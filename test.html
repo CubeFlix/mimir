@@ -1,0 +1,13 @@
+<script>
+    function dothing() {
+        const range = document.getSelection().getRangeAt(0);
+        const contents = range.extractContents();
+        range.insertNode(contents);
+    }
+</script>
+
+<button onclick="dothing()"></button>
+<div contenteditable>
+    <p>abc</p>
+    <p>123</p>
+</div>
