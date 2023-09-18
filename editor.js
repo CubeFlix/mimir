@@ -169,15 +169,15 @@ class Editor {
                 }
             }
 
-            if (!currentNode.nextSibling) {
+            if (currentNode.childNodes.length != 0) {
+                // If there are children of this node, enter the node.
+                currentNode = currentNode.firstChild;
+            } else if (!currentNode.nextSibling) {
                 // If this is the last node in the parent, move to the parent's next neighbor.
                 while (!currentNode.nextSibling) {
                     currentNode = currentNode.parentNode;
                 } 
                 currentNode = currentNode.nextSibling;
-            } else if (currentNode.childNodes.length != 0) {
-                // If there are children of this node, enter the node.
-                currentNode = currentNode.firstChild;
             } else {
                 // Go to the next node.
                 currentNode = currentNode.nextSibling;
@@ -209,6 +209,7 @@ class Editor {
         
         const startOffset = range.startOffset;
         const endOffset = range.endOffset;
+
         if (nodes.length == 0) {
             // TODO: handle just pressing the button to create a new span to write in
         } else if (nodes.length == 1) {
@@ -255,17 +256,18 @@ class Editor {
             // Apply formatting to the new nodes.
             newNodeStart = applyFormatting(newNodeStart, style, args);
             newNodeEnd = applyFormatting(newNodeEnd, style, args);
+
+            // Append the new start and end nodes.
+            firstNode.after(newNodeStart);
+            lastNode.before(newNodeEnd);
             
             // Apply formatting to all the nodes in between the first and last nodes.
-            const formattedNodes = [];
             for (const node of nodes.slice(1, -1)) {
-                formattedNodes.push(applyFormatting(node, style, args));
-            }
-            formattedNodes.unshift(newNodeStart);
-            formattedNodes.push(newNodeEnd);
+                const formattedNode = applyFormatting(node, style, args);
 
-            // Append all the new nodes.
-            firstNode.after(...formattedNodes);
+                // Replace the node.
+                node.replaceWith(formattedNode);
+            }
 
             // Select the new nodes.
             const newRange = new Range();
@@ -322,6 +324,13 @@ class Editor {
         this.editor.setAttribute("id", "editor-body")
         this.editor.setAttribute("contenteditable", "true");
         this.container.append(this.editor);
+
+        // TODO: testing
+        const d1 = document.createElement("p");
+        const d2 = document.createElement("p");
+        d1.innerText = "abc";
+        d2.innerText = "def";
+        this.editor.append(d1, d2);
 
         // Apply min/max height.
         this.applySizeStyles();
