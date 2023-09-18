@@ -42,6 +42,21 @@ function applyFormatting(node, style, args) {
                 }
             }
             break;
+	case "underline":
+            if (node.nodeType == Node.TEXT_NODE && args.command == "apply") {
+                // Create a new span.
+                const span = document.createElement("span");
+                span.textContent = node.textContent;
+                span.style.textDecoration = "underline";
+                node = span;
+            } else if (isSpan(node)) {
+                if (args.command == "apply") {
+                    node.style.textDecoration = "underline";
+                } else {
+                    node.style.textDecoration = "";
+                }
+            }
+            break;
     }
     return node;
 }
@@ -66,7 +81,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic"] || settings.commands;
+        this.commands = ["bold", "italic", "underline"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
     }
 
@@ -110,6 +125,13 @@ class Editor {
                     this.menubarOptions.italic.innerHTML = "<i>I</i>";
                     this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
                     this.menubar.append(this.menubarOptions.italic);
+                    break;
+		  case "underline":
+                    this.menubarOptions.underline = document.createElement("button");
+                    this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-italic");
+                    this.menubarOptions.underline.innerHTML = "<span style=\"text-decoration: underline;\">U</span>";
+                    this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
+                    this.menubar.append(this.menubarOptions.underline);
                     break;
             }
         }
@@ -155,7 +177,8 @@ class Editor {
             return nodes;
         }
 
-        while (currentNode != range.endContainer && this.inEditor(currentNode)) {
+        var haveTraversedLastNode = false;
+        while (this.inEditor(currentNode)) {
             // Append the node.
             if (this.inEditor(currentNode)) {
                 if (currentNode.nodeType == Node.TEXT_NODE) {
@@ -182,22 +205,51 @@ class Editor {
                 // Go to the next node.
                 currentNode = currentNode.nextSibling;
             }
-        }
 
-        if (this.inEditor(currentNode)) {
-            // Add the final node of the range, so long as it is within bounds of the editor.
-            if (currentNode.nodeType == Node.TEXT_NODE) {
-                if (isSpan(currentNode.parentNode)) {
-                    // If the parent node is a span, append the parent node.
-                    nodes.push(currentNode.parentNode);
-                } else {
-                    // The parent node is not a span.
-                    nodes.push(currentNode);
-                }
+            // We always want to fully traverse the end node.
+            if (currentNode == range.endContainer) {
+                haveTraversedLastNode = true;
+            }
+            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode))) {
+                break;
             }
         }
 
         return nodes;
+    }
+
+    /*
+    Detect the current styling of a range. For a style to be active, all of the nodes
+    in the range must be the same.
+    */
+    detectStyling(range) {
+        var styling = {};
+        const nodes = this.getInlineNodesInRange(range);
+        
+        // Iterate through the inline nodes.
+        for (const node of nodes) {
+            // If the node is empty, don't count it.
+            if (node.textContent == "") {
+                continue;
+            }
+
+            // Go through each tracked style and calculate the overall style.
+            for (const styleName of this.trackedStyles) {
+                var styleValue = "";
+                if (node.style) {
+                    styleValue = node.style[styleName];
+                }
+                if (styleName in styling) {
+                    if (styling[styleName] != styleValue) {
+                        styling[styleName] = "";
+                    }
+                } else {
+                    styling[styleName] = styleValue;
+                }
+            }
+        }
+
+        return styling;
     }
 
     /* 
@@ -282,10 +334,22 @@ class Editor {
     Perform a style command.
     */
     performStyleCommand(style) {
-        // TODO: handle just pressing the button to create a new span to write in
-
+        // Get the current styling of the selected range.
         const range = this.getRange();
-        this.setStyle(range, style, {command: "apply"});
+        const currentStyling = this.detectStyling(range);
+
+        // Set the style.
+        switch (style) {
+            case "bold":
+                this.setStyle(range, style, {command: (currentStyling.fontWeight != "") ? "remove" : "apply"});
+                break;
+            case "italic":
+                this.setStyle(range, style, {command: (currentStyling.fontStyle != "") ? "remove" : "apply"});
+                break;
+            case "underline":
+                this.setStyle(range, style, {command: (currentStyling.textDecoration != "") ? "remove" : "apply"});
+                break;
+        }
     }
 
     /*
@@ -300,6 +364,13 @@ class Editor {
     */
     italic() {
         this.performStyleCommand("italic");
+    }
+
+    /*
+    Underline.
+    */
+    underline() {
+        this.performStyleCommand("underline");
     }
 
     /* 
@@ -321,7 +392,7 @@ class Editor {
 
         // Insert the content editable div.
         this.editor = document.createElement("div");
-        this.editor.setAttribute("id", "editor-body")
+        this.editor.setAttribute("id", "editor-body");
         this.editor.setAttribute("contenteditable", "true");
         this.container.append(this.editor);
 
