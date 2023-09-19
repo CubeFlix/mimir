@@ -168,17 +168,17 @@ class Editor {
         var startOffset = range.startOffset;
         var endOffset = range.endOffset;
         
-        if (currentNode == range.endContainer) {
-            // This handles the case where the start and end containers are the same.
-            if (isSpan(currentNode.parentNode)) {
-                // If the parent node is a span, append the parent node.
-                nodes.push(currentNode.parentNode);
-            } else {
-                // The parent node is not a span.
-                nodes.push(currentNode);
-            }
-            return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
-        }
+        // if (currentNode == range.endContainer) {
+        //     // This handles the case where the start and end containers are the same.
+        //     if (isSpan(currentNode.parentNode)) {
+        //         // If the parent node is a span, append the parent node.
+        //         nodes.push(currentNode.parentNode);
+        //     } else {
+        //         // The parent node is not a span.
+        //         nodes.push(currentNode);
+        //     }
+        //     return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
+        // }
 
         // If the first node is not a text node, move the start node to the start offset.
         if (range.startContainer.nodeType != Node.TEXT_NODE) {
@@ -278,6 +278,8 @@ class Editor {
         const nodes = rangeOutput.nodes;
         const startOffset = rangeOutput.startOffset;
         const endOffset = rangeOutput.endOffset;
+        console.log(range.startContainer.cloneNode(true), range.endContainer.cloneNode(true));
+        console.log(nodes);
 
         if (nodes.length == 0) {
             // TODO: handle just pressing the button to create a new span to write in
