@@ -167,18 +167,6 @@ class Editor {
         var currentNode = range.startContainer;
         var startOffset = range.startOffset;
         var endOffset = range.endOffset;
-        
-        // if (currentNode == range.endContainer) {
-        //     // This handles the case where the start and end containers are the same.
-        //     if (isSpan(currentNode.parentNode)) {
-        //         // If the parent node is a span, append the parent node.
-        //         nodes.push(currentNode.parentNode);
-        //     } else {
-        //         // The parent node is not a span.
-        //         nodes.push(currentNode);
-        //     }
-        //     return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
-        // }
 
         // If the first node is not a text node, move the start node to the start offset.
         if (range.startContainer.nodeType != Node.TEXT_NODE) {
@@ -188,6 +176,16 @@ class Editor {
 
         var haveTraversedLastNode = false;
         while (this.inEditor(currentNode)) {
+            // We always want to fully traverse the end node.
+            if (range.endContainer.contains(currentNode)) {
+                haveTraversedLastNode = true;
+            }
+
+            // If we've finished traversing the last node or we've reached the bound of the last node, quit.
+            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
+                break;
+            }
+
             // Append the node.
             if (this.inEditor(currentNode)) {
                 if (currentNode.nodeType == Node.TEXT_NODE) {
@@ -214,23 +212,12 @@ class Editor {
                 // Go to the next node.
                 currentNode = currentNode.nextSibling;
             }
-
-            // We always want to fully traverse the end node.
-            if (currentNode == range.endContainer) {
-                haveTraversedLastNode = true;
-            }
-
-            // If we've finished traversing the last node or we've reached the bound of the last node, quit.
-            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
-                break;
-            }
         }
 
         // If the final node is not a text node, set the end offset.
         if (range.endContainer.nodeType != Node.TEXT_NODE) {
             endOffset = nodes.slice(-1)[0].textContent.length;
         }
-
 
         return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
     }
@@ -278,8 +265,6 @@ class Editor {
         const nodes = rangeOutput.nodes;
         const startOffset = rangeOutput.startOffset;
         const endOffset = rangeOutput.endOffset;
-        console.log(range.startContainer.cloneNode(true), range.endContainer.cloneNode(true));
-        console.log(nodes);
 
         if (nodes.length == 0) {
             // TODO: handle just pressing the button to create a new span to write in
