@@ -159,11 +159,14 @@ class Editor {
 
     /* 
     Get an array of all the inline nodes within a range. This includes spans and text nodes. 
-    If the text node is contained within a span, it only returns the span.
+    If the text node is contained within a span, it only returns the span. Returns the newly 
+    calculated start and end offsets.
     */
     getInlineNodesInRange(range) {
         const nodes = [];
         var currentNode = range.startContainer;
+        var startOffset = range.startOffset;
+        var endOffset = range.endOffset;
         
         if (currentNode == range.endContainer) {
             // This handles the case where the start and end containers are the same.
@@ -174,7 +177,13 @@ class Editor {
                 // The parent node is not a span.
                 nodes.push(currentNode);
             }
-            return nodes;
+            return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
+        }
+
+        // If the first node is not a text node, move the start node to the start offset.
+        if (range.startContainer.nodeType != Node.TEXT_NODE) {
+            currentNode = currentNode.childNodes[range.startOffset];
+            startOffset = 0;
         }
 
         var haveTraversedLastNode = false;
@@ -210,12 +219,20 @@ class Editor {
             if (currentNode == range.endContainer) {
                 haveTraversedLastNode = true;
             }
-            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode))) {
+
+            // If we've finished traversing the last node or we've reached the bound of the last node, quit.
+            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
                 break;
             }
         }
 
-        return nodes;
+        // If the final node is not a text node, set the end offset.
+        if (range.endContainer.nodeType != Node.TEXT_NODE) {
+            endOffset = nodes.slice(-1)[0].textContent.length;
+        }
+
+
+        return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
     }
 
     /*
@@ -224,7 +241,7 @@ class Editor {
     */
     detectStyling(range) {
         var styling = {};
-        const nodes = this.getInlineNodesInRange(range);
+        const nodes = this.getInlineNodesInRange(range).nodes;
         
         // Iterate through the inline nodes.
         for (const node of nodes) {
@@ -257,10 +274,10 @@ class Editor {
     */
     setStyle(range, style, args) {
         // Get all inline nodes within the range.
-        const nodes = this.getInlineNodesInRange(range);
-        
-        const startOffset = range.startOffset;
-        const endOffset = range.endOffset;
+        const rangeOutput = this.getInlineNodesInRange(range);
+        const nodes = rangeOutput.nodes;
+        const startOffset = rangeOutput.startOffset;
+        const endOffset = rangeOutput.endOffset;
 
         if (nodes.length == 0) {
             // TODO: handle just pressing the button to create a new span to write in
