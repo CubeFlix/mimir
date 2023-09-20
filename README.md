@@ -15,4 +15,9 @@ Design specs:
 - Get all text nodes between range: iteratively traverse through the node tree like the previous function, but only return spans and text nodes. If a text node is contained within a span, return the parent span, not the text node.
 
 ## todo
-- for some reason text within <p> tag not working
+- delete the empty spans after changing styles
+- font style
+- keyboard shortcuts
+- display current styling on buttons/options
+- when clicking button with nothing selected, create new span
+- retain selection when leaving focus

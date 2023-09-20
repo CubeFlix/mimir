@@ -42,7 +42,7 @@ function applyFormatting(node, style, args) {
                 }
             }
             break;
-	case "underline":
+	    case "underline":
             if (node.nodeType == Node.TEXT_NODE && args.command == "apply") {
                 // Create a new span.
                 const span = document.createElement("span");
@@ -57,6 +57,17 @@ function applyFormatting(node, style, args) {
                 }
             }
             break;
+        case "font":
+            if (node.nodeType == Node.TEXT_NODE) {
+                // Create a new span.
+                const span = document.createElement("span");
+                span.textContent = node.textContent;
+                span.style.fontFamily = args.family;
+                node = span;
+            } else if (isSpan(node)) {
+                node.style.fontFamily = args.family;
+            }
+            break;
     }
     return node;
 }
@@ -69,7 +80,6 @@ class Editor {
     Editor constants. 
     */
     trackedStyles = ["fontWeight", "fontStyle", "textDecoration", "fontFamily", "fontSize"];
-    allowedTagTypes = ["span", "br"];
 
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
     ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
@@ -81,8 +91,10 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "font"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
+        this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Inter"] || settings.supportedFonts;
+        this.defaultFont = "Arial" || settings.defaultFont;
     }
 
     /* 
@@ -98,6 +110,13 @@ class Editor {
         } else {
             this.editor.style.minHeight = "600px";
         }
+    }
+
+    /*
+    Apply the default font.
+    */
+    applyDefaultFont() {
+        this.editor.style.fontFamily = this.defaultFont;
     }
 
     /*
@@ -126,12 +145,25 @@ class Editor {
                     this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
                     this.menubar.append(this.menubarOptions.italic);
                     break;
-		  case "underline":
+		        case "underline":
                     this.menubarOptions.underline = document.createElement("button");
                     this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-italic");
                     this.menubarOptions.underline.innerHTML = "<span style=\"text-decoration: underline;\">U</span>";
                     this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
                     this.menubar.append(this.menubarOptions.underline);
+                    break;
+                case "font":
+                    this.menubarOptions.font = document.createElement("select");
+                    this.menubarOptions.font.setAttribute("id", "editor-menubar-option-font");
+                    for (const font of this.supportedFonts) {
+                        const newFontOption = document.createElement("option");
+                        newFontOption.innerHTML = font;
+                        newFontOption.style.fontFamily = font;
+                        newFontOption.setAttribute("value", font);
+                        this.menubarOptions.font.append(newFontOption);
+                    }
+                    this.menubarOptions.font.addEventListener("change", this.font.bind(this));
+                    this.menubar.append(this.menubarOptions.font);
                     break;
             }
         }
@@ -353,6 +385,9 @@ class Editor {
             case "underline":
                 this.setStyle(range, style, {command: (currentStyling.textDecoration != "") ? "remove" : "apply"});
                 break;
+            case "font":
+                this.setStyle(range, style, {family: this.menubarOptions.font.value});
+                break;
         }
     }
 
@@ -375,6 +410,13 @@ class Editor {
     */
     underline() {
         this.performStyleCommand("underline");
+    }
+
+    /*
+    Font change.
+    */
+    font() {
+        this.performStyleCommand("font");
     }
 
     /* 
@@ -400,14 +442,10 @@ class Editor {
         this.editor.setAttribute("contenteditable", "true");
         this.container.append(this.editor);
 
-        // TODO: testing
-        const d1 = document.createElement("p");
-        const d2 = document.createElement("p");
-        d1.innerText = "abc";
-        d2.innerText = "def";
-        this.editor.append(d1, d2);
-
         // Apply min/max height.
         this.applySizeStyles();
+
+        // Apply default font.
+        this.applyDefaultFont();
     }
 }
