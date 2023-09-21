@@ -173,7 +173,21 @@ class Editor {
     Bind event listeners for keyboard events.
     */
     bindKeyboardEvents() {
-        // TODO
+        this.editor.addEventListener("keydown", function(e) {
+            if (e.key == "b" && e.ctrlKey) {
+                // Bold.
+                e.preventDefault();
+                this.bold();
+            } else if (e.key == "i" && e.ctrlKey) {
+                // Italic.
+                e.preventDefault();
+                this.italic();
+            } else if (e.key == "u" && e.ctrlKey) {
+                // Underline.
+                e.preventDefault();
+                this.underline();
+            }
+        }.bind(this));
     }
 
     /* 
@@ -280,6 +294,25 @@ class Editor {
             const computedStyle = node.nodeType != Node.TEXT_NODE ? window.getComputedStyle(node) : window.getComputedStyle(node.parentNode);
             for (const styleName of this.trackedStyles) {
                 var styleValue = computedStyle[styleName];
+                
+                // Normalize the style value in certain cases.
+                switch (styleName) {
+                    case "fontWeight":
+                        if (styleValue == "700" || styleValue == "bold") {
+                            styleValue = "bold";
+                        } else {
+                            styleValue = "";
+                        }
+                        break;
+                    case "textDecoration":
+                        if (styleValue.includes("underline")) {
+                            styleValue = "underline";
+                        } else {
+                            styleValue = "";
+                        }
+                        break;
+                }
+
                 if (styleName in styling) {
                     if (styling[styleName] != styleValue) {
                         styling[styleName] = "";
@@ -398,7 +431,7 @@ class Editor {
         // Set the style.
         switch (style) {
             case "bold":
-                this.setStyle(range, style, {command: (currentStyling.fontWeight == "bold" || currentStyling.fontWeight == "700") ? "remove" : "apply"});
+                this.setStyle(range, style, {command: (currentStyling.fontWeight == "bold") ? "remove" : "apply"});
                 break;
             case "italic":
                 this.setStyle(range, style, {command: (currentStyling.fontStyle == "italic") ? "remove" : "apply"});
