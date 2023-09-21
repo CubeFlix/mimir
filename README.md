@@ -14,8 +14,11 @@ Design specs:
 - Get all nodes between range: iteratively traverse through the node tree, starting at the start node and ending at the end node, returning all nodes in between
 - Get all text nodes between range: iteratively traverse through the node tree like the previous function, but only return spans and text nodes. If a text node is contained within a span, return the parent span, not the text node.
 
+Needs a special function for handling invalid DOM: this includes text styling on elements that aren't spans, etc., invalid tags (bold, ul, etc)
+
 ## todo
 - keyboard shortcuts
+- handle invalid elements (bold, italic, etc.) and properly handle them
 - display current styling on buttons/options
 - when clicking button with nothing selected, create new span
 - retain selection when leaving focus

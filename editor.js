@@ -148,7 +148,7 @@ class Editor {
 		        case "underline":
                     this.menubarOptions.underline = document.createElement("button");
                     this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-italic");
-                    this.menubarOptions.underline.innerHTML = "<span style=\"text-decoration: underline;\">U</span>";
+                    this.menubarOptions.underline.innerHTML = "<u>U</u>";
                     this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
                     this.menubar.append(this.menubarOptions.underline);
                     break;
@@ -167,6 +167,13 @@ class Editor {
                     break;
             }
         }
+    }
+
+    /*
+    Bind event listeners for keyboard events.
+    */
+    bindKeyboardEvents() {
+        // TODO
     }
 
     /* 
@@ -270,11 +277,9 @@ class Editor {
             }
 
             // Go through each tracked style and calculate the overall style.
+            const computedStyle = node.nodeType != Node.TEXT_NODE ? window.getComputedStyle(node) : window.getComputedStyle(node.parentNode);
             for (const styleName of this.trackedStyles) {
-                var styleValue = "";
-                if (node.style) {
-                    styleValue = node.style[styleName];
-                }
+                var styleValue = computedStyle[styleName];
                 if (styleName in styling) {
                     if (styling[styleName] != styleValue) {
                         styling[styleName] = "";
@@ -393,13 +398,13 @@ class Editor {
         // Set the style.
         switch (style) {
             case "bold":
-                this.setStyle(range, style, {command: (currentStyling.fontWeight != "") ? "remove" : "apply"});
+                this.setStyle(range, style, {command: (currentStyling.fontWeight == "bold" || currentStyling.fontWeight == "700") ? "remove" : "apply"});
                 break;
             case "italic":
-                this.setStyle(range, style, {command: (currentStyling.fontStyle != "") ? "remove" : "apply"});
+                this.setStyle(range, style, {command: (currentStyling.fontStyle == "italic") ? "remove" : "apply"});
                 break;
             case "underline":
-                this.setStyle(range, style, {command: (currentStyling.textDecoration != "") ? "remove" : "apply"});
+                this.setStyle(range, style, {command: (currentStyling.textDecoration == "underline") ? "remove" : "apply"});
                 break;
             case "font":
                 this.setStyle(range, style, {family: this.menubarOptions.font.value});
@@ -463,5 +468,8 @@ class Editor {
 
         // Apply default font.
         this.applyDefaultFont();
+
+        // Bind event listeners for keyboard events.
+        this.bindKeyboardEvents();
     }
 }
