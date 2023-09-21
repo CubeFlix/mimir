@@ -320,6 +320,14 @@ class Editor {
             // Append the nodes.
             nodes[0].after(newNode, endNode);
 
+            // If the start or end nodes are empty, remove them.
+            if (nodes[0].textContent == "") {
+                nodes[0].remove();
+            }
+            if (endNode.textContent == "") {
+                endNode.remove();
+            }
+
             // Select the node.
             const newRange = new Range();
             newRange.selectNode(newNode);
@@ -355,6 +363,14 @@ class Editor {
 
                 // Replace the node.
                 node.replaceWith(formattedNode);
+            }
+
+            // If the original nodes are empty, remove them.
+            if (firstNode.textContent == "") {
+                firstNode.remove();
+            }
+            if (lastNode.textContent == "") {
+                lastNode.remove();
             }
 
             // Select the new nodes.
