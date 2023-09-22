@@ -268,7 +268,7 @@ class Editor {
         }
 
         // If the final node is not a text node, set the end offset.
-        if (range.endContainer.nodeType != Node.TEXT_NODE) {
+        if (range.endContainer.nodeType != Node.TEXT_NODE && this.inEditor(range.endContainer) && nodes.slice(-1)[0]) {
             endOffset = nodes.slice(-1)[0].textContent.length;
         }
 
@@ -336,8 +336,30 @@ class Editor {
         const startOffset = rangeOutput.startOffset;
         const endOffset = rangeOutput.endOffset;
 
+        // If the editor is empty, place in a new span.
+        if (this.editor.childNodes.length == 0) {
+            var newNode = document.createElement("span");
+
+            // Apply formatting to the new node.
+            newNode = applyFormatting(newNode, style, args);
+
+            // Append the node.
+            this.editor.append(newNode);
+
+            // Insert an invisible character for the cursor to latch on to.
+            newNode.innerHTML += this.invisible;
+
+            // Select the node.
+            const newRange = new Range();
+            newRange.setStart(newNode, 0);
+            newRange.collapse();
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        }
+
+        // Set the style.
         if (nodes.length == 0) {
-            // TODO: handle just pressing the button to create a new span to write in
+            return;
         } else if (nodes.length == 1) {
             // If there is only one node in the range, split the node.
             var newNode = nodes[0].cloneNode(true);
@@ -364,6 +386,11 @@ class Editor {
             }
             if (endNode.textContent == "") {
                 endNode.remove();
+            }
+
+            // If the new node is empty, place in invisible character for the cursor to latch onto.
+            if (newNode.textContent == "") {
+                newNode.innerHTML += this.invisible;
             }
 
             // Select the node.

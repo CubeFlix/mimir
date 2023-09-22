@@ -17,8 +17,6 @@ Design specs:
 Needs a special function for handling invalid DOM: this includes text styling on elements that aren't spans, etc., invalid tags (bold, ul, etc)
 
 ## todo
-- keyboard shortcuts
 - handle invalid elements (bold, italic, etc.) and properly handle them
 - display current styling on buttons/options
-- when clicking button with nothing selected, create new span
 - retain selection when leaving focus
