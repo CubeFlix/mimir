@@ -190,6 +190,66 @@ class Editor {
         }.bind(this));
     }
 
+    /*
+    Called on selection change and on styling change.
+    */
+    onChangeSelect = () => {
+        const range = this.getRange();
+        if (range == null) {
+            return;
+        }
+        if (this.lastCalculatedRange == range) {
+            return;
+        } 
+        this.lastCalculatedRange = range;
+        const styling = this.detectStyling(range);
+
+        // Alter the styling of each of the options.
+        for (const styleName of this.trackedStyles) {
+            switch (styleName) {
+                case "fontWeight":
+                    if (styling[styleName] == "bold") {
+                        if (!this.menubarOptions.bold.classList.contains("editor-pressed")) this.menubarOptions.bold.classList.add("editor-pressed");
+                    } else {
+                        if (this.menubarOptions.bold.classList.contains("editor-pressed")) this.menubarOptions.bold.classList.remove("editor-pressed");
+                    }
+                    break;
+                case "fontStyle":
+                    if (styling[styleName] == "italic") {
+                        if (!this.menubarOptions.italic.classList.contains("editor-pressed")) this.menubarOptions.italic.classList.add("editor-pressed");
+                    } else {
+                        if (this.menubarOptions.italic.classList.contains("editor-pressed")) this.menubarOptions.italic.classList.remove("editor-pressed");
+                    }
+                    break;
+                case "textDecoration":
+                    if (styling[styleName] == "underline") {
+                        if (!this.menubarOptions.underline.classList.contains("editor-pressed")) this.menubarOptions.underline.classList.add("editor-pressed");
+                    } else {
+                        if (this.menubarOptions.underline.classList.contains("editor-pressed")) this.menubarOptions.underline.classList.remove("editor-pressed");
+                    }
+                    break;
+            }
+        }
+    }
+
+    /*
+    Bind event listeners for select event.
+    */
+    bindSelectEvents() {
+        const onChangeSelect = setTimeout.bind(window, this.onChangeSelect.bind(this), 0);
+
+        this.editor.addEventListener('mousedown', onChangeSelect);
+        this.editor.addEventListener('click', onChangeSelect);
+        this.editor.addEventListener('touchstart', onChangeSelect);
+        this.editor.addEventListener('input', onChangeSelect);
+        this.editor.addEventListener('paste', onChangeSelect);
+        this.editor.addEventListener('cut', onChangeSelect);
+        this.editor.addEventListener('drag', onChangeSelect); // Selection, dragging text
+        this.editor.addEventListener('keydown', onChangeSelect);
+        // this.editor.addEventListener('select', onChangeSelect); // Some browsers support this event
+        // this.editor.addEventListener("selectionchange", onChangeSelect);
+    }
+
     /* 
     Check if a node is in the editor.
     */
@@ -216,6 +276,9 @@ class Editor {
     calculated start and end offsets.
     */
     getInlineNodesInRange(range) {
+        if (range == null) {
+            return [];
+        }
         const nodes = [];
         var currentNode = range.startContainer;
         var startOffset = range.startOffset;
@@ -453,6 +516,9 @@ class Editor {
     performStyleCommand(style) {
         // Get the current styling of the selected range.
         const range = this.getRange();
+        if (range == null) {
+            return;
+        }
         const currentStyling = this.detectStyling(range);
 
         // Set the style.
@@ -470,6 +536,9 @@ class Editor {
                 this.setStyle(range, style, {family: this.menubarOptions.font.value});
                 break;
         }
+
+        // Call the selection change event.
+        this.onChangeSelect();
     }
 
     /*
@@ -511,6 +580,9 @@ class Editor {
         // Initialize the global range cache variable.
         this.rangeCache = null;
 
+        // Initialize the global last calculated range variable.
+        this.lastCalculatedRange = null;
+
         // Clear the container.
         this.container.innerHTML = "";
 
@@ -531,5 +603,8 @@ class Editor {
 
         // Bind event listeners for keyboard events.
         this.bindKeyboardEvents();
+
+        // Bind event listeners for select event.
+        this.bindSelectEvents();
     }
 }
