@@ -93,8 +93,13 @@ class Editor {
 
         this.commands = ["bold", "italic", "underline", "font"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
-        this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Inter"] || settings.supportedFonts;
+        this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
+
+        // Parse the invisible entity as text.
+        const temp = document.createElement("div");
+        temp.innerHTML = this.invisible;
+        this.invisibleParsed = temp.innerHTML;
     }
 
     /* 
@@ -198,10 +203,6 @@ class Editor {
         if (range == null) {
             return;
         }
-        if (this.lastCalculatedRange == range) {
-            return;
-        } 
-        this.lastCalculatedRange = range;
         const styling = this.detectStyling(range);
 
         // Alter the styling of each of the options.
@@ -228,6 +229,9 @@ class Editor {
                         if (this.menubarOptions.underline.classList.contains("editor-pressed")) this.menubarOptions.underline.classList.remove("editor-pressed");
                     }
                     break;
+                case "fontFamily":
+                    this.menubarOptions.font.value = styling[styleName];
+                    break;
             }
         }
     }
@@ -236,18 +240,15 @@ class Editor {
     Bind event listeners for select event.
     */
     bindSelectEvents() {
+        // Bind the onChangeSelect function with setTimeout so that it runs after the event bubbles.
         const onChangeSelect = setTimeout.bind(window, this.onChangeSelect.bind(this), 0);
 
-        this.editor.addEventListener('mousedown', onChangeSelect);
-        this.editor.addEventListener('click', onChangeSelect);
-        this.editor.addEventListener('touchstart', onChangeSelect);
-        this.editor.addEventListener('input', onChangeSelect);
-        this.editor.addEventListener('paste', onChangeSelect);
-        this.editor.addEventListener('cut', onChangeSelect);
-        this.editor.addEventListener('drag', onChangeSelect); // Selection, dragging text
-        this.editor.addEventListener('keydown', onChangeSelect);
-        // this.editor.addEventListener('select', onChangeSelect); // Some browsers support this event
-        // this.editor.addEventListener("selectionchange", onChangeSelect);
+        this.editor.addEventListener('focus', function (e) {
+            document.addEventListener('selectionchange', onChangeSelect);
+        });
+        this.editor.addEventListener('focusout', function (e) {
+            document.removeEventListener('selectionchange', onChangeSelect);
+        });
     }
 
     /* 
@@ -286,17 +287,12 @@ class Editor {
 
         // If the first node is not a text node, move the start node to the start offset.
         if (range.startContainer.nodeType != Node.TEXT_NODE) {
-            currentNode = currentNode.childNodes[range.startOffset];
+            currentNode = currentNode.childNodes[range.startOffset] ? currentNode.childNodes[range.startOffset] : currentNode;
             startOffset = 0;
         }
 
         var haveTraversedLastNode = false;
         while (this.inEditor(currentNode)) {
-            // We always want to fully traverse the end node.
-            if (range.endContainer.contains(currentNode)) {
-                haveTraversedLastNode = true;
-            }
-
             // If we've finished traversing the last node or we've reached the bound of the last node, quit.
             if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
                 break;
@@ -304,15 +300,21 @@ class Editor {
 
             // Append the node.
             if (this.inEditor(currentNode)) {
-                if (currentNode.nodeType == Node.TEXT_NODE) {
-                    if (isSpan(currentNode.parentNode)) {
-                        // If the parent node is a span, append the parent node.
-                        nodes.push(currentNode.parentNode);
-                    } else {
-                        // The parent node is not a span.
-                        nodes.push(currentNode);
-                    }
+                if (isSpan(currentNode.parentNode)) {
+                    // If the parent node is a span, append the parent node.
+                    if (!nodes.includes(currentNode.parentNode)) nodes.push(currentNode.parentNode);
+                } else if (isSpan(currentNode)) {
+                    // The current node is a span, so append it.
+                    if (!nodes.includes(currentNode)) nodes.push(currentNode);
+                } else if (currentNode.nodeType == Node.TEXT_NODE) {
+                    // If the parent node is not a span and the current node is a text node, append the span.
+                    if (!nodes.includes(currentNode)) nodes.push(currentNode);
                 }
+            }
+
+            // We always want to fully traverse the end node.
+            if (range.endContainer.contains(currentNode)) {
+                haveTraversedLastNode = true;
             }
 
             if (currentNode.childNodes.length != 0) {
@@ -349,7 +351,7 @@ class Editor {
         // Iterate through the inline nodes.
         for (const node of nodes) {
             // If the node is empty, don't count it.
-            if (node.textContent == "") {
+            if (node.innerHTML == "") {
                 continue;
             }
 
@@ -374,6 +376,10 @@ class Editor {
                             styleValue = "";
                         }
                         break;
+                    case "fontFamily":
+                        // If there are multiple fonts, get the first font. Then, remove all quotes.
+                        styleValue = styleValue.split(",")[0].replace("\"", "").replace("\"", "").replace("'", "").replace("'", "");
+                        break;
                 }
 
                 if (styleName in styling) {
@@ -386,6 +392,11 @@ class Editor {
             }
         }
 
+        // Set the default font in the styling.
+        if (nodes.length == 0 && this.trackedStyles.includes("fontFamily")) {
+            styling.fontFamily = this.defaultFont;
+        }
+        
         return styling;
     }
 
@@ -458,7 +469,11 @@ class Editor {
 
             // Select the node.
             const newRange = new Range();
-            newRange.selectNode(newNode);
+            newRange.selectNodeContents(newNode);
+            if (newNode.innerHTML.replace(this.invisibleParsed, "") == "") {
+                // If the node is empty, collapse the range.
+                newRange.collapse();
+            }
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else {
@@ -579,9 +594,6 @@ class Editor {
 
         // Initialize the global range cache variable.
         this.rangeCache = null;
-
-        // Initialize the global last calculated range variable.
-        this.lastCalculatedRange = null;
 
         // Clear the container.
         this.container.innerHTML = "";

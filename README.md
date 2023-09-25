@@ -7,7 +7,7 @@ Design specs:
 
 - Text must be contained within a p tag, header tag, table, or list
 - Text is stored in text nodes or in spans
-- Spans may only contain text nodes
+- Spans may only contain text nodes or br node
 - only spans may have styling applied
 - when copying text, make sure invisible characters are ignored
 
@@ -18,5 +18,4 @@ Needs a special function for handling invalid DOM: this includes text styling on
 
 ## todo
 - handle invalid elements (bold, italic, etc.) and properly handle them
-- display current styling on buttons/options
 - retain selection when leaving focus
