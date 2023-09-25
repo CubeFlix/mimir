@@ -351,7 +351,7 @@ class Editor {
         // Iterate through the inline nodes.
         for (const node of nodes) {
             // If the node is empty, don't count it.
-            if (node.innerHTML == "") {
+            if (node.textContent.replace(this.invisibleParsed, "") == "") {
                 continue;
             }
 
@@ -393,7 +393,7 @@ class Editor {
         }
 
         // Set the default font in the styling.
-        if (nodes.length == 0 && this.trackedStyles.includes("fontFamily")) {
+        if (!("fontFamily" in styling) && this.trackedStyles.includes("fontFamily")) {
             styling.fontFamily = this.defaultFont;
         }
         
