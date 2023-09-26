@@ -72,6 +72,27 @@ function applyFormatting(node, style, args) {
     return node;
 }
 
+/*
+Check if a style attribute is valid for a non-span element. This means that it either contains no style attribute or the only style is text-align.
+*/
+function styleAttributeValidForNonSpan(attr) {
+    if (attr == null) {
+        attr = "";
+    }
+    attr = attr.trim();
+    if (attr == "") {
+        return true;
+    }
+    const splitAttrs = attr.split(";").map((s) => {return s.split(":").map((a) => {return a.trim()})});
+    
+    // TODO: EMPTY ATTRS
+
+    if (splitAttrs.length != 0 && splitAttrs[0].length != 0 && splitAttrs[0][0].toLowerCase == "text-align") {
+        return true;
+    }
+    return false;
+}
+
 /* 
 The rich text editor class. 
 */
@@ -83,6 +104,8 @@ class Editor {
 
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
     ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
+
+    allowedTags = ["DIV", "P", "SPAN", "BR"];
 
     /* 
     Create the editor. 
@@ -198,7 +221,7 @@ class Editor {
     /*
     Called on selection change and on styling change.
     */
-    onChangeSelect = () => {
+    onChangeSelect() {
         const range = this.getRange();
         if (range == null) {
             return;
@@ -236,6 +259,127 @@ class Editor {
         }
     }
 
+    /* 
+    Copy styles from one style object to another.
+    */
+    copyStyles(src, dest) {
+        for (const styleName of this.trackedStyles) {
+            dest.style[styleName] = src[styleName];
+        }
+        return dest;
+    }
+
+    /*
+    Check if a node is valid DOM.
+    */
+    checkNodeValid(node) {        
+        // Traverse the node and ensure each node is valid.
+        var currentNode = node;
+        while (node.contains(currentNode) && this.inEditor(currentNode)) {
+            // If the element is not a span and has styling, it is invalid.
+            if (!isSpan(currentNode) && currentNode.nodeType == Node.ELEMENT_NODE && !styleAttributeValidForNonSpan(currentNode.getAttribute("style"))) {
+                return false;
+            }
+
+            // If the element is a span, check that it only contains <br> and text nodes.
+            if (isSpan(currentNode)) {
+                for (const spanChild of currentNode.childNodes) {
+                    if (spanChild.nodeType != Node.TEXT_NODE && spanChild.tagName != "BR") {
+                        return false;
+                    }
+                    if (spanChild.childNodes.length != 0) {
+                        return false;
+                    }
+                }
+            }
+
+            // If the element is one of the disallowed tags, it is invalid.
+            if (currentNode.nodeType == Node.ELEMENT_NODE && !this.allowedTags.includes(currentNode.tagName)) {
+                return false;
+            }
+
+            // Traverse the node tree.
+            if (currentNode.childNodes.length != 0) {
+                // If there are children of this node, enter the node.
+                currentNode = currentNode.firstChild;
+            } else if (!currentNode.nextSibling) {
+                // If this is the last node in the parent, move to the parent's next neighbor.
+                while (!currentNode.nextSibling) {
+                    currentNode = currentNode.parentNode;
+                }
+                currentNode = currentNode.nextSibling;
+            } else {
+                // Go to the next node.
+                currentNode = currentNode.nextSibling;
+            }
+        }
+
+        return true;
+    }
+
+    /*
+    Normalize an invalid node.
+    */
+    normalizeNode(node) {
+        const output = document.createDocumentFragment();
+
+        // Traverse the node and convert each child node.
+        var currentNode = node;
+        var currentNewNode = output;
+
+        // Store the current number of parent nodes to traverse up through to get to the next valid node.
+        var numParentNodesUntilValidNode = 0;
+
+        while (node.contains(currentNode) && this.inEditor(currentNode)) {
+            if (node.nodeType == Node.TEXT_NODE) {
+                // Create a span for the text node.
+                const newSpan = document.createElement("span");
+                newSpan.textContent = node.textContent;
+                newSpan = this.copyStyles(window.getComputedStyle(node.parentNode), newSpan);
+                currentNewNode.append(newSpan);
+            }
+
+            // If the node is valid, insert it.
+            // if (node.nodeType == )
+
+            // If the node is invalid, or is a span, don't insert anything. Instead, 
+
+            // Traverse the node tree.
+            if (currentNode.childNodes.length != 0) {
+                // If there are children of this node, enter the node.
+                currentNode = currentNode.firstChild;
+            } else if (!currentNode.nextSibling) {
+                // If this is the last node in the parent, move to the parent's next neighbor.
+                while (!currentNode.nextSibling) {
+                    currentNode = currentNode.parentNode;
+                }
+                currentNode = currentNode.nextSibling;
+            } else {
+                // Go to the next node.
+                currentNode = currentNode.nextSibling;
+            }
+        }
+
+        return output;
+    }
+    
+    /*
+    Callback for mutation observer. Should handle invalid DOM structure cases and invalid DOM nodes.
+    */
+    onMutate(mutationList, observer) {
+        for (const mutation of mutationList) {
+            if (mutation.type === "childList") {
+                const addedNodes = mutation.addedNodes;
+                for (const node of addedNodes) {
+                    if (!this.checkNodeValid(node) && this.inEditor(node)) {
+                        console.log("INVALID!!!!!!!", node);
+                        // 
+                    }
+                }
+            }
+        }
+    }
+
     /*
     Bind event listeners for select event.
     */
@@ -249,6 +393,16 @@ class Editor {
         this.editor.addEventListener('focusout', function (e) {
             document.removeEventListener('selectionchange', onChangeSelect);
         });
+    }
+
+    /*
+    Bind the mutation observer to the editor.
+    */
+    bindMutationObserver() {
+        // Bind the mutation observer.
+        const config = { attributes: true, childList: true, subtree: true };
+        const observer = new MutationObserver(this.onMutate.bind(this));
+        observer.observe(this.editor, config);
     }
 
     /* 
@@ -351,7 +505,7 @@ class Editor {
         // Iterate through the inline nodes.
         for (const node of nodes) {
             // If the node is empty, don't count it.
-            if (node.textContent.replace(this.invisibleParsed, "") == "") {
+            if (node.textContent.replace(this.invisibleParsed, "") == "" && nodes.length > 1) {
                 continue;
             }
 
@@ -618,5 +772,8 @@ class Editor {
 
         // Bind event listeners for select event.
         this.bindSelectEvents();
+
+        // Bind mutation observer.
+        this.bindMutationObserver();
     }
 }
