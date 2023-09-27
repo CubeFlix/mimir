@@ -148,39 +148,95 @@
 
             function removeStyleOnNode(node, tag) {
                 // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
-                const nodes = [];
+                var currentReconstructedNode = node.cloneNode();
                 var currentNode = node;
                 var found = false;
                 while (inEditor(currentNode)) {
+                    currentNode = currentNode.parentNode;
+
                     if (currentNode.nodeType == Node.ELEMENT_NODE && currentNode.tagName == tag.toUpperCase()) {
                         // Found the node.
                         found = true;
                         break;
                     }
 
-                    currentNode = currentNode.parentNode;
-
                     // Add the node.
-                    nodes.push(currentNode.cloneNode(false));
+                    var clone = currentNode.cloneNode(false);
+                    clone.appendChild(currentReconstructedNode);
+                    currentReconstructedNode = clone;
                 }
 
                 if (!found) {
                     return node;
                 }
 
-                // Recreate the DOM tree.
-                var tree = nodes.slice(-2)[0];
-                console.log(tree.cloneNode(true));
-                var currentNodeInTree = tree;
-                for (const childNode of nodes.reverse().slice(1, nodes.length)) {
-                    currentNodeInTree.appendChild(childNode);
-                    currentNodeInTree = childNode;
+                // Reconstruct all the nodes within the parent after the target text node.
+                const parent = currentNode;
+                currentNode = node;
+                var currentReconstructedAfterNode;
+
+                
+
+                while (parent.contains(currentNode)) {
+                    if (currentNode.childNodes.length != 0) {
+                        // If there are children of this node, enter the node.
+                        const currentNodeTemp = currentNode;
+                        currentNode = currentNode.firstChild;
+
+                        // Add the current node, along with the first child.
+                        clone = currentNodeTemp.cloneNode(false);
+                        currentReconstructedAfterNode.after(clone);
+                        currentReconstructedAfterNode = clone;
+                        if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
+                            clone = currentNodeTemp.cloneNode(false);
+                            currentReconstructedAfterNode.appendChild(clone);
+                            currentReconstructedAfterNode = clone;
+                        } else {
+                            currentReconstructedAfterNode.appendChild(currentNodeTemp);
+                            currentReconstructedAfterNode = currentNodeTemp;
+                        }
+                    } else if (!currentNode.nextSibling) {
+                        // If this is the last node in the parent, move to the parent's next neighbor.
+                        while (!currentNode.nextSibling) {
+                            if (!currentReconstructedAfterNode.parentNode) {
+                                // No parent node, so reconstruct the parent.
+                                clone = currentNode.parentNode.cloneNode(false);
+                                clone.appendChild(currentReconstructedAfterNode);
+                                currentReconstructedAfterNode = clone;
+                            }
+                            currentNode = currentNode.parentNode;
+                        }
+                        
+                        const currentNodeTemp = currentNode;
+                        currentNode = currentNode.nextSibling;
+                        // Add in the next sibling.
+                        if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
+                            clone = currentNodeTemp.cloneNode(false);
+                            currentReconstructedAfterNode.after(clone);
+                            currentReconstructedAfterNode = clone;
+                        } else {
+                            currentReconstructedAfterNode.after(currentNodeTemp);
+                            currentReconstructedAfterNode = currentNodeTemp;
+                        }
+                    } else {
+                        // Go to the next node.
+                        const currentNodeTemp = currentNode;
+                        currentNode = currentNode.nextSibling;
+
+                        // Add in the current node.
+                        if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
+                            clone = currentNodeTemp.cloneNode(false);
+                            currentReconstructedAfterNode.after(clone);
+                            currentReconstructedAfterNode = clone;
+                        } else {
+                            currentReconstructedAfterNode.after(currentNodeTemp);
+                            currentReconstructedAfterNode = currentNodeTemp;
+                        }
+                    }
                 }
 
-                // Place the node in the bottommost child.
-                currentNodeInTree.appendChild(node.cloneNode(true));
-                console.log(tree);
-                return tree;
+                console.log(currentReconstructedNode, currentReconstructedAfterNode);
+                return currentReconstructedNode;
             }
 
             function removeStyle(tag) {
