@@ -2,6 +2,7 @@
     <head>
         <script>
             var editor = null;
+            const contentTags = ["img"]; 
 
             function inEditor(node) {
                 return editor.contains(node);
@@ -44,7 +45,7 @@
                         currentNode = currentNode.firstChild;
                     } else if (!currentNode.nextSibling) {
                         // If this is the last node in the parent, move to the parent's next neighbor.
-                        while (!currentNode.nextSibling) {
+                        while (!currentNode.nextSibling && inEditor(currentNode)) {
                             currentNode = currentNode.parentNode;
                         } 
                         currentNode = currentNode.nextSibling;
@@ -146,9 +147,37 @@
                 }
             }
 
+            function isEmpty(node) {
+                // Determine if the node is empty (meaning no text/special nodes).
+                var currentNode = node;
+                while (node.contains(currentNode)) {
+                    if (currentNode.nodeType == Node.ELEMENT_NODE && contentTags.includes(currentNode.tagName)) {
+                        return false;
+                    }
+                    if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent != "") {
+                        return false;
+                    }
+                
+                    if (currentNode.childNodes.length != 0) {
+                        // If there are children of this node, enter the node.
+                        currentNode = currentNode.firstChild;
+                    } else if (!currentNode.nextSibling) {
+                        // If this is the last node in the parent, move to the parent's next neighbor.
+                        while (!currentNode.nextSibling && node.contains(currentNode) && node != currentNode) {
+                            currentNode = currentNode.parentNode;
+                        } 
+                        currentNode = currentNode.nextSibling;
+                    } else {
+                        // Go to the next node.
+                        currentNode = currentNode.nextSibling;
+                    }
+                }
+                return true;
+            }
+
             function removeStyleOnNode(node, tag) {
                 // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
-                var currentReconstructedNode = node.cloneNode();
+                var currentReconstructedNode = node;
                 var currentNode = node;
                 var found = false;
                 while (inEditor(currentNode)) {
@@ -167,16 +196,33 @@
                 }
 
                 if (!found) {
+                    // Return the node back to where it started.
+                    
                     return node;
                 }
 
                 // Reconstruct all the nodes within the parent after the target text node.
                 const parent = currentNode;
                 currentNode = node;
-                var currentReconstructedAfterNode;
+                var currentReconstructedAfterNode = null;
 
-                
+                // First traversal.
+                if (currentNode.childNodes.length != 0) {
+                    // If there are children of this node, enter the node.
+                    currentNode = currentNode.firstChild;
+                } else if (!currentNode.nextSibling) {
+                    // If this is the last node in the parent, move to the parent's next neighbor.
+                    while (!currentNode.nextSibling) {
+                        currentNode = currentNode.parentNode;
+                    }
+                    currentNode = currentNode.nextSibling;
+                } else {
+                    // Go to the next node.
+                    const currentNodeTemp = currentNode;
+                    currentNode = currentNode.nextSibling;
+                }
 
+                // Start reconstructing.
                 while (parent.contains(currentNode)) {
                     if (currentNode.childNodes.length != 0) {
                         // If there are children of this node, enter the node.
@@ -185,23 +231,31 @@
 
                         // Add the current node, along with the first child.
                         clone = currentNodeTemp.cloneNode(false);
-                        currentReconstructedAfterNode.after(clone);
+                        if (currentReconstructedAfterNode != null) {
+                            currentReconstructedAfterNode.after(clone);
+                        }
                         currentReconstructedAfterNode = clone;
                         if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
                             clone = currentNodeTemp.cloneNode(false);
-                            currentReconstructedAfterNode.appendChild(clone);
+                            if (currentReconstructedAfterNode != null) {
+                                currentReconstructedAfterNode.appendChild(clone);
+                            }
                             currentReconstructedAfterNode = clone;
                         } else {
-                            currentReconstructedAfterNode.appendChild(currentNodeTemp);
+                            if (currentReconstructedAfterNode != null) {
+                                currentReconstructedAfterNode.appendChild(currentNodeTemp);
+                            }
                             currentReconstructedAfterNode = currentNodeTemp;
                         }
                     } else if (!currentNode.nextSibling) {
                         // If this is the last node in the parent, move to the parent's next neighbor.
-                        while (!currentNode.nextSibling) {
-                            if (!currentReconstructedAfterNode.parentNode) {
+                        while (!currentNode.nextSibling && node.contains(currentNode)) {
+                            if (!currentReconstructedAfterNode || !currentReconstructedAfterNode.parentNode) {
                                 // No parent node, so reconstruct the parent.
                                 clone = currentNode.parentNode.cloneNode(false);
-                                clone.appendChild(currentReconstructedAfterNode);
+                                if (currentReconstructedAfterNode != null) {
+                                    clone.appendChild(currentReconstructedAfterNode);
+                                }
                                 currentReconstructedAfterNode = clone;
                             }
                             currentNode = currentNode.parentNode;
@@ -212,10 +266,14 @@
                         // Add in the next sibling.
                         if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
                             clone = currentNodeTemp.cloneNode(false);
-                            currentReconstructedAfterNode.after(clone);
+                            if (currentReconstructedAfterNode != null) {
+                                currentReconstructedAfterNode.after(clone);
+                            }
                             currentReconstructedAfterNode = clone;
                         } else {
-                            currentReconstructedAfterNode.after(currentNodeTemp);
+                            if (currentReconstructedAfterNode != null) {
+                                currentReconstructedAfterNode.after(currentNodeTemp);
+                            }
                             currentReconstructedAfterNode = currentNodeTemp;
                         }
                     } else {
@@ -226,16 +284,34 @@
                         // Add in the current node.
                         if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
                             clone = currentNodeTemp.cloneNode(false);
-                            currentReconstructedAfterNode.after(clone);
+                            if (currentReconstructedAfterNode != null) {
+                                currentReconstructedAfterNode.after(clone);
+                            }
                             currentReconstructedAfterNode = clone;
                         } else {
-                            currentReconstructedAfterNode.after(currentNodeTemp);
+                            if (currentReconstructedAfterNode != null) {
+                                currentReconstructedAfterNode.after(currentNodeTemp);
+                            }
                             currentReconstructedAfterNode = currentNodeTemp;
                         }
                     }
                 }
 
-                console.log(currentReconstructedNode, currentReconstructedAfterNode);
+                clone = parent.cloneNode(false);
+                if (currentReconstructedAfterNode != null) {
+                    clone.appendChild(currentReconstructedAfterNode);
+                }
+                currentReconstructedAfterNode = clone;
+
+                currentReconstructedAfterNode.remove();
+                if (!isEmpty(currentReconstructedAfterNode)) parent.after(currentReconstructedAfterNode);
+                console.log(!isEmpty(currentReconstructedAfterNode))
+
+                // Place in the reconstructed node and the reconstructed after node.
+                parent.after(currentReconstructedNode);
+
+                if (isEmpty(parent)) parent.remove();
+
                 return currentReconstructedNode;
             }
 
@@ -304,13 +380,13 @@
                     window.getSelection().addRange(newRange);
                 }
             }
-
-            // TODO: remove empty node trees
         </script>
     </head>
     <body>
         <button onclick="applyStyle('strong')">Apply Bold</button>
         <button onclick="removeStyle('strong')">Remove Bold</button>
+        <button onclick="applyStyle('em')">Apply Italic</button>
+        <button onclick="removeStyle('em')">Remove Italic</button>
         <div id="editor" contenteditable></div>
         <script>
             editor = document.getElementById("editor");
