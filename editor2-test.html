@@ -222,7 +222,7 @@
                     currentNode = currentNode.nextSibling;
                 }
 
-                // Start reconstructing.
+                // Start reconstructing all the nodes after the target text node.
                 while (parent.contains(currentNode)) {
                     if (currentNode.childNodes.length != 0) {
                         // If there are children of this node, enter the node.
@@ -324,28 +324,29 @@
                     const firstNode = nodes[0];
                     const lastNode = nodes.slice(-1)[0];
 
-                    // Split the first node at the start offset and remove the styling on the remainder.
+                    // Split the first node at the start offset.
                     var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
                     firstNode.textContent = firstNode.textContent.slice(0, startOffset);
                     firstNode.after(newStartNode);
-                    newStartNode = removeStyleOnNode(newStartNode, tag);
                     if (firstNode.textContent == "") {
                         firstNode.remove();
                     }
 
-                    // Split the last node at the end offset and remove the styling on the remainder.
+                    // Split the last node at the end offset.
                     var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
                     lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
                     lastNode.before(newEndNode);
-                    newEndNode = removeStyleOnNode(newEndNode, tag);
                     if (lastNode.textContent == "") {
                         lastNode.remove();
                     }
 
-                    // Place each node in between in a new tag.
-                    for (const node of nodes.slice(1, nodes.length - 1)) {
+                    // Remove the styling for each node.
+                    newEndNode = removeStyleOnNode(newEndNode, tag);
+                    for (const node of nodes.slice(1, nodes.length - 1).reverse()) {
+                        console.log(node.cloneNode());
                         const styledNode = removeStyleOnNode(node, tag);
                     }
+                    newStartNode = removeStyleOnNode(newStartNode, tag);
 
                     // Select the new nodes.
                     const newRange = new Range();
@@ -362,7 +363,7 @@
                     node.textContent = node.textContent.slice(0, startOffset);
                     node.after(styledNode, endNode);
 
-                    // Style the middle node.
+                    // Remove the styling on the middle node.
                     styledNode = removeStyleOnNode(styledNode, tag);
 
                     if (node.textContent == "") {
