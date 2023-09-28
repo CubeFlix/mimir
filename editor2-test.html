@@ -197,7 +197,7 @@
 
                 if (!found) {
                     // Return the node back to where it started.
-                    
+
                     return node;
                 }
 
@@ -212,7 +212,7 @@
                     currentNode = currentNode.firstChild;
                 } else if (!currentNode.nextSibling) {
                     // If this is the last node in the parent, move to the parent's next neighbor.
-                    while (!currentNode.nextSibling) {
+                    while (!currentNode.nextSibling && node.contains(currentNode) && node != currentNode) {
                         currentNode = currentNode.parentNode;
                     }
                     currentNode = currentNode.nextSibling;
@@ -345,7 +345,6 @@
                     // Place each node in between in a new tag.
                     for (const node of nodes.slice(1, nodes.length - 1)) {
                         const styledNode = removeStyleOnNode(node, tag);
-                        node.replaceWith(styledNode);
                     }
 
                     // Select the new nodes.
