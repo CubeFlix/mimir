@@ -1,3 +1,15 @@
+#editor-menubar > #editor-menubar-option-bold {
+    font-weight: bold;
+}
+
+#editor-menubar > #editor-menubar-option-italic {
+    font-style: italic;
+}
+
+#editor-menubar > #editor-menubar-option-underline {
+    text-decoration: underline;
+}
+
 #editor-menubar > .editor-pressed {
     background-color: grey;
 }
