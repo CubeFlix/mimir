@@ -177,7 +177,7 @@
 
             function removeStyleOnNode(node, tag) {
                 // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
-                var currentReconstructedNode = node;
+                var currentReconstructedNode = node.cloneNode(true);
                 var currentNode = node;
                 var found = false;
                 while (inEditor(currentNode)) {
@@ -194,10 +194,7 @@
                     clone.appendChild(currentReconstructedNode);
                     currentReconstructedNode = clone;
                 }
-
                 if (!found) {
-                    // Return the node back to where it started.
-
                     return node;
                 }
 
@@ -305,12 +302,14 @@
 
                 currentReconstructedAfterNode.remove();
                 if (!isEmpty(currentReconstructedAfterNode)) parent.after(currentReconstructedAfterNode);
-                console.log(!isEmpty(currentReconstructedAfterNode))
 
                 // Place in the reconstructed node and the reconstructed after node.
                 parent.after(currentReconstructedNode);
 
                 if (isEmpty(parent)) parent.remove();
+
+                // Remove the original node.
+                node.remove();
 
                 return currentReconstructedNode;
             }
@@ -343,7 +342,6 @@
                     // Remove the styling for each node.
                     newEndNode = removeStyleOnNode(newEndNode, tag);
                     for (const node of nodes.slice(1, nodes.length - 1).reverse()) {
-                        console.log(node.cloneNode());
                         const styledNode = removeStyleOnNode(node, tag);
                     }
                     newStartNode = removeStyleOnNode(newStartNode, tag);
