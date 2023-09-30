@@ -134,32 +134,17 @@ class Editor {
         const styling = this.detectStyling(range);
 
         // Alter the styling of each of the options.
-        for (const styleName of this.trackedStyles) {
-            switch (styleName) {
-                case "fontWeight":
-                    if (styling[styleName] == "bold") {
-                        if (!this.menubarOptions.bold.classList.contains("editor-pressed")) this.menubarOptions.bold.classList.add("editor-pressed");
-                    } else {
-                        if (this.menubarOptions.bold.classList.contains("editor-pressed")) this.menubarOptions.bold.classList.remove("editor-pressed");
-                    }
-                    break;
-                case "fontStyle":
-                    if (styling[styleName] == "italic") {
-                        if (!this.menubarOptions.italic.classList.contains("editor-pressed")) this.menubarOptions.italic.classList.add("editor-pressed");
-                    } else {
-                        if (this.menubarOptions.italic.classList.contains("editor-pressed")) this.menubarOptions.italic.classList.remove("editor-pressed");
-                    }
-                    break;
-                case "textDecoration":
-                    if (styling[styleName] == "underline") {
-                        if (!this.menubarOptions.underline.classList.contains("editor-pressed")) this.menubarOptions.underline.classList.add("editor-pressed");
-                    } else {
-                        if (this.menubarOptions.underline.classList.contains("editor-pressed")) this.menubarOptions.underline.classList.remove("editor-pressed");
-                    }
-                    break;
-                case "fontFamily":
-                    this.menubarOptions.font.value = styling[styleName];
-                    break;
+        for (const option of this.commands) {
+            if (option == "font") {
+                this.menubarOptions.font.value = styling.find(s => s.type == "font") ? styling.find(s => s.type == "font").family : this.defaultFont;
+                // TODO: this doesn't handle conflicting results
+                continue;
+            }
+
+            if (styling.some(s => s.type == option)) {
+                if (!this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.add("editor-pressed");
+            } else {
+                if (this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.remove("editor-pressed");
             }
         }
     }
@@ -265,32 +250,34 @@ class Editor {
         
         // Check if the element itself applies styling.
         switch (node.tagName) {
-            case "strong", "b":
-                styling.append({type: "bold"});
+            case "STRONG":
+            case "B":
+                styling.push({type: "bold"});
                 break;
-            case "em", "i":
-                styling.append({type: "italic"});
+            case "EM":
+            case "I":
+                styling.push({type: "italic"});
                 break;
-            case "u":
-                styling.append({type: "underline"});
+            case "U":
+                styling.push({type: "underline"});
                 break;
-            case "s":
-                styling.append({type: "strikethrough"})
+            case "S":
+                styling.push({type: "strikethrough"})
                 break;
         }
 
         // Check the element's inline styling.
         if (node.style.fontWeight == "700" || node.style.fontWeight.toLowerCase() == "bold") {
-            if (!styling.some(s => s.type == "bold")) styling.append({type: "bold"});
+            if (!styling.some(s => s.type == "bold")) styling.push({type: "bold"});
         }
         if (node.style.fontStyle.toLowerCase() == "italic") {
-            if (!styling.some(s => s.type == "italic")) styling.append({type: "italic"});
+            if (!styling.some(s => s.type == "italic")) styling.push({type: "italic"});
         }
         if (node.style.textDecoration.toLowerCase().includes("underline")) {
-            if (!styling.some(s => s.type == "underline")) styling.append({type: "underline"});
+            if (!styling.some(s => s.type == "underline")) styling.push({type: "underline"});
         }
         if (node.style.textDecoration.toLowerCase().includes("line-through")) {
-            if (!styling.some(s => s.type == "strikethrough")) styling.append({type: "strikethrough"});
+            if (!styling.some(s => s.type == "strikethrough")) styling.push({type: "strikethrough"});
         }
 
         return styling;
@@ -314,24 +301,23 @@ class Editor {
 
             // Traverse up the tree and track each style node passed on the way up.
             var currentNode = node.parentNode;
+            var nodeStyling = [];
             while (this.inEditor(currentNode)) {
-                if (firstNode) {
-                    // If this is the first node being tracked, add its styles to the styling.
-                    styling.push(...this.getStylingOfElement(currentNode));
-                } else {
-                    // If this is not, check that each of the current styles is included in this element's styling.
-                    const currentStyling = this.getStylingOfElement(currentNode);
-                    for (const style in styling.slice(0, styling.length)) {
-                        if (!currentStyling.some(s => s === style)) {
-                            delete styling[styling.indexOf(style)];
-                        }
-                    }
-                }
+                nodeStyling.push(...this.getStylingOfElement(currentNode));
                 currentNode = currentNode.parentNode;
             }
-
+            
             if (firstNode) {
+                // If this is the first node being tracked, add its styles to the styling.
+                styling.push(...nodeStyling);
                 firstNode = false;
+            } else {
+                // If this is not, check that each of the current styles is included in this element's styling.
+                for (const style of styling.slice(0, styling.length)) {
+                    if (!nodeStyling.some(s => s.type == style.type)) {
+                        styling.splice(styling.findIndex(s => s.type == style.type), 1);
+                    }
+                }
             }
         }
         
@@ -676,26 +662,25 @@ class Editor {
             return;
         }
         const currentStyling = this.detectStyling(range);
-        console.log(currentStyling);
 
         // Set the style.
         switch (style) {
             case "bold":
-                if (currentStyling.fontWeight == "bold") {
+                if (currentStyling.some(s => s.type == "bold")) {
                     this.removeStyle("strong", range);
                 } else {
                     this.applyStyle("strong", range);
                 }
                 break;
             case "italic":
-                if (currentStyling.fontStyle == "italic") {
+                if (currentStyling.some(s => s.type == "italic")) {
                     this.removeStyle("em", range);
                 } else {
                     this.applyStyle("em", range);
                 }
                 break;
             case "underline":
-                if (currentStyling.textDecoration == "underline") {
+                if (currentStyling.some(s => s.type == "underline")) {
                     this.removeStyle("u", range);
                 } else {
                     this.applyStyle("u", range);
