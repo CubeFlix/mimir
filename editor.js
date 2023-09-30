@@ -10,7 +10,7 @@ class Editor {
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
     ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
 
-    allowedTags = ["DIV", "P", "SPAN", "BR"];
+    contentTags = ["IMG"];
 
     /* 
     Create the editor. 
@@ -218,14 +218,14 @@ class Editor {
         }
     
         var haveTraversedLastNode = false;
-        while (inEditor(currentNode)) {
+        while (this.inEditor(currentNode)) {
             // If we've finished traversing the last node or we've reached the bound of the last node, quit.
             if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
                 break;
             }
         
             // Append the node.
-            if (inEditor(currentNode) && currentNode.nodeType == Node.TEXT_NODE) {
+            if (this.inEditor(currentNode) && currentNode.nodeType == Node.TEXT_NODE) {
                 nodes.push(currentNode);
             }
         
@@ -239,7 +239,7 @@ class Editor {
                 currentNode = currentNode.firstChild;
             } else if (!currentNode.nextSibling) {
                 // If this is the last node in the parent, move to the parent's next neighbor.
-                while (!currentNode.nextSibling && inEditor(currentNode)) {
+                while (!currentNode.nextSibling && this.inEditor(currentNode)) {
                     currentNode = currentNode.parentNode;
                 } 
                 currentNode = currentNode.nextSibling;
@@ -250,7 +250,7 @@ class Editor {
         }
     
         // If the final node is not a text node, set the end offset.
-        if (range.endContainer.nodeType != Node.TEXT_NODE && inEditor(range.endContainer) && nodes.slice(-1)[0]) {
+        if (range.endContainer.nodeType != Node.TEXT_NODE && this.inEditor(range.endContainer) && nodes.slice(-1)[0]) {
             endOffset = nodes.slice(-1)[0].textContent.length;
         }
     
@@ -258,69 +258,93 @@ class Editor {
     }
 
     /*
+    Get a list of styling that an element applies.
+    */
+    getStylingOfElement(node) {
+        var styling = [];
+        
+        // Check if the element itself applies styling.
+        switch (node.tagName) {
+            case "strong", "b":
+                styling.append({type: "bold"});
+                break;
+            case "em", "i":
+                styling.append({type: "italic"});
+                break;
+            case "u":
+                styling.append({type: "underline"});
+                break;
+            case "s":
+                styling.append({type: "strikethrough"})
+                break;
+        }
+
+        // Check the element's inline styling.
+        if (node.style.fontWeight == "700" || node.style.fontWeight.toLowerCase() == "bold") {
+            if (!styling.some(s => s.type == "bold")) styling.append({type: "bold"});
+        }
+        if (node.style.fontStyle.toLowerCase() == "italic") {
+            if (!styling.some(s => s.type == "italic")) styling.append({type: "italic"});
+        }
+        if (node.style.textDecoration.toLowerCase().includes("underline")) {
+            if (!styling.some(s => s.type == "underline")) styling.append({type: "underline"});
+        }
+        if (node.style.textDecoration.toLowerCase().includes("line-through")) {
+            if (!styling.some(s => s.type == "strikethrough")) styling.append({type: "strikethrough"});
+        }
+
+        return styling;
+    }
+
+    /*
     Detect the current styling of a range. For a style to be active, all of the nodes
     in the range must be the same.
     */
     detectStyling(range) {
-        var styling = {};
+        var styling = [];
         const nodes = this.getTextNodesInRange(range).nodes;
         
-        // Iterate through the inline nodes.
+        // Iterate through the text nodes.
+        var firstNode = true;
         for (const node of nodes) {
             // If the node is empty, don't count it.
             if (node.textContent.replace(this.invisibleParsed, "") == "" && nodes.length > 1) {
                 continue;
             }
 
-            // Go through each tracked style and calculate the overall style.
-            const computedStyle = node.nodeType != Node.TEXT_NODE ? window.getComputedStyle(node) : window.getComputedStyle(node.parentNode);
-            for (const styleName of this.trackedStyles) {
-                var styleValue = computedStyle[styleName];
-                
-                // Normalize the style value in certain cases.
-                switch (styleName) {
-                    case "fontWeight":
-                        if (styleValue == "700" || styleValue == "bold") {
-                            styleValue = "bold";
-                        } else {
-                            styleValue = "";
-                        }
-                        break;
-                    case "textDecoration":
-                        if (styleValue.includes("underline")) {
-                            styleValue = "underline";
-                        } else {
-                            styleValue = "";
-                        }
-                        break;
-                    case "fontFamily":
-                        // If there are multiple fonts, get the first font. Then, remove all quotes.
-                        styleValue = styleValue.split(",")[0].replace("\"", "").replace("\"", "").replace("'", "").replace("'", "");
-                        break;
-                }
-
-                if (styleName in styling) {
-                    if (styling[styleName] != styleValue) {
-                        styling[styleName] = "";
-                    }
+            // Traverse up the tree and track each style node passed on the way up.
+            var currentNode = node.parentNode;
+            while (this.inEditor(currentNode)) {
+                if (firstNode) {
+                    // If this is the first node being tracked, add its styles to the styling.
+                    styling.push(...this.getStylingOfElement(currentNode));
                 } else {
-                    styling[styleName] = styleValue;
+                    // If this is not, check that each of the current styles is included in this element's styling.
+                    const currentStyling = this.getStylingOfElement(currentNode);
+                    for (const style in styling.slice(0, styling.length)) {
+                        if (!currentStyling.some(s => s === style)) {
+                            delete styling[styling.indexOf(style)];
+                        }
+                    }
                 }
+                currentNode = currentNode.parentNode;
             }
-        }
 
-        // Set the default font in the styling.
-        if (!("fontFamily" in styling) && this.trackedStyles.includes("fontFamily")) {
-            styling.fontFamily = this.defaultFont;
+            if (firstNode) {
+                firstNode = false;
+            }
         }
         
         return styling;
     }
 
+    /*
+    Apply a style to a node.
+    */
     applyStyleToNode(node, tag) {
         // Go up the DOM tree, and check if the tag has already been applied.
         var currentNode = node;
-        while (inEditor(currentNode)) {
+        while (this.inEditor(currentNode)) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && currentNode.tagName == tag.toUpperCase()) {
                 // Found the node.
                 return node;
@@ -335,10 +359,12 @@ class Editor {
         return newElem;
     }
 
-    applyStyle(tag) {
-        // Get the text nodes within the current selection.
-        const range = document.getSelection().getRangeAt(0);
-        const {nodes, startOffset, endOffset} = getTextNodesInRange(range);
+    /*
+    Apply a style to a range.
+    */
+    applyStyle(tag, range) {
+        // Get the text nodes within the range.
+        const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
 
         if (nodes.length >= 2) {
             const firstNode = nodes[0];
@@ -348,7 +374,7 @@ class Editor {
             var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
             firstNode.textContent = firstNode.textContent.slice(0, startOffset);
             firstNode.after(newStartNode);
-            newStartNode = applyStyleToNode(newStartNode, tag);
+            newStartNode = this.applyStyleToNode(newStartNode, tag);
             if (firstNode.textContent == "") {
                 firstNode.remove();
             }
@@ -357,14 +383,14 @@ class Editor {
             var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
             lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
             lastNode.before(newEndNode);
-            newEndNode = applyStyleToNode(newEndNode, tag);
+            newEndNode = this.applyStyleToNode(newEndNode, tag);
             if (lastNode.textContent == "") {
                 lastNode.remove();
             }
 
             // Place each node in between in a new tag.
             for (const node of nodes.slice(1, nodes.length - 1)) {
-                const styledNode = applyStyleToNode(node, tag);
+                const styledNode = this.applyStyleToNode(node, tag);
                 node.replaceWith(styledNode);
             }
 
@@ -384,7 +410,7 @@ class Editor {
             node.after(styledNode, endNode);
 
             // Style the middle node.
-            styledNode = applyStyleToNode(styledNode, tag);
+            styledNode = this.applyStyleToNode(styledNode, tag);
 
             if (node.textContent == "") {
                 node.remove();
@@ -401,11 +427,13 @@ class Editor {
         }
     }
 
+    /*
+    Check if a node is empty (no text/content nodes).
+    */
     isEmpty(node) {
-        // Determine if the node is empty (meaning no text/special nodes).
         var currentNode = node;
         while (node.contains(currentNode)) {
-            if (currentNode.nodeType == Node.ELEMENT_NODE && contentTags.includes(currentNode.tagName)) {
+            if (currentNode.nodeType == Node.ELEMENT_NODE && this.contentTags.includes(currentNode.tagName)) {
                 return false;
             }
             if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent != "") {
@@ -429,12 +457,15 @@ class Editor {
         return true;
     }
 
+    /*
+    Remove a style on a node.
+    */
     removeStyleOnNode(node, tag) {
         // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
         var currentReconstructedNode = node.cloneNode(true);
         var currentNode = node;
         var found = false;
-        while (inEditor(currentNode)) {
+        while (this.inEditor(currentNode)) {
             currentNode = currentNode.parentNode;
 
             if (currentNode.nodeType == Node.ELEMENT_NODE && currentNode.tagName == tag.toUpperCase()) {
@@ -555,12 +586,12 @@ class Editor {
         currentReconstructedAfterNode = clone;
 
         currentReconstructedAfterNode.remove();
-        if (!isEmpty(currentReconstructedAfterNode)) parent.after(currentReconstructedAfterNode);
+        if (!this.isEmpty(currentReconstructedAfterNode)) parent.after(currentReconstructedAfterNode);
 
         // Place in the reconstructed node and the reconstructed after node.
         parent.after(currentReconstructedNode);
 
-        if (isEmpty(parent)) parent.remove();
+        if (this.isEmpty(parent)) parent.remove();
 
         // Remove the original node.
         node.remove();
@@ -569,11 +600,11 @@ class Editor {
     }
 
     /* 
-    Remove a specific style from 
-    removeStyle(tag) {
-        // Get the text nodes within the current selection.
-        const range = document.getSelection().getRangeAt(0);
-        const {nodes, startOffset, endOffset} = getTextNodesInRange(range);
+    Remove a style from a range.
+    */
+    removeStyle(tag, range) {
+        // Get the text nodes within the range.
+        const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
 
         if (nodes.length >= 2) {
             const firstNode = nodes[0];
@@ -596,11 +627,11 @@ class Editor {
             }
 
             // Remove the styling for each node.
-            newEndNode = removeStyleOnNode(newEndNode, tag);
+            newEndNode = this.removeStyleOnNode(newEndNode, tag);
             for (const node of nodes.slice(1, nodes.length - 1).reverse()) {
-                const styledNode = removeStyleOnNode(node, tag);
+                this.removeStyleOnNode(node, tag);
             }
-            newStartNode = removeStyleOnNode(newStartNode, tag);
+            newStartNode = this.removeStyleOnNode(newStartNode, tag);
 
             // Select the new nodes.
             const newRange = new Range();
@@ -618,7 +649,7 @@ class Editor {
             node.after(styledNode, endNode);
 
             // Remove the styling on the middle node.
-            styledNode = removeStyleOnNode(styledNode, tag);
+            styledNode = this.removeStyleOnNode(styledNode, tag);
 
             if (node.textContent == "") {
                 node.remove();
@@ -645,17 +676,30 @@ class Editor {
             return;
         }
         const currentStyling = this.detectStyling(range);
+        console.log(currentStyling);
 
         // Set the style.
         switch (style) {
             case "bold":
-                this.setStyle(range, style, {command: (currentStyling.fontWeight == "bold") ? "remove" : "apply"});
+                if (currentStyling.fontWeight == "bold") {
+                    this.removeStyle("strong", range);
+                } else {
+                    this.applyStyle("strong", range);
+                }
                 break;
             case "italic":
-                this.setStyle(range, style, {command: (currentStyling.fontStyle == "italic") ? "remove" : "apply"});
+                if (currentStyling.fontStyle == "italic") {
+                    this.removeStyle("em", range);
+                } else {
+                    this.applyStyle("em", range);
+                }
                 break;
             case "underline":
-                this.setStyle(range, style, {command: (currentStyling.textDecoration == "underline") ? "remove" : "apply"});
+                if (currentStyling.textDecoration == "underline") {
+                    this.removeStyle("u", range);
+                } else {
+                    this.applyStyle("u", range);
+                }
                 break;
             case "font":
                 this.setStyle(range, style, {family: this.menubarOptions.font.value});
@@ -728,8 +772,5 @@ class Editor {
 
         // Bind event listeners for select event.
         this.bindSelectEvents();
-
-        // Bind mutation observer.
-        this.bindMutationObserver();
     }
 }
