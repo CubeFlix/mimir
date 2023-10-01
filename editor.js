@@ -444,6 +444,34 @@ class Editor {
     }
 
     /*
+    Split a node at a child. Returns the split node after the child.
+    */
+    splitNodeAtChild(parent, child) {
+        var currentNode = child;
+        var currentSplitNode = null;
+        while (parent.contains(currentNode) && parent != currentNode) {
+            // Get all the nodes after the current node.
+            const siblings = Array.from(currentNode.parentNode.childNodes);
+            const nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode) + 1, siblings.length);
+            
+            // Append the nodes after the current split node.
+            if (currentSplitNode == null) {
+                currentSplitNode = currentNode.parentNode.cloneNode(false);
+                currentSplitNode.append(...nodesAfterCurrentNode);
+            } else {
+                const oldSplitNode = currentSplitNode;
+                currentSplitNode = currentNode.parentNode.cloneNode(false);
+                currentSplitNode.append(oldSplitNode, ...nodesAfterCurrentNode);
+            }
+
+            // Traverse up the tree.
+            currentNode = currentNode.parentNode;
+        }
+        
+        return currentSplitNode;
+    }
+
+    /*
     Remove a style on a node.
     */
     removeStyleOnNode(node, tag) {
@@ -469,110 +497,11 @@ class Editor {
             return node;
         }
 
-        // Reconstruct all the nodes within the parent after the target text node.
         const parent = currentNode;
-        currentNode = node;
-        var currentReconstructedAfterNode = null;
 
-        // First traversal.
-        if (currentNode.childNodes.length != 0) {
-            // If there are children of this node, enter the node.
-            currentNode = currentNode.firstChild;
-        } else if (!currentNode.nextSibling) {
-            // If this is the last node in the parent, move to the parent's next neighbor.
-            while (!currentNode.nextSibling && node.contains(currentNode) && node != currentNode) {
-                currentNode = currentNode.parentNode;
-            }
-            currentNode = currentNode.nextSibling;
-        } else {
-            // Go to the next node.
-            const currentNodeTemp = currentNode;
-            currentNode = currentNode.nextSibling;
-        }
-
-        // Start reconstructing all the nodes after the target text node.
-        while (parent.contains(currentNode)) {
-            if (currentNode.childNodes.length != 0) {
-                // If there are children of this node, enter the node.
-                const currentNodeTemp = currentNode;
-                currentNode = currentNode.firstChild;
-
-                // Add the current node, along with the first child.
-                clone = currentNodeTemp.cloneNode(false);
-                if (currentReconstructedAfterNode != null) {
-                    currentReconstructedAfterNode.after(clone);
-                }
-                currentReconstructedAfterNode = clone;
-                if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
-                    clone = currentNodeTemp.cloneNode(false);
-                    if (currentReconstructedAfterNode != null) {
-                        currentReconstructedAfterNode.appendChild(clone);
-                    }
-                    currentReconstructedAfterNode = clone;
-                } else {
-                    if (currentReconstructedAfterNode != null) {
-                        currentReconstructedAfterNode.appendChild(currentNodeTemp);
-                    }
-                    currentReconstructedAfterNode = currentNodeTemp;
-                }
-            } else if (!currentNode.nextSibling) {
-                // If this is the last node in the parent, move to the parent's next neighbor.
-                while (!currentNode.nextSibling && node.contains(currentNode)) {
-                    if (!currentReconstructedAfterNode || !currentReconstructedAfterNode.parentNode) {
-                        // No parent node, so reconstruct the parent.
-                        clone = currentNode.parentNode.cloneNode(false);
-                        if (currentReconstructedAfterNode != null) {
-                            clone.appendChild(currentReconstructedAfterNode);
-                        }
-                        currentReconstructedAfterNode = clone;
-                    }
-                    currentNode = currentNode.parentNode;
-                }
-                
-                const currentNodeTemp = currentNode;
-                currentNode = currentNode.nextSibling;
-                // Add in the next sibling.
-                if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
-                    clone = currentNodeTemp.cloneNode(false);
-                    if (currentReconstructedAfterNode != null) {
-                        currentReconstructedAfterNode.after(clone);
-                    }
-                    currentReconstructedAfterNode = clone;
-                } else {
-                    if (currentReconstructedAfterNode != null) {
-                        currentReconstructedAfterNode.after(currentNodeTemp);
-                    }
-                    currentReconstructedAfterNode = currentNodeTemp;
-                }
-            } else {
-                // Go to the next node.
-                const currentNodeTemp = currentNode;
-                currentNode = currentNode.nextSibling;
-
-                // Add in the current node.
-                if (currentNodeTemp.nodeType != Node.TEXT_NODE) {
-                    clone = currentNodeTemp.cloneNode(false);
-                    if (currentReconstructedAfterNode != null) {
-                        currentReconstructedAfterNode.after(clone);
-                    }
-                    currentReconstructedAfterNode = clone;
-                } else {
-                    if (currentReconstructedAfterNode != null) {
-                        currentReconstructedAfterNode.after(currentNodeTemp);
-                    }
-                    currentReconstructedAfterNode = currentNodeTemp;
-                }
-            }
-        }
-
-        clone = parent.cloneNode(false);
-        if (currentReconstructedAfterNode != null) {
-            clone.appendChild(currentReconstructedAfterNode);
-        }
-        currentReconstructedAfterNode = clone;
-
-        currentReconstructedAfterNode.remove();
-        if (!this.isEmpty(currentReconstructedAfterNode)) parent.after(currentReconstructedAfterNode);
+        // Split the parent at the current node.
+        const splitAfterNode = this.splitNodeAtChild(parent, node);
+        if (!this.isEmpty(splitAfterNode)) parent.after(splitAfterNode);
 
         // Place in the reconstructed node and the reconstructed after node.
         parent.after(currentReconstructedNode);

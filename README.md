@@ -4,6 +4,7 @@ a rich text editor for javascript
 
 ## todo
 
+[ ] bug! (create bold, make substring italic, remove bold on substring)
 [ ] splitNodeAtChild
 [ ] styleToElement
 [ ] elementHasStyle
