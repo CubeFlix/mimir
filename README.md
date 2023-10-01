@@ -4,10 +4,10 @@ a rich text editor for javascript
 
 ## todo
 
-[ ] bug! (create bold, make substring italic, remove bold on substring)
-[ ] splitNodeAtChild
-[ ] styleToElement
-[ ] elementHasStyle
+[x] bug! (create bold, make substring italic, remove bold on substring)
+[x] splitNodeAtChild
+[x] styleToElement
+[x] elementHasStyle
 [ ] removeStyleFromElement
 [ ] solve bug with empty style elems
 [ ] clicking to create a new style elem

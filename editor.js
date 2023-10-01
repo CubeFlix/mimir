@@ -19,7 +19,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "font"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
@@ -84,6 +84,13 @@ class Editor {
                     this.menubarOptions.underline.innerHTML = "U";
                     this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
                     this.menubar.append(this.menubarOptions.underline);
+                    break;
+                case "strikethrough":
+                    this.menubarOptions.strikethrough = document.createElement("button");
+                    this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
+                    this.menubarOptions.strikethrough.innerHTML = "S";
+                    this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
+                    this.menubar.append(this.menubarOptions.strikethrough);
                     break;
                 case "font":
                     this.menubarOptions.font = document.createElement("select");
@@ -243,6 +250,27 @@ class Editor {
     }
 
     /*
+    Create the appropriate element for a style.
+    */
+    styleToElement(style) {
+        console.log(style);
+        switch (style.type) {
+            case "bold":
+                return document.createElement("strong");
+            case "italic":
+                return document.createElement("em");
+            case "underline":
+                return document.createElement("u");
+            case "strikethrough":
+                return document.createElement("s");
+            case "font":
+                const elem = document.createElement("span");
+                elem.style.fontFamily = style.family;
+                return elem;
+        }
+    }
+
+    /*
     Get a list of styling that an element applies.
     */
     getStylingOfElement(node) {
@@ -281,6 +309,26 @@ class Editor {
         }
 
         return styling;
+    }
+
+    /*
+    Compare two styling objects.
+    */
+    compareStyling(a, b) {
+        for (const e in a) {
+            if (a[e] != b[e]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*
+    Check if an element applies a specific style.
+    */
+    elementHasStyle(elem, style) {
+        const styling = this.getStylingOfElement(elem);
+        return styling.some(s => this.compareStyling(s, style));
     }
 
     /*
@@ -327,11 +375,11 @@ class Editor {
     /*
     Apply a style to a node.
     */
-    applyStyleToNode(node, tag) {
-        // Go up the DOM tree, and check if the tag has already been applied.
+    applyStyleToNode(node, style) {
+        // Go up the DOM tree, and check if the style has already been applied.
         var currentNode = node;
         while (this.inEditor(currentNode)) {
-            if (currentNode.nodeType == Node.ELEMENT_NODE && currentNode.tagName == tag.toUpperCase()) {
+            if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
                 // Found the node.
                 return node;
             }
@@ -339,7 +387,7 @@ class Editor {
         }
 
         // Create a new style element and place the node within it.
-        const newElem = document.createElement(tag);
+        const newElem = this.styleToElement(style);
         newElem.appendChild(node.cloneNode(true));
         node.replaceWith(newElem);
         return newElem;
@@ -348,7 +396,7 @@ class Editor {
     /*
     Apply a style to a range.
     */
-    applyStyle(tag, range) {
+    applyStyle(style, range) {
         // Get the text nodes within the range.
         const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
 
@@ -360,7 +408,7 @@ class Editor {
             var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
             firstNode.textContent = firstNode.textContent.slice(0, startOffset);
             firstNode.after(newStartNode);
-            newStartNode = this.applyStyleToNode(newStartNode, tag);
+            newStartNode = this.applyStyleToNode(newStartNode, style);
             if (firstNode.textContent == "") {
                 firstNode.remove();
             }
@@ -369,14 +417,14 @@ class Editor {
             var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
             lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
             lastNode.before(newEndNode);
-            newEndNode = this.applyStyleToNode(newEndNode, tag);
+            newEndNode = this.applyStyleToNode(newEndNode, style);
             if (lastNode.textContent == "") {
                 lastNode.remove();
             }
 
             // Place each node in between in a new tag.
             for (const node of nodes.slice(1, nodes.length - 1)) {
-                const styledNode = this.applyStyleToNode(node, tag);
+                const styledNode = this.applyStyleToNode(node, style);
                 node.replaceWith(styledNode);
             }
 
@@ -396,7 +444,7 @@ class Editor {
             node.after(styledNode, endNode);
 
             // Style the middle node.
-            styledNode = this.applyStyleToNode(styledNode, tag);
+            styledNode = this.applyStyleToNode(styledNode, style);
 
             if (node.textContent == "") {
                 node.remove();
@@ -474,7 +522,7 @@ class Editor {
     /*
     Remove a style on a node.
     */
-    removeStyleOnNode(node, tag) {
+    removeStyleOnNode(node, style) {
         // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
         var currentReconstructedNode = node.cloneNode(true);
         var currentNode = node;
@@ -482,7 +530,7 @@ class Editor {
         while (this.inEditor(currentNode)) {
             currentNode = currentNode.parentNode;
 
-            if (currentNode.nodeType == Node.ELEMENT_NODE && currentNode.tagName == tag.toUpperCase()) {
+            if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
                 // Found the node.
                 found = true;
                 break;
@@ -517,7 +565,7 @@ class Editor {
     /* 
     Remove a style from a range.
     */
-    removeStyle(tag, range) {
+    removeStyle(style, range) {
         // Get the text nodes within the range.
         const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
 
@@ -542,11 +590,11 @@ class Editor {
             }
 
             // Remove the styling for each node.
-            newEndNode = this.removeStyleOnNode(newEndNode, tag);
+            newEndNode = this.removeStyleOnNode(newEndNode, style);
             for (const node of nodes.slice(1, nodes.length - 1).reverse()) {
-                this.removeStyleOnNode(node, tag);
+                this.removeStyleOnNode(node, style);
             }
-            newStartNode = this.removeStyleOnNode(newStartNode, tag);
+            newStartNode = this.removeStyleOnNode(newStartNode, style);
 
             // Select the new nodes.
             const newRange = new Range();
@@ -564,7 +612,7 @@ class Editor {
             node.after(styledNode, endNode);
 
             // Remove the styling on the middle node.
-            styledNode = this.removeStyleOnNode(styledNode, tag);
+            styledNode = this.removeStyleOnNode(styledNode, style);
 
             if (node.textContent == "") {
                 node.remove();
@@ -594,29 +642,15 @@ class Editor {
 
         // Set the style.
         switch (style) {
-            case "bold":
-                if (currentStyling.some(s => s.type == "bold")) {
-                    this.removeStyle("strong", range);
-                } else {
-                    this.applyStyle("strong", range);
-                }
-                break;
-            case "italic":
-                if (currentStyling.some(s => s.type == "italic")) {
-                    this.removeStyle("em", range);
-                } else {
-                    this.applyStyle("em", range);
-                }
-                break;
-            case "underline":
-                if (currentStyling.some(s => s.type == "underline")) {
-                    this.removeStyle("u", range);
-                } else {
-                    this.applyStyle("u", range);
-                }
-                break;
             case "font":
                 this.setStyle(range, style, {family: this.menubarOptions.font.value});
+                break;
+            default:
+                if (currentStyling.some(s => s.type == style.type)) {
+                    this.removeStyle(style, range);
+                } else {
+                    this.applyStyle(style, range);
+                }
                 break;
         }
 
@@ -628,28 +662,35 @@ class Editor {
     Bold.
     */
     bold() {
-        this.performStyleCommand("bold");
+        this.performStyleCommand({type: "bold"});
     }
 
     /*
     Italic.
     */
     italic() {
-        this.performStyleCommand("italic");
+        this.performStyleCommand({type: "italic"});
     }
 
     /*
     Underline.
     */
     underline() {
-        this.performStyleCommand("underline");
+        this.performStyleCommand({type: "underline"});
+    }
+
+    /*
+    Strikethrough.
+    */
+    strikethrough() {
+        this.performStyleCommand({type: "strikethrough"});
     }
 
     /*
     Font change.
     */
     font() {
-        this.performStyleCommand("font");
+        this.performStyleCommand({type: "font"});
     }
 
     /* 

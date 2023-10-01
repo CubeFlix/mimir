@@ -10,6 +10,10 @@
     text-decoration: underline;
 }
 
+#editor-menubar > #editor-menubar-option-strikethrough {
+    text-decoration: line-through;
+}
+
 #editor-menubar > .editor-pressed {
     background-color: grey;
 }
