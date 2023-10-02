@@ -472,6 +472,7 @@ class Editor {
                 return false;
             }
             if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent != "") {
+                console.log("unempty text", currentNode.textContent);
                 return false;
             }
         
@@ -640,10 +641,11 @@ class Editor {
         // Place in the reconstructed node and the reconstructed after node.
         parent.after(currentReconstructedNode);
 
-        if (this.isEmpty(parent)) parent.remove();
-
         // Remove the original node.
         node.remove();
+
+        // Remove empty nodes.
+        if (this.isEmpty(parent)) parent.remove();
 
         return currentReconstructedNode;
     }

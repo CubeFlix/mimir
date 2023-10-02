@@ -9,7 +9,7 @@ a rich text editor for javascript
 - [x] styleToElement
 - [x] elementHasStyle
 - [x] removeStyleFromElement
-- [ ] solve bug with empty style elems
+- [x] solve bug with empty style elems
 - [ ] clicking to create a new style elem
 - [ ] font support (handle font tag)
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
