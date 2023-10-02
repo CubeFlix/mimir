@@ -11,6 +11,7 @@ class Editor {
     ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
 
     contentTags = ["IMG"];
+    stylingTags = ["B", "STRONG", "I", "EM", "S", "U"];
 
     /* 
     Create the editor. 
@@ -520,6 +521,88 @@ class Editor {
     }
 
     /*
+    Remove a style from an element.
+    */
+    removeStyleFromElement(elem, style) {
+        if (elem.getAttribute("style")) {
+            // Element contains styling. Determine if any of the styles applies the specified style.
+            switch (style.type) {
+                case "bold":
+                    if (elem.style.fontWeight.toLowerCase() == "bold" || elem.style.fontWeight == "700") {
+                        elem.style.fontWeight = "";
+                    }
+                    break;
+                case "italic":
+                    if (elem.style.fontStyle.toLowerCase() == "italic") {
+                        elem.style.fontStyle = "";
+                    }
+                    break;
+                case "underline":
+                    if (elem.style.textDecoration.toLowerCase().includes("underline")) {
+                        elem.style.textDecoration = "";
+                    }
+                    break;
+                case "strikethrough":
+                    if (elem.style.textDecoration.toLowerCase().includes("line-through")) {
+                        elem.style.textDecoration = "";
+                    }
+                    break;
+                case "font":
+                    if (elem.style.fontFamily) {
+                        elem.style.fontFamily = "";
+                    }
+                    break;
+            }
+
+            // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
+            if (!elem.getAttribute("style") && !this.stylingTags.includes(elem.tagName)) {
+                elem = elem.firstChild;
+                return elem;
+            }
+        }
+
+        // If the element itself applies the specified style, remove the element.
+        const savedStyles = elem.getAttribute("style");
+        switch (style.type) {
+            case "bold":
+                if (elem.tagName == "B" || elem.tagName == "STRONG") {
+                    elem = elem.firstChild;
+                }
+                break;
+            case "italic":
+                if (elem.tagName == "I" || elem.tagName == "EM") {
+                    elem = elem.firstChild;
+                }
+                break;
+            case "underline":
+                if (elem.tagName == "U") {
+                    elem = elem.firstChild;
+                }
+                break;
+            case "strikethrough":
+                if (elem.tagName == "S") {
+                    elem = elem.firstChild;
+                }
+                break;
+            case "font":
+                if (elem.tagName == "FONT") {
+                    elem = elem.firstChild;
+                }
+                break;
+        }
+
+        // If the previous element had styles on it, reapply the styles.
+        if (savedStyles) {
+            const newElem = document.createElement("span");
+            newElem.setAttribute("style", savedStyles);
+            newElem.append(elem);
+            elem = newElem;
+        }
+
+        return elem;
+    }
+
+    /*
     Remove a style on a node.
     */
     removeStyleOnNode(node, style) {
@@ -530,20 +613,23 @@ class Editor {
         while (this.inEditor(currentNode)) {
             currentNode = currentNode.parentNode;
 
+            // Add the node.
+            var clone = currentNode.cloneNode(false);
+            clone.appendChild(currentReconstructedNode);
+            currentReconstructedNode = clone;
+
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
                 // Found the node.
                 found = true;
                 break;
             }
-
-            // Add the node.
-            var clone = currentNode.cloneNode(false);
-            clone.appendChild(currentReconstructedNode);
-            currentReconstructedNode = clone;
         }
         if (!found) {
             return node;
         }
+
+        // Remove the style on the reconstructed node.
+        currentReconstructedNode = this.removeStyleFromElement(currentReconstructedNode, style);
 
         const parent = currentNode;
 

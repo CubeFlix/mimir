@@ -8,8 +8,8 @@ a rich text editor for javascript
 [x] splitNodeAtChild
 [x] styleToElement
 [x] elementHasStyle
-[ ] removeStyleFromElement
+[x] removeStyleFromElement
 [ ] solve bug with empty style elems
 [ ] clicking to create a new style elem
-[ ] font support
+[ ] font support (handle font tag)
 [ ] sanitization (handle spans, invalid elements, and nested styling)
