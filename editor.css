@@ -1,19 +1,49 @@
-#editor-menubar > #editor-menubar-option-bold {
-    font-weight: bold;
+/* Editor menubar. */
+#editor-menubar {
+    display: flex;
+    gap: 5px;
+    padding: 5px;
 }
 
-#editor-menubar > #editor-menubar-option-italic {
-    font-style: italic;
+#editor-menubar > button {
+    min-width: 30px;
+    min-height: 30px;
+    background: none;
+    border: none;
+    border-radius: 5px;
 }
 
-#editor-menubar > #editor-menubar-option-underline {
-    text-decoration: underline;
+#editor-menubar > button:hover {
+    background: #e0e0e0;
 }
 
-#editor-menubar > #editor-menubar-option-strikethrough {
-    text-decoration: line-through;
+#editor-menubar > select {
+    min-height: 30px;
+    padding: 5px 35px 5px 5px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    border-radius: 5px;
+    background-color: white;
+    background-repeat: no-repeat;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 15px top 1em, right 10px top 1em;
+    background-size: 5px 5px, 5px 5px;
+}
+
+#editor-menubar > select:hover {
+    background-color: #e0e0e0;
 }
 
 #editor-menubar > .editor-pressed {
-    background-color: grey;
+    background: #cee2ff;
 }
+
+#editor-menubar > #editor-menubar-option-bold { font-weight: bold; }
+
+#editor-menubar > #editor-menubar-option-italic { font-style: italic; }
+
+#editor-menubar > #editor-menubar-option-underline { text-decoration: underline; }
+
+#editor-menubar > #editor-menubar-option-strikethrough { text-decoration: line-through; }
