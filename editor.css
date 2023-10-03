@@ -1,3 +1,9 @@
+/* Editor. */
+#editor-body:focus {
+    border: none;
+    outline: none;
+}
+
 /* Editor menubar. */
 #editor-menubar {
     display: flex;

@@ -11,5 +11,6 @@ a rich text editor for javascript
 - [x] removeStyleFromElement
 - [x] solve bug with empty style elems
 - [ ] clicking to create a new style elem
+- [ ] bug with styling completely empty editor/element
 - [ ] font support (handle font tag)
 - [ ] sanitization (handle spans, invalid elements, and nested styling)

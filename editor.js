@@ -7,8 +7,8 @@ class Editor {
     /* 
     Editor constants. 
     */
+    ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
-    ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
 
     contentTags = ["IMG"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U"];
@@ -29,6 +29,65 @@ class Editor {
         const temp = document.createElement("div");
         temp.innerHTML = this.invisible;
         this.invisibleParsed = temp.innerHTML;
+    }
+
+    /*
+    Create the cursor object.
+    */
+    createCursor(parent) {
+        // Create the cursor object.
+        const cursor = document.createElement("span");
+        cursor.setAttribute("class", "editor-temp-cursor");
+        cursor.innerHTML = this.invisible;
+
+        // var keydown = (e) => {
+        //     // Remove the cursor.
+        //     const ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
+        //     if (ascii.includes(e.key)) {
+        //         e.preventDefault();
+        //         cursor.before(document.createTextNode(e.key));
+        //         cursor.remove();
+        //         this.editor.removeEventListener("keydown", keydown);
+        //         document.removeEventListener("selectionchange", selectionchange);
+        //     }
+        // }
+        // keydown = keydown.bind(this);
+// 
+        // var evs = 0;
+        // var selectionchange = function(e) {
+        //     // Remove the cursor.
+        //     if (evs < 2) {
+        //         // Catch the first three accidental events.
+        //         evs += 1;
+        //         return;
+        //     }
+        //     if (this.isEmpty(cursor.parentNode)) {
+        //         cursor.parentNode.remove();
+        //     }
+        //     cursor.remove();
+        //     this.editor.removeEventListener("keydown", keydown);
+        //     document.removeEventListener("selectionchange", selectionchange);
+        // }
+// 
+        // 
+        // selectionchange = selectionchange.bind(this);
+// 
+        parent.appendChild(cursor);
+
+        // Select the cursor.
+        const newRange = new Range();
+        newRange.selectNodeContents(cursor);
+        newRange.collapse();
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(newRange);
+
+        this.currentCursor = cursor;
+
+        // Bind events to the cursor.
+        // document.addEventListener("selectionchange", selectionchange);
+        // this.editor.addEventListener("keydown", keydown);
+
+        return cursor;
     }
 
     /* 
@@ -115,6 +174,20 @@ class Editor {
     */
     bindKeyboardEvents() {
         this.editor.addEventListener("keydown", function(e) {
+            if (this.ascii.includes(e.key)) {
+                // Check if the cursor is inside a cursor.
+                const range = this.getRange();
+                if (range != null && range.commonAncestorContainer.nodeType == Node.ELEMENT_NODE && range.commonAncestorContainer.getAttribute("class") == "editor-temp-cursor") {
+                    // Remove the cursor.
+                    e.preventDefault();
+                    const cursor = range.commonAncestorContainer;
+                    cursor.before(document.createTextNode(e.key));
+                    cursor.remove();
+                    this.currentCursor = null;
+                    return;
+                }
+            }
+
             if (e.key == "b" && e.ctrlKey) {
                 // Bold.
                 e.preventDefault();
@@ -155,6 +228,18 @@ class Editor {
                 if (this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.remove("editor-pressed");
             }
         }
+
+        // Check for a cursor element.
+        if (this.currentCursor) {
+            // If the cursor left the cursor element, remove the cursor.
+            if (!this.currentCursor.contains(range.commonAncestorContainer)) {
+                if (this.isEmpty(this.currentCursor.parentNode)) {
+                    this.currentCursor.parentNode.remove();
+                }
+                this.currentCursor.remove();
+                this.currentCursor = null;
+            }
+        }
     }
 
     /*
@@ -164,11 +249,13 @@ class Editor {
         // Bind the onChangeSelect function with setTimeout so that it runs after the event bubbles.
         const onChangeSelect = setTimeout.bind(window, this.onChangeSelect.bind(this), 0);
 
-        this.editor.addEventListener('focus', function (e) {
-            document.addEventListener('selectionchange', onChangeSelect);
+        this.editor.addEventListener("focus", function (e) {
+            onChangeSelect();
+            document.addEventListener("selectionchange", onChangeSelect);
         });
-        this.editor.addEventListener('focusout', function (e) {
-            document.removeEventListener('selectionchange', onChangeSelect);
+        this.editor.addEventListener("focusout", function (e) {
+            onChangeSelect();
+            document.removeEventListener("selectionchange", onChangeSelect);
         });
     }
 
@@ -254,7 +341,6 @@ class Editor {
     Create the appropriate element for a style.
     */
     styleToElement(style) {
-        console.log(style);
         switch (style.type) {
             case "bold":
                 return document.createElement("strong");
@@ -454,6 +540,12 @@ class Editor {
                 endNode.remove();
             }
 
+            if (styledNode.textContent == "") {
+                // If the node is empty, create a cursor to bind the caret to.
+                this.createCursor(styledNode);
+                return;
+            }
+
             // Select the new node.
             const newRange = new Range();
             newRange.selectNodeContents(styledNode);
@@ -471,8 +563,7 @@ class Editor {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.contentTags.includes(currentNode.tagName)) {
                 return false;
             }
-            if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent != "") {
-                console.log("unempty text", currentNode.textContent);
+            if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent.replace(this.invisibleParsed, "") != "") {
                 return false;
             }
         
