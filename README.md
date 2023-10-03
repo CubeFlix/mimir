@@ -10,6 +10,8 @@ a rich text editor for javascript
 - [x] elementHasStyle
 - [x] removeStyleFromElement
 - [x] solve bug with empty style elems
+- [ ] handle BR as content tag
+- [ ] issue with strikethrough and underline together not working on spans
 - [ ] clicking to create a new style elem
 - [ ] bug with styling completely empty editor/element
 - [ ] font support (handle font tag)
