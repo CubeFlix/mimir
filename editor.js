@@ -150,7 +150,6 @@ class Editor {
                 // Check if the cursor is inside a cursor.
                 const range = this.getRange();
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
-                    // document.write("DELETE CURSOR (bindKeyboardEvents)");
                     // Remove the cursor.
                     e.preventDefault();
                     const cursor = this.currentCursor;
