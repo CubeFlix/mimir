@@ -156,6 +156,7 @@ class Editor {
                     cursor.before(document.createTextNode(e.key));
                     cursor.remove();
                     this.currentCursor = null;
+                    this.updateMenubarOptions();
                     return;
                 }
             }
@@ -163,16 +164,16 @@ class Editor {
     }
 
     /*
-    Called on selection change and on styling change.
+    Update the styling of the menubar options.
     */
-    onChangeSelect() {
+    updateMenubarOptions() {
         const range = this.getRange();
         if (range == null) {
             return;
         }
-        const styling = this.detectStyling(range);
 
         // Alter the styling of each of the options.
+        const styling = this.detectStyling(range);
         for (const option of this.commands) {
             if (option == "font") {
                 this.menubarOptions.font.value = styling.find(s => s.type == "font") ? styling.find(s => s.type == "font").family : this.defaultFont;
@@ -185,6 +186,16 @@ class Editor {
             } else {
                 if (this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.remove("editor-pressed");
             }
+        }
+    }
+
+    /*
+    Called on selection change and on styling change.
+    */
+    onChangeSelect() {
+        const range = this.getRange();
+        if (range == null) {
+            return;
         }
 
         // Check for a cursor element.
@@ -200,6 +211,8 @@ class Editor {
                 this.currentCursor = null;
             }
         }
+
+        this.updateMenubarOptions();
     }
 
     /*
@@ -531,6 +544,11 @@ class Editor {
             newRange.selectNodeContents(styledNode);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
+        } else if (nodes.length == 0) {
+            // Create a new cursor at the current range.
+            const node = document.createTextNode("");
+            range.commonAncestorContainer[range.startOffset].after(node);
+            
         }
     }
 
