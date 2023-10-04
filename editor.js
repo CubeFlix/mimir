@@ -149,10 +149,11 @@ class Editor {
             if (this.ascii.includes(e.key)) {
                 // Check if the cursor is inside a cursor.
                 const range = this.getRange();
-                if (range != null && range.commonAncestorContainer.nodeType == Node.ELEMENT_NODE && range.commonAncestorContainer.getAttribute("class") == "editor-temp-cursor") {
+                if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
+                    // document.write("DELETE CURSOR (bindKeyboardEvents)");
                     // Remove the cursor.
                     e.preventDefault();
-                    const cursor = range.commonAncestorContainer;
+                    const cursor = this.currentCursor;
                     cursor.before(document.createTextNode(e.key));
                     cursor.remove();
                     this.currentCursor = null;
