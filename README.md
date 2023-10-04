@@ -16,6 +16,8 @@ a rich text editor for javascript
 - [x] empty style elem
 - [x] bug with styling completely empty editor/element
 - [x] when making newline, retain styling options
+- [ ] when clicking to create style elem, it doesn't update style (not sure if this is just mobile)
+- [ ] handle br node in style change
 - [ ] font support (handle font tag)
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
 - [ ] history (restore selection and currentCursor)
