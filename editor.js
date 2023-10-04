@@ -278,7 +278,7 @@ class Editor {
             }
         
             // Append the node.
-            if (this.inEditor(currentNode) && currentNode.nodeType == Node.TEXT_NODE) {
+            if (this.inEditor(currentNode) && (currentNode.nodeType == Node.TEXT_NODE || currentNode.tagName == "BR")) {
                 nodes.push(currentNode);
             }
         
@@ -545,10 +545,31 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 0) {
-            // Create a new cursor at the current range.
+            // Create a new node at the current range.
+            if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
             const node = document.createTextNode("");
-            range.commonAncestorContainer[range.startOffset].after(node);
+            const siblings = range.commonAncestorContainer.childNodes;
+            if (siblings.length == 0) {
+                range.commonAncestorContainer.append(node);
+            } else {
+                siblings[range.startOffset].after(node);
+            }
             
+            // Style the node.
+            const styledNode = this.applyStyleToNode(node, style);
+
+            // Place the cursor in the node.
+            const cursor = this.createCursor();
+            styledNode.appendChild(cursor);
+
+            // Select the cursor.
+            const newRange = new Range();
+            newRange.selectNodeContents(cursor);
+            newRange.collapse();
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
         }
     }
 
@@ -833,6 +854,32 @@ class Editor {
             // Select the new node.
             const newRange = new Range();
             newRange.selectNodeContents(styledNode);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        } else if (nodes.length == 0) {
+            // Create a new node at the current range.
+            if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
+            const node = document.createTextNode("");
+            const siblings = range.commonAncestorContainer.childNodes;
+            if (siblings.length == 0) {
+                range.commonAncestorContainer.append(node);
+            } else {
+                siblings[range.startOffset].after(node);
+            }
+            
+            // Style the node.
+            const styledNode = this.removeStyleOnNode(node, style);
+
+            // Place the cursor in the node.
+            const cursor = this.createCursor();
+            styledNode.after(cursor);
+
+            // Select the cursor.
+            const newRange = new Range();
+            newRange.selectNodeContents(cursor);
+            newRange.collapse();
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         }
