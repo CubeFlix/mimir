@@ -10,7 +10,7 @@ class Editor {
     ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
 
-    contentTags = ["IMG"];
+    contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U"];
 
     /* 
@@ -34,58 +34,13 @@ class Editor {
     /*
     Create the cursor object.
     */
-    createCursor(parent) {
+    createCursor() {
         // Create the cursor object.
         const cursor = document.createElement("span");
         cursor.setAttribute("class", "editor-temp-cursor");
         cursor.innerHTML = this.invisible;
 
-        // var keydown = (e) => {
-        //     // Remove the cursor.
-        //     const ascii = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
-        //     if (ascii.includes(e.key)) {
-        //         e.preventDefault();
-        //         cursor.before(document.createTextNode(e.key));
-        //         cursor.remove();
-        //         this.editor.removeEventListener("keydown", keydown);
-        //         document.removeEventListener("selectionchange", selectionchange);
-        //     }
-        // }
-        // keydown = keydown.bind(this);
-// 
-        // var evs = 0;
-        // var selectionchange = function(e) {
-        //     // Remove the cursor.
-        //     if (evs < 2) {
-        //         // Catch the first three accidental events.
-        //         evs += 1;
-        //         return;
-        //     }
-        //     if (this.isEmpty(cursor.parentNode)) {
-        //         cursor.parentNode.remove();
-        //     }
-        //     cursor.remove();
-        //     this.editor.removeEventListener("keydown", keydown);
-        //     document.removeEventListener("selectionchange", selectionchange);
-        // }
-// 
-        // 
-        // selectionchange = selectionchange.bind(this);
-// 
-        parent.appendChild(cursor);
-
-        // Select the cursor.
-        const newRange = new Range();
-        newRange.selectNodeContents(cursor);
-        newRange.collapse();
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(newRange);
-
         this.currentCursor = cursor;
-
-        // Bind events to the cursor.
-        // document.addEventListener("selectionchange", selectionchange);
-        // this.editor.addEventListener("keydown", keydown);
 
         return cursor;
     }
@@ -174,6 +129,23 @@ class Editor {
     */
     bindKeyboardEvents() {
         this.editor.addEventListener("keydown", function(e) {
+            if (e.key == "b" && e.ctrlKey) {
+                // Bold.
+                e.preventDefault();
+                this.bold();
+                return;
+            } else if (e.key == "i" && e.ctrlKey) {
+                // Italic.
+                e.preventDefault();
+                this.italic();
+                return;
+            } else if (e.key == "u" && e.ctrlKey) {
+                // Underline.
+                e.preventDefault();
+                this.underline();
+                return;
+            }
+
             if (this.ascii.includes(e.key)) {
                 // Check if the cursor is inside a cursor.
                 const range = this.getRange();
@@ -186,20 +158,6 @@ class Editor {
                     this.currentCursor = null;
                     return;
                 }
-            }
-
-            if (e.key == "b" && e.ctrlKey) {
-                // Bold.
-                e.preventDefault();
-                this.bold();
-            } else if (e.key == "i" && e.ctrlKey) {
-                // Italic.
-                e.preventDefault();
-                this.italic();
-            } else if (e.key == "u" && e.ctrlKey) {
-                // Underline.
-                e.preventDefault();
-                this.underline();
             }
         }.bind(this));
     }
@@ -484,8 +442,20 @@ class Editor {
     Apply a style to a range.
     */
     applyStyle(style, range) {
-        // Get the text nodes within the range.
-        const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
+        var nodes, startOffset, endOffset;
+        if (this.currentCursor) {
+            // If a cursor exists, remove it and perform styling on its parent.
+            const newTextNode = document.createTextNode("");
+            this.currentCursor.parentElement.appendChild(newTextNode);
+            nodes = [newTextNode];
+            startOffset = 0;
+            endOffset = 0;
+            this.currentCursor.remove();
+            this.currentCursor = null;
+        } else {
+            // Get the text nodes within the range.
+            [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
+        }
 
         if (nodes.length >= 2) {
             const firstNode = nodes[0];
@@ -542,7 +512,15 @@ class Editor {
 
             if (styledNode.textContent == "") {
                 // If the node is empty, create a cursor to bind the caret to.
-                this.createCursor(styledNode);
+                const cursor = this.createCursor();
+                styledNode.appendChild(cursor);
+
+                // Select the cursor.
+                const newRange = new Range();
+                newRange.selectNodeContents(cursor);
+                newRange.collapse();
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
                 return;
             }
 
@@ -631,12 +609,12 @@ class Editor {
                     break;
                 case "underline":
                     if (elem.style.textDecoration.toLowerCase().includes("underline")) {
-                        elem.style.textDecoration = "";
+                        elem.style.textDecoration = elem.style.textDecoration.toLowerCase().replace("underline", "");
                     }
                     break;
                 case "strikethrough":
                     if (elem.style.textDecoration.toLowerCase().includes("line-through")) {
-                        elem.style.textDecoration = "";
+                        elem.style.textDecoration = elem.style.textDecoration.toLowerCase().replace("line-through", "");
                     }
                     break;
                 case "font":
@@ -655,36 +633,42 @@ class Editor {
 
         // If the element itself applies the specified style, remove the element.
         const savedStyles = elem.getAttribute("style");
+        var elemRemoved = false;
         switch (style.type) {
             case "bold":
                 if (elem.tagName == "B" || elem.tagName == "STRONG") {
                     elem = elem.firstChild;
+                    elemRemoved = true;
                 }
                 break;
             case "italic":
                 if (elem.tagName == "I" || elem.tagName == "EM") {
                     elem = elem.firstChild;
+                    elemRemoved = true;
                 }
                 break;
             case "underline":
                 if (elem.tagName == "U") {
                     elem = elem.firstChild;
+                    elemRemoved = true;
                 }
                 break;
             case "strikethrough":
                 if (elem.tagName == "S") {
                     elem = elem.firstChild;
+                    elemRemoved = true;
                 }
                 break;
             case "font":
                 if (elem.tagName == "FONT") {
                     elem = elem.firstChild;
+                    elemRemoved = true;
                 }
                 break;
         }
 
         // If the previous element had styles on it, reapply the styles.
-        if (savedStyles) {
+        if (savedStyles && elemRemoved) {
             const newElem = document.createElement("span");
             newElem.setAttribute("style", savedStyles);
             newElem.append(elem);
@@ -745,8 +729,20 @@ class Editor {
     Remove a style from a range.
     */
     removeStyle(style, range) {
-        // Get the text nodes within the range.
-        const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
+        var nodes, startOffset, endOffset;
+        if (this.currentCursor) {
+            // If a cursor exists, remove it and perform styling on its parent.
+            const newTextNode = document.createTextNode("");
+            this.currentCursor.parentElement.appendChild(newTextNode);
+            nodes = [newTextNode];
+            startOffset = 0;
+            endOffset = 0;
+            this.currentCursor.remove();
+            this.currentCursor = null;
+        } else {
+            // Get the text nodes within the range.
+            [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
+        }
 
         if (nodes.length >= 2) {
             const firstNode = nodes[0];
@@ -798,6 +794,20 @@ class Editor {
             }
             if (endNode.textContent == "") {
                 endNode.remove();
+            }
+
+            if (styledNode.textContent == "") {
+                // If the node is empty, create a cursor to bind the caret to.
+                const cursor = this.createCursor();
+                styledNode.after(cursor);
+
+                // Select the cursor.
+                const newRange = new Range();
+                newRange.selectNodeContents(cursor);
+                newRange.collapse();
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
             }
 
             // Select the new node.
