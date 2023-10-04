@@ -191,10 +191,12 @@ class Editor {
         if (this.currentCursor) {
             // If the cursor left the cursor element, remove the cursor.
             if (!this.currentCursor.contains(range.commonAncestorContainer)) {
-                if (this.isEmpty(this.currentCursor.parentNode)) {
-                    this.currentCursor.parentNode.remove();
+                // Traverse up the tree until we find the highest empty node.
+                var currentNode = this.currentCursor;
+                while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
+                    currentNode = currentNode.parentNode;
                 }
-                this.currentCursor.remove();
+                currentNode.remove();
                 this.currentCursor = null;
             }
         }
