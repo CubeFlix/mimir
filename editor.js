@@ -150,10 +150,13 @@ class Editor {
                 // Check if the caret is inside a cursor.
                 const range = this.getRange();
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
-                    // Remove the cursor.
-                    this.currentCursor.remove();
+                    // Traverse up the tree until we find the highest empty node and remove the cursor.
+                    var currentNode = this.currentCursor;
+                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
+                        currentNode = currentNode.parentNode;
+                    }
+                    currentNode.remove();
                     this.currentCursor = null;
-                    this.updateMenubarOptions();
                     return;
                 }
             }
@@ -164,14 +167,11 @@ class Editor {
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
                     // Remove the cursor.
                     e.preventDefault();
-
-                    // Traverse up the tree until we find the highest empty node.
-                    var currentNode = this.currentCursor;
-                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
-                        currentNode = currentNode.parentNode;
-                    }
-                    currentNode.remove();
+                    const cursor = this.currentCursor;
+                    cursor.before(document.createTextNode(e.key));
+                    cursor.remove();
                     this.currentCursor = null;
+                    this.updateMenubarOptions();
                     return;
                 }
             }
