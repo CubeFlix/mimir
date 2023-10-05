@@ -146,17 +146,32 @@ class Editor {
                 return;
             }
 
+            if (e.key == "ArrowLeft") {
+                // Check if the caret is inside a cursor.
+                const range = this.getRange();
+                if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
+                    // Remove the cursor.
+                    this.currentCursor.remove();
+                    this.currentCursor = null;
+                    this.updateMenubarOptions();
+                    return;
+                }
+            }
+
             if (this.ascii.includes(e.key)) {
-                // Check if the cursor is inside a cursor.
+                // Check if the caret is inside a cursor.
                 const range = this.getRange();
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
                     // Remove the cursor.
                     e.preventDefault();
-                    const cursor = this.currentCursor;
-                    cursor.before(document.createTextNode(e.key));
-                    cursor.remove();
+
+                    // Traverse up the tree until we find the highest empty node.
+                    var currentNode = this.currentCursor;
+                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
+                        currentNode = currentNode.parentNode;
+                    }
+                    currentNode.remove();
                     this.currentCursor = null;
-                    this.updateMenubarOptions();
                     return;
                 }
             }
