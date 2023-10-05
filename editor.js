@@ -191,8 +191,7 @@ class Editor {
         const styling = this.detectStyling(range);
         for (const option of this.commands) {
             if (option == "font") {
-                this.menubarOptions.font.value = styling.find(s => s.type == "font") ? styling.find(s => s.type == "font").family : this.defaultFont;
-                // TODO: this doesn't handle conflicting results
+                this.menubarOptions.font.value = styling.find(s => s.type == "font") ? styling.find(s => s.type == "font").family : "";
                 continue;
             }
 
@@ -272,7 +271,7 @@ class Editor {
     */
     getTextNodesInRange(range) {
         if (range == null) {
-            return [];
+            return null;
         }
         const nodes = [];
         var currentNode = range.startContainer;
@@ -369,7 +368,10 @@ class Editor {
                 break;
             case "FONT":
                 if (node.getAttribute("face")) {
-                    styling.push({type: "font", family: node.getAttribute("face")});
+                    var family = node.getAttribute("face");
+                    family = family.replace("\"", "").replace("\"", "");
+                    family = family.replace("'", "").replace("'", "");
+                    styling.push({type: "font", family: family});
                 }
                 // TODO: color, text size, etc
                 break;
@@ -389,7 +391,10 @@ class Editor {
             if (!styling.some(s => s.type == "strikethrough")) styling.push({type: "strikethrough"});
         }
         if (node.style.fontFamily) {
-            if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: node.style.fontFamily});
+            var family = node.style.fontFamily;
+            family = family.replace("\"", "").replace("\"", "");
+            family = family.replace("'", "").replace("'", "");
+            if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: family});
         }
 
         return styling;
@@ -439,10 +444,16 @@ class Editor {
                 nodeStyling.push(...this.getStylingOfElement(currentNode));
                 currentNode = currentNode.parentNode;
             }
+
+            // Add the default font styling.
+            if (!nodeStyling.some(s => s.type == "font")) {
+                nodeStyling.push({type: "font", family: this.defaultFont});
+            }
             
             if (firstNode) {
                 // If this is the first node being tracked, add its styles to the styling.
                 styling.push(...nodeStyling);
+
                 firstNode = false;
             } else {
                 // If this is not, check that each of the current styles is included in this element's styling.
@@ -454,7 +465,7 @@ class Editor {
                 }
             }
         }
-        
+
         return styling;
     }
 
@@ -472,8 +483,6 @@ class Editor {
             currentNode = currentNode.parentNode;
         }
 
-        console.log("hello??");
-
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
         newElem.appendChild(node.cloneNode(true));
@@ -486,7 +495,6 @@ class Editor {
     */
     applyStyle(style, range) {
         var nodes, startOffset, endOffset;
-        console.log(style, nodes);
         if (this.currentCursor) {
             // If a cursor exists, remove it and perform styling on its parent.
             const newTextNode = document.createTextNode("");
@@ -499,6 +507,9 @@ class Editor {
         } else {
             // Get the text nodes within the range.
             [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
+            if (!nodes) {
+                return;
+            }
         }
 
         console.log(2);
@@ -814,6 +825,9 @@ class Editor {
         } else {
             // Get the text nodes within the range.
             [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
+            if (!nodes) {
+                return;
+            }
         }
 
         if (nodes.length >= 2) {
@@ -932,10 +946,10 @@ class Editor {
             case "font":
                 console.log(currentStyling);
                 if (currentStyling.some(s => s.type == style.type)) {
-                    this.removeStyle({type: "font"}, range);
-                } else {
-                    this.applyStyle(style, range);
+                    // Remove the font.
+                    this.removeStyle(currentStyling.find(s => s.type == "font", range));
                 }
+                this.applyStyle(style, range);
                 break;
             default:
                 if (currentStyling.some(s => s.type == style.type)) {

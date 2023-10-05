@@ -20,5 +20,6 @@ a rich text editor for javascript
 - [x] when clicking to create style elem, properly handle back arrow
 - [x] handle br node in style change
 - [ ] font support (handle font tag)
+- [ ] clicking to create font tag creates error
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
 - [ ] history (restore selection and currentCursor)
