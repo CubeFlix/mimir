@@ -18,7 +18,7 @@ a rich text editor for javascript
 - [x] when making newline, retain styling options
 - [x] when clicking to create style elem, it doesn't update style (not sure if this is just mobile)
 - [x] when clicking to create style elem, properly handle back arrow
-- [ ] handle br node in style change
+- [x] handle br node in style change
 - [ ] font support (handle font tag)
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
 - [ ] history (restore selection and currentCursor)

@@ -365,7 +365,13 @@ class Editor {
                 styling.push({type: "underline"});
                 break;
             case "S":
-                styling.push({type: "strikethrough"})
+                styling.push({type: "strikethrough"});
+                break;
+            case "FONT":
+                if (node.getAttribute("face")) {
+                    styling.push({type: "font", family: node.getAttribute("face")});
+                }
+                // TODO: color, text size, etc
                 break;
         }
 
@@ -381,6 +387,9 @@ class Editor {
         }
         if (node.style.textDecoration.toLowerCase().includes("line-through")) {
             if (!styling.some(s => s.type == "strikethrough")) styling.push({type: "strikethrough"});
+        }
+        if (node.style.fontFamily) {
+            if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: node.style.fontFamily});
         }
 
         return styling;
@@ -413,6 +422,7 @@ class Editor {
     detectStyling(range) {
         var styling = [];
         const nodes = this.getTextNodesInRange(range).nodes;
+        console.log(nodes);
         
         // Iterate through the text nodes.
         var firstNode = true;
@@ -425,7 +435,7 @@ class Editor {
             // Traverse up the tree and track each style node passed on the way up.
             var currentNode = node.parentNode;
             var nodeStyling = [];
-            while (this.inEditor(currentNode)) {
+            while (this.inEditor(currentNode) && currentNode != this.editor) {
                 nodeStyling.push(...this.getStylingOfElement(currentNode));
                 currentNode = currentNode.parentNode;
             }
@@ -437,7 +447,8 @@ class Editor {
             } else {
                 // If this is not, check that each of the current styles is included in this element's styling.
                 for (const style of styling.slice(0, styling.length)) {
-                    if (!nodeStyling.some(s => s.type == style.type)) {
+                    if (!nodeStyling.some(s => this.compareStyling(s, style))) {
+                        // If the styling is not the same, remove the styling from the list.
                         styling.splice(styling.findIndex(s => s.type == style.type), 1);
                     }
                 }
@@ -461,6 +472,8 @@ class Editor {
             currentNode = currentNode.parentNode;
         }
 
+        console.log("hello??");
+
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
         newElem.appendChild(node.cloneNode(true));
@@ -473,6 +486,7 @@ class Editor {
     */
     applyStyle(style, range) {
         var nodes, startOffset, endOffset;
+        console.log(style, nodes);
         if (this.currentCursor) {
             // If a cursor exists, remove it and perform styling on its parent.
             const newTextNode = document.createTextNode("");
@@ -486,6 +500,8 @@ class Editor {
             // Get the text nodes within the range.
             [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
         }
+
+        console.log(2);
 
         if (nodes.length >= 2) {
             const firstNode = nodes[0];
@@ -912,9 +928,14 @@ class Editor {
         const currentStyling = this.detectStyling(range);
 
         // Set the style.
-        switch (style) {
+        switch (style.type) {
             case "font":
-                this.setStyle(range, style, {family: this.menubarOptions.font.value});
+                console.log(currentStyling);
+                if (currentStyling.some(s => s.type == style.type)) {
+                    this.removeStyle({type: "font"}, range);
+                } else {
+                    this.applyStyle(style, range);
+                }
                 break;
             default:
                 if (currentStyling.some(s => s.type == style.type)) {
@@ -961,7 +982,8 @@ class Editor {
     Font change.
     */
     font() {
-        this.performStyleCommand({type: "font"});
+        console.log(this.menubarOptions.font.value);
+        this.performStyleCommand({type: "font", family: this.menubarOptions.font.value});
     }
 
     /* 
