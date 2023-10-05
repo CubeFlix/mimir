@@ -129,17 +129,17 @@ class Editor {
     */
     bindKeyboardEvents() {
         this.editor.addEventListener("keydown", function(e) {
-            if (e.key == "b" && e.ctrlKey) {
+            if (e.key.toLowerCase() == "b" && (e.ctrlKey || e.metaKey)) {
                 // Bold.
                 e.preventDefault();
                 this.bold();
                 return;
-            } else if (e.key == "i" && e.ctrlKey) {
+            } else if (e.key.toLowerCase() == "i" && (e.ctrlKey || e.metaKey)) {
                 // Italic.
                 e.preventDefault();
                 this.italic();
                 return;
-            } else if (e.key == "u" && e.ctrlKey) {
+            } else if (e.key.toLowerCase() == "u" && (e.ctrlKey || e.metaKey)) {
                 // Underline.
                 e.preventDefault();
                 this.underline();
@@ -427,7 +427,6 @@ class Editor {
     detectStyling(range) {
         var styling = [];
         const nodes = this.getTextNodesInRange(range).nodes;
-        console.log(nodes);
         
         // Iterate through the text nodes.
         var firstNode = true;
@@ -464,6 +463,11 @@ class Editor {
                     }
                 }
             }
+        }
+
+        // Add the default font styling.
+        if (nodes.length == 0 && !styling.some(s => s.type == "font")) {
+            styling.push({type: "font", family: this.defaultFont});
         }
 
         return styling;
