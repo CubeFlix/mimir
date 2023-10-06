@@ -19,7 +19,8 @@ a rich text editor for javascript
 - [x] when clicking to create style elem, it doesn't update style (not sure if this is just mobile)
 - [x] when clicking to create style elem, properly handle back arrow
 - [x] handle br node in style change
-- [ ] font support (handle font tag)
-- [ ] clicking to create font tag creates error
+- [x] font support (handle font tag)
+- [x] clicking to create font tag creates error
+- [ ] reload in cursor doesn't reload page
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
 - [ ] history (restore selection and currentCursor)

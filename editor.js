@@ -257,11 +257,22 @@ class Editor {
     Get the current range.
     */
     getRange() {
-        if (this.rangeCache) {
-            return this.rangeCache;
+        const selection = window.getSelection();
+        
+        // Nothing selected.
+        if (selection.rangeCount == 0) {
+            if (this.rangeCache) {
+                return this.rangeCache;
+            }
+            return null;
         }
-        if (window.getSelection().rangeCount != 0) {
-            return window.getSelection().getRangeAt(0);
+        
+        // Something is selected.
+        const range = selection.getRangeAt(0);
+        if (selection.containsNode(this.editor) || this.editor.contains(range.commonAncestorContainer)) {
+            return range;
+        } else if (this.rangeCache) {
+            return this.rangeCache;
         }
         return null;
     }
@@ -479,7 +490,7 @@ class Editor {
     applyStyleToNode(node, style) {
         // Go up the DOM tree, and check if the style has already been applied.
         var currentNode = node;
-        while (this.inEditor(currentNode)) {
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
                 // Found the node.
                 return node;
@@ -510,13 +521,12 @@ class Editor {
             this.currentCursor = null;
         } else {
             // Get the text nodes within the range.
-            [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
-            if (!nodes) {
+            const output = this.getTextNodesInRange(range);
+            if (!output) {
                 return;
             }
+            [{nodes, startOffset, endOffset} = output];
         }
-
-        console.log(2);
 
         if (nodes.length >= 2) {
             const firstNode = nodes[0];
@@ -624,7 +634,7 @@ class Editor {
     */
     isEmpty(node) {
         var currentNode = node;
-        while (node.contains(currentNode)) {
+        while (node.contains(currentNode) && currentNode != this.editor) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.contentTags.includes(currentNode.tagName)) {
                 return false;
             }
@@ -773,7 +783,7 @@ class Editor {
         var currentReconstructedNode = node.cloneNode(true);
         var currentNode = node;
         var found = false;
-        while (this.inEditor(currentNode)) {
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
             currentNode = currentNode.parentNode;
 
             // Add the node.
@@ -828,10 +838,11 @@ class Editor {
             this.currentCursor = null;
         } else {
             // Get the text nodes within the range.
-            [{nodes, startOffset, endOffset} = this.getTextNodesInRange(range)];
-            if (!nodes) {
+            const output = this.getTextNodesInRange(range);
+            if (!output) {
                 return;
             }
+            [{nodes, startOffset, endOffset} = output];
         }
 
         if (nodes.length >= 2) {
@@ -935,6 +946,184 @@ class Editor {
     }
 
     /*
+    Change a style on a node.
+    */
+    changeStyleOnNode(node, style) {
+        // Go up the DOM tree, and check if the style has already been applied. Reconstruct the node on the way up, in case it needs to be split.
+        var currentNode = node;
+        var currentReconstructedNode = node.cloneNode(true);
+
+        currentNode = currentNode.parentNode;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (currentNode == this.editor) {
+                break;
+            }
+
+            // Add the node.
+            var clone = currentNode.cloneNode(false);
+            clone.appendChild(currentReconstructedNode);
+            currentReconstructedNode = clone;
+            if (currentNode.nodeType == Node.ELEMENT_NODE && this.getStylingOfElement(currentNode).some(s => s.type == style.type) && currentNode != this.editor) {
+                // Found the node. Split the node and change the styling.
+                const splitAfterNode = this.splitNodeAtChild(currentNode, node);
+                if (!this.isEmpty(splitAfterNode)) currentNode.after(splitAfterNode);
+
+                // Place in the reconstructed node and the reconstructed after node.
+                currentNode.after(currentReconstructedNode);
+
+                // Remove the original node.
+                node.remove();
+
+                // Remove empty nodes.
+                if (this.isEmpty(currentNode)) currentNode.remove();
+
+                // Change the styling.
+                switch (style.type) {
+                    case "font":
+                        if (currentReconstructedNode.tagName == "FONT") {
+                            currentReconstructedNode.setAttribute("face", style.family);
+                        } else if (currentReconstructedNode.tagName == "SPAN") {
+                            currentReconstructedNode.style.fontFamily = style.family;
+                        }
+                        break;
+                }
+                return currentReconstructedNode;
+            }
+
+            currentNode = currentNode.parentNode;
+        }
+
+        // Create a new style element and place the node within it.
+        const newElem = this.styleToElement(style);
+        newElem.appendChild(node.cloneNode(true));
+        node.replaceWith(newElem);
+        return newElem;
+    }
+
+    /*
+    Change the styling on a range.
+    */
+    changeStyling(style, range) {
+        var nodes, startOffset, endOffset;
+        if (this.currentCursor) {
+            // If a cursor exists, remove it and perform styling on its parent.
+            const newTextNode = document.createTextNode("");
+            this.currentCursor.parentElement.appendChild(newTextNode);
+            nodes = [newTextNode];
+            startOffset = 0;
+            endOffset = 0;
+            this.currentCursor.remove();
+            this.currentCursor = null;
+        } else {
+            // Get the text nodes within the range.
+            const output = this.getTextNodesInRange(range);
+            if (!output) {
+                return;
+            }
+            [{nodes, startOffset, endOffset} = output];
+        }
+
+        if (nodes.length >= 2) {
+            const firstNode = nodes[0];
+            const lastNode = nodes.slice(-1)[0];
+
+            // Split the first node at the start offset.
+            var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
+            firstNode.textContent = firstNode.textContent.slice(0, startOffset);
+            firstNode.after(newStartNode);
+            if (firstNode.textContent == "") {
+                firstNode.remove();
+            }
+
+            // Split the last node at the end offset.
+            var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
+            lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
+            lastNode.before(newEndNode);
+            if (lastNode.textContent == "") {
+                lastNode.remove();
+            }
+
+            // Change the styling for each node.
+            newEndNode = this.changeStyleOnNode(newEndNode, style);
+            for (const node of nodes.slice(1, nodes.length - 1).reverse()) {
+                this.changeStyleOnNode(node, style);
+            }
+            newStartNode = this.changeStyleOnNode(newStartNode, style);
+
+            // Select the new nodes.
+            const newRange = new Range();
+            newRange.setStartBefore(newStartNode);
+            newRange.setEndAfter(newEndNode);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        } else if (nodes.length == 1) {
+            const node = nodes[0];
+
+            // Split the node at the start and end offsets.
+            var styledNode = document.createTextNode(node.textContent.slice(startOffset, endOffset));
+            var endNode = document.createTextNode(node.textContent.slice(endOffset, node.textContent.length));
+            node.textContent = node.textContent.slice(0, startOffset);
+            node.after(styledNode, endNode);
+
+            // Remove the styling on the middle node.
+            styledNode = this.changeStyleOnNode(styledNode, style);
+
+            if (node.textContent == "") {
+                node.remove();
+            }
+            if (endNode.textContent == "") {
+                endNode.remove();
+            }
+
+            if (styledNode.textContent == "") {
+                // If the node is empty, create a cursor to bind the caret to.
+                const cursor = this.createCursor();
+                styledNode.append(cursor);
+
+                // Select the cursor.
+                const newRange = new Range();
+                newRange.selectNodeContents(cursor);
+                newRange.collapse();
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
+
+            // Select the new node.
+            const newRange = new Range();
+            newRange.selectNodeContents(styledNode);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        } else if (nodes.length == 0) {
+            // Create a new node at the current range.
+            if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
+            const node = document.createTextNode("");
+            const siblings = range.commonAncestorContainer.childNodes;
+            if (siblings.length == 0) {
+                range.commonAncestorContainer.append(node);
+            } else {
+                siblings[range.startOffset].after(node);
+            }
+            
+            // Style the node.
+            const styledNode = this.changeStyleOnNode(node, style);
+
+            // Place the cursor in the node.
+            const cursor = this.createCursor();
+            styledNode.append(cursor);
+
+            // Select the cursor.
+            const newRange = new Range();
+            newRange.selectNodeContents(cursor);
+            newRange.collapse();
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        }
+    }
+
+    /*
     Perform a style command.
     */
     performStyleCommand(style) {
@@ -948,12 +1137,7 @@ class Editor {
         // Set the style.
         switch (style.type) {
             case "font":
-                console.log(currentStyling);
-                if (currentStyling.some(s => s.type == style.type)) {
-                    // Remove the font.
-                    this.removeStyle(currentStyling.find(s => s.type == "font", range));
-                }
-                this.applyStyle(style, range);
+                this.changeStyling(style, range);
                 break;
             default:
                 if (currentStyling.some(s => s.type == style.type)) {
@@ -1000,7 +1184,6 @@ class Editor {
     Font change.
     */
     font() {
-        console.log(this.menubarOptions.font.value);
         this.performStyleCommand({type: "font", family: this.menubarOptions.font.value});
     }
 
