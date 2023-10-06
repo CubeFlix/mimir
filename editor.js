@@ -900,7 +900,15 @@ class Editor {
             if (styledNode.textContent == "") {
                 // If the node is empty, create a cursor to bind the caret to.
                 const cursor = this.createCursor();
-                styledNode.after(cursor);
+                var furthestInsideNode = styledNode;
+                while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                    furthestInsideNode = furthestInsideNode.childNodes[0];
+                }
+                if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                    furthestInsideNode.after(cursor);
+                } else {
+                    furthestInsideNode.append(cursor);
+                }
 
                 // Select the cursor.
                 const newRange = new Range();
@@ -934,7 +942,15 @@ class Editor {
 
             // Place the cursor in the node.
             const cursor = this.createCursor();
-            styledNode.after(cursor);
+            var furthestInsideNode = styledNode;
+            while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                furthestInsideNode = furthestInsideNode.childNodes[0];
+            }
+            if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                furthestInsideNode.after(cursor);
+            } else {
+                furthestInsideNode.append(cursor);
+            }
 
             // Select the cursor.
             const newRange = new Range();
@@ -1078,7 +1094,15 @@ class Editor {
             if (styledNode.textContent == "") {
                 // If the node is empty, create a cursor to bind the caret to.
                 const cursor = this.createCursor();
-                styledNode.append(cursor);
+                var furthestInsideNode = styledNode;
+            while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                furthestInsideNode = furthestInsideNode.childNodes[0];
+            }
+            if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                furthestInsideNode.after(cursor);
+            } else {
+                furthestInsideNode.append(cursor);
+            }
 
                 // Select the cursor.
                 const newRange = new Range();
@@ -1112,7 +1136,15 @@ class Editor {
 
             // Place the cursor in the node.
             const cursor = this.createCursor();
-            styledNode.append(cursor);
+            var furthestInsideNode = styledNode;
+            while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                furthestInsideNode = furthestInsideNode.childNodes[0];
+            }
+            if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                furthestInsideNode.after(cursor);
+            } else {
+                furthestInsideNode.append(cursor);
+            }
 
             // Select the cursor.
             const newRange = new Range();

@@ -22,5 +22,7 @@ a rich text editor for javascript
 - [x] font support (handle font tag)
 - [x] clicking to create font tag creates error
 - [x] reload in cursor doesn't reload page
+- [x] bug with removing/changing styling with styling already applied 
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
+- [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
