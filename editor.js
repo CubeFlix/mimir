@@ -161,7 +161,7 @@ class Editor {
                 }
             }
 
-            if (this.ascii.includes(e.key)) {
+            if (this.ascii.includes(e.key) && !e.ctrlKey) {
                 // Check if the caret is inside a cursor.
                 const range = this.getRange();
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {

@@ -21,6 +21,6 @@ a rich text editor for javascript
 - [x] handle br node in style change
 - [x] font support (handle font tag)
 - [x] clicking to create font tag creates error
-- [ ] reload in cursor doesn't reload page
+- [x] reload in cursor doesn't reload page
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
 - [ ] history (restore selection and currentCursor)
