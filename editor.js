@@ -11,7 +11,7 @@ class Editor {
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
 
     contentTags = ["IMG", "BR"];
-    stylingTags = ["B", "STRONG", "I", "EM", "S", "U"];
+    stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
     illegalTags = ["SCRIPT"]
     illegal
 

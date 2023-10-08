@@ -24,6 +24,7 @@ a rich text editor for javascript
 - [x] reload in cursor doesn't reload page
 - [x] bug with removing/changing styling with styling already applied 
 - [x] sanitization (handle spans, invalid elements, and nested styling)
+- [x] bug with changeStyle and font tag
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
 - [ ] more styling options
