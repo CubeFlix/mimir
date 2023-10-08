@@ -26,3 +26,7 @@ a rich text editor for javascript
 - [ ] sanitization (handle spans, invalid elements, and nested styling)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
+- [ ] more styling options
+- [ ] block styling options
+- [ ] lists
+- [ ] images

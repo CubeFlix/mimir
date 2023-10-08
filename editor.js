@@ -12,6 +12,8 @@ class Editor {
 
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U"];
+    illegalTags = ["SCRIPT"]
+    illegal
 
     /* 
     Create the editor. 
@@ -175,6 +177,107 @@ class Editor {
                     return;
                 }
             }
+        }.bind(this));
+    }
+
+    /*
+    Reconstruct a node's children.
+    */
+    reconstructNodeContents(node, parent) {
+        const reconstructed = [];
+
+        // Reconstruct each of the children.
+        for (const child of node.childNodes) {
+            if (child.nodeType == Node.TEXT_NODE) {
+                // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
+                var styling = [];
+                var currentNode = child;
+                while (parent.contains(currentNode)) {
+                    // Only push the styling if it hasn't been added yet.
+                    if (currentNode.nodeType == Node.TEXT_NODE) {
+                        currentNode = currentNode.parentNode;
+                        continue;
+                    }
+                    styling.push(...this.getStylingOfElement(currentNode).filter(s => !styling.some(e => s.type == e.type)));
+                    currentNode = currentNode.parentNode;
+                }
+
+                // Reconstruct the styling.
+                var currentReconstructedNode = child.cloneNode();
+                for (const s of styling) {
+                    var newNode = this.styleToElement(s);
+                    newNode.append(currentReconstructedNode);
+                    currentReconstructedNode = newNode;
+                }
+
+                // Append the newly reconstructed node.
+                reconstructed.push(currentReconstructedNode);
+            } else if (child.nodeType == Node.ELEMENT_NODE) {
+                // If the tag is invalid, ignore it.
+                if (this.illegalTags.includes(child.tagName)) {
+                    continue;
+                }
+
+                // Clone the node without any attributes.
+                const newNode = document.createElement(child.tagName);
+
+                // Add any important attributes.
+                if (child.getAttribute("href")) {
+                    if (!child.getAttribute("href").trim().substring(0, 11).toLowerCase() === 'javascript:') {
+                        newNode.setAttribute("href", child.getAttribute("href"));
+                    }
+                }
+
+                // Reconstruct the node's children.
+                const reconstructedChildren = this.reconstructNodeContents(child, parent);
+                newNode.append(...reconstructedChildren);
+
+                // Append the newly reconstructed node.
+                reconstructed.push(newNode);
+            }
+        }
+
+        return reconstructed;
+    }
+
+    /*
+    Sanitize and reconstruct HTML data.
+    */
+    sanitize(contents) {
+        // Place the data into a temporary node.
+        const original = document.createElement("div");
+        original.innerHTML = contents;
+
+        // Reconstruct the node.
+        const reconstructed = this.reconstructNodeContents(original, original);
+        
+        return reconstructed;
+    }
+
+    /*
+    Bind event listeners for paste events.
+    */
+    bindPasteEvents() {
+        this.editor.addEventListener("paste", function(e) {
+            // Sanitize and reconstruct the pasted data.
+            e.preventDefault();
+            const range = this.getRange();
+            if (range == null) {
+                return;
+            }
+            range.deleteContents();
+            if (e.clipboardData.getData("text/html")) {
+                const reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
+                for (const node of reconstructed.reverse()) {
+                    range.insertNode(node);
+                }
+            } else {
+                const data = e.clipboardData.getData("text");
+                range.insertNode(document.createTextNode(data));
+            }
+            
+
+            // Slice the topmost style node and place in the paste data.
         }.bind(this));
     }
 
@@ -1253,5 +1356,8 @@ class Editor {
 
         // Bind event listeners for select event.
         this.bindSelectEvents();
+
+        // Bind event listeners for paste event.
+        this.bindPasteEvents();
     }
 }
