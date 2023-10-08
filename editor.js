@@ -218,6 +218,16 @@ class Editor {
                     continue;
                 }
 
+                // If this tag is a styling tag, ignore it but parse its children.
+                if (this.stylingTags.includes(child.tagName) || child.tagName == "SPAN") {
+                    // Reconstruct the node's children.
+                    const reconstructedChildren = this.reconstructNodeContents(child, parent);
+
+                    // Append the newly reconstructed nodes.
+                    reconstructed.push(...reconstructedChildren);
+                    continue;
+                }
+
                 // Clone the node without any attributes.
                 const newNode = document.createElement(child.tagName);
 
@@ -259,25 +269,59 @@ class Editor {
     */
     bindPasteEvents() {
         this.editor.addEventListener("paste", function(e) {
-            // Sanitize and reconstruct the pasted data.
-            e.preventDefault();
-            const range = this.getRange();
-            if (range == null) {
-                return;
-            }
-            range.deleteContents();
             if (e.clipboardData.getData("text/html")) {
-                const reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
-                for (const node of reconstructed.reverse()) {
-                    range.insertNode(node);
+                // Prepare to reconstruct and paste the HTML data.
+                e.preventDefault();
+                const range = this.getRange();
+                if (range == null) {
+                    return;
                 }
-            } else {
-                const data = e.clipboardData.getData("text");
-                range.insertNode(document.createTextNode(data));
-            }
-            
+                range.deleteContents();
 
-            // Slice the topmost style node and place in the paste data.
+                // Reconstruct the data.
+                const reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
+                if (reconstructed.length == 0) {
+                    return;
+                }
+
+                // Break out of any style nodes.
+                const temp = document.createTextNode("");
+                range.insertNode(temp);
+                var currentNode = temp;
+                var topmostStyleNode = null;
+                while (this.inEditor(currentNode) && this.editor != currentNode) {
+                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
+                        // Styling node.
+                        topmostStyleNode = currentNode;
+                    }
+                    currentNode = currentNode.parentElement;
+                }
+
+                if (topmostStyleNode) {
+                    // If there are any style nodes passed on the way up, split the node.
+                    const split = this.splitNodeAtChild(topmostStyleNode, temp);
+
+                    // Insert the split node.
+                    topmostStyleNode.after(split);
+
+                    // Insert the reconstructed nodes.
+                    topmostStyleNode.after(...reconstructed);
+                    var lastReconstructed = reconstructed.slice(-1)[0];
+                } else {
+                    // Insert the reconstructed nodes.
+                    for (const node of reconstructed.reverse()) {
+                        range.insertNode(node);
+                    }
+                    var lastReconstructed = reconstructed[0];
+                }
+
+                // Place the cursor after the reconstructed nodes.
+                const newRange = new Range();
+                newRange.selectNodeContents(lastReconstructed);
+                newRange.collapse(false);
+                document.getSelection().removeAllRanges();
+                document.getSelection().addRange(newRange);
+            }
         }.bind(this));
     }
 
