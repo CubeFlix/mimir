@@ -285,6 +285,8 @@ class Editor {
                 }
                 range.deleteContents();
 
+                console.log(e.clipboardData.getData("text/html"));
+
                 // Reconstruct the data.
                 var reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
                 if (reconstructed.length == 0) {
@@ -347,7 +349,7 @@ class Editor {
                     if (this.isEmpty(node)) {
                         continue;
                     }
-                    if ((node.nodeType == Node.TEXT_NODE || !this.blockNodes.includes(node.tagName)) && !(reconstructed[reconstructed.indexOf(node) - 1] && this.blockNodes.includes(reconstructed[reconstructed.indexOf(node) - 1].tagName))) {
+                    if ((node.nodeType == Node.TEXT_NODE || !this.blockNodes.includes(node.tagName)) && !(reconstructed[reconstructed.indexOf(node) - 1] && (this.blockNodes.includes(reconstructed[reconstructed.indexOf(node) - 1].tagName) || reconstructed[reconstructed.indexOf(node) - 1].tagName == "OL" || reconstructed[reconstructed.indexOf(node) - 1].tagName == "UL"))) {
                         // Not a block node.
                         currentLastNode.after(node);
                         currentLastNode = node;
@@ -360,6 +362,7 @@ class Editor {
                         }
                     } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "OL" || currentLastNode.tagName == "UL")) {
                         // Pasting a list into a list.
+                        console.log("knew it");
                         if (node.childNodes.length != 0) {
                             const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
                             currentLastNode.append(...childNodes);

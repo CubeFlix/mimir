@@ -27,6 +27,7 @@ a rich text editor for javascript
 - [x] bug with changeStyle and font tag
 - [ ] div, brs, ps and lists in pastes
 - [ ] pasting multiline content into lists
+- [ ] when pasting list into list, it sometimes places list at the end of the lists
 - [ ] spaces between pasted nodes
 - [ ] pasting with empty editor
 - [ ] update illegal tags
