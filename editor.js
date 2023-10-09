@@ -12,8 +12,8 @@ class Editor {
 
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
-    illegalTags = ["SCRIPT"]
-    illegal
+    illegalTags = ["SCRIPT"];
+    blockNodes = ["BR", "DIV", "P", "OL", "UL", "LI"];
 
     /* 
     Create the editor. 
@@ -228,12 +228,19 @@ class Editor {
                     continue;
                 }
 
+                // If this is a list with no LI tags within, ignore it.
+                if (child.tagName == "OL" || child.tagName == "UL") {
+                    if (!Array.from(child.childNodes).some(s => s.tagName == "LI")) {
+                        continue;
+                    }
+                }
+
                 // Clone the node without any attributes.
                 const newNode = document.createElement(child.tagName);
 
                 // Add any important attributes.
                 if (child.getAttribute("href")) {
-                    if (!child.getAttribute("href").trim().substring(0, 11).toLowerCase() === 'javascript:') {
+                    if (child.getAttribute("href").trim().substring(0, 11).toLowerCase() !== 'javascript:') {
                         newNode.setAttribute("href", child.getAttribute("href"));
                     }
                 }
@@ -279,7 +286,7 @@ class Editor {
                 range.deleteContents();
 
                 // Reconstruct the data.
-                const reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
+                var reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
                 if (reconstructed.length == 0) {
                     return;
                 }
@@ -297,28 +304,103 @@ class Editor {
                     currentNode = currentNode.parentElement;
                 }
 
+                var currentLastNode;
+                var split;
                 if (topmostStyleNode) {
                     // If there are any style nodes passed on the way up, split the node.
-                    const split = this.splitNodeAtChild(topmostStyleNode, temp);
-
-                    // Insert the split node.
-                    topmostStyleNode.after(split);
-
-                    // Insert the reconstructed nodes.
-                    topmostStyleNode.after(...reconstructed);
-                    var lastReconstructed = reconstructed.slice(-1)[0];
+                    split = this.splitNodeAtChild(topmostStyleNode, temp);
+                    currentLastNode = topmostStyleNode;
                 } else {
-                    // Insert the reconstructed nodes.
-                    for (const node of reconstructed.reverse()) {
-                        range.insertNode(node);
+                    currentLastNode = range.startContainer;
+                }
+
+                if (currentLastNode == this.editor) {
+                    const temp = document.createTextNode("");
+                    this.editor.append(temp);
+                    currentLastNode = temp;
+                }
+                
+                // Remove all empty nodes and fix orphaned <li> nodes.
+                const reconstructedFixed = [];
+                for (const node of reconstructed) {
+                    if (this.isEmpty(node)) {
+                        continue;
                     }
-                    var lastReconstructed = reconstructed[0];
+                    if (node.nodeType == Node.ELEMENT_NODE && node.tagName == "LI") {
+                        reconstructedFixed.push(...node.childNodes);
+                        continue;
+                    }
+                    reconstructedFixed.push(node);
+                }
+                if (split) {
+                    reconstructedFixed.push(split);
+                }
+                reconstructed = reconstructedFixed;
+
+                // Add in the reconstructed nodes.
+                for (const node of reconstructed) {
+                    console.log("adding node", node.cloneNode(true), "after", currentLastNode);
+                    // console.log(node, currentLastNode, currentLastNode.parentNode);
+                    if (node.nodeType == Node.TEXT_NODE && node.textContent.trim() == "") {
+                        continue;
+                    }
+                    if (this.isEmpty(node)) {
+                        continue;
+                    }
+                    if ((node.nodeType == Node.TEXT_NODE || !this.blockNodes.includes(node.tagName)) && !(reconstructed[reconstructed.indexOf(node) - 1] && this.blockNodes.includes(reconstructed[reconstructed.indexOf(node) - 1].tagName))) {
+                        // Not a block node.
+                        currentLastNode.after(node);
+                        currentLastNode = node;
+                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.parentNode.tagName == "LI")) {
+                        // Pasting a list into a list.
+                        if (node.childNodes.length != 0) {
+                            const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
+                            currentLastNode.parentNode.after(...childNodes);
+                            currentLastNode = childNodes.slice(-1)[0];
+                        }
+                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "OL" || currentLastNode.tagName == "UL")) {
+                        // Pasting a list into a list.
+                        if (node.childNodes.length != 0) {
+                            const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
+                            currentLastNode.append(...childNodes);
+                            currentLastNode = childNodes.slice(-1)[0];
+                        }
+                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "LI")) {
+                        // Pasting a list into a list.
+                        if (node.childNodes.length != 0) {
+                            const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
+                            currentLastNode.after(...childNodes);
+                            currentLastNode = childNodes.slice(-1)[0];
+                        }
+                    } else {
+                        // Block node. Find the closest block node and duplicate it.
+                        currentNode = currentLastNode;
+                        var closestBlockNode;
+                        while (this.inEditor(currentNode) && this.editor != currentNode) {
+                            if (currentNode.nodeType == Node.ELEMENT_NODE && this.blockNodes.includes(currentNode.tagName)) {
+                                closestBlockNode = currentNode;
+                                break;
+                            }
+                            currentNode = currentNode.parentElement;
+                        }
+
+                        if (closestBlockNode) {
+                            // Clone the node and place the clone after the block node.
+                            const clonedBlockNode = closestBlockNode.cloneNode(false);
+                            clonedBlockNode.append(node);
+                            closestBlockNode.after(clonedBlockNode);
+                            currentLastNode = clonedBlockNode;
+                        } else {
+                            currentLastNode.after(node);
+                            currentLastNode = node;
+                        }
+                    }
                 }
 
                 // Place the cursor after the reconstructed nodes.
                 const newRange = new Range();
-                newRange.selectNodeContents(lastReconstructed);
-                newRange.collapse(false);
+                newRange.selectNodeContents(currentLastNode);
+                newRange.collapse(split ? true : false);
                 document.getSelection().removeAllRanges();
                 document.getSelection().addRange(newRange);
             }

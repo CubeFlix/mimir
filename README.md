@@ -25,6 +25,11 @@ a rich text editor for javascript
 - [x] bug with removing/changing styling with styling already applied 
 - [x] sanitization (handle spans, invalid elements, and nested styling)
 - [x] bug with changeStyle and font tag
+- [ ] div, brs, ps and lists in pastes
+- [ ] pasting multiline content into lists
+- [ ] spaces between pasted nodes
+- [ ] pasting with empty editor
+- [ ] update illegal tags
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
 - [ ] more styling options

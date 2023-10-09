@@ -4,6 +4,10 @@
     outline: none;
 }
 
+#editor-body p, div {
+    margin: 0;
+}
+
 /* Editor menubar. */
 #editor-menubar {
     display: flex;
