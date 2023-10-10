@@ -342,7 +342,8 @@ class Editor {
                 for (const node of reconstructed) {
                     // Combine any lists.
 
-                    // HANDLE PLACING FIRST LIST ELEM ON CURRENTLASTNODE
+                    // TODO: HANDLE PLACING FIRST LIST ELEM ON CURRENTLASTNODE
+                    // TODO: traverse up the node tree to see if its encapsulated by any lists, instead of doing all these checks
                     if ((node.tagName == "OL" || node.tagName == "UL") && currentLastNode.parentNode.tagName == "LI") {
                         currentLastNode.parentNode.after(...node.childNodes);
                         if (node.childNodes.length != 0) {
