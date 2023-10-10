@@ -267,8 +267,18 @@ class Editor {
 
         // Reconstruct the node.
         const reconstructed = this.reconstructNodeContents(original, original);
+
+        // Remove trailing and leading whitespace nodes.
+        const withoutWhitespace = [];
+        for (const node of reconstructed) {
+            if (!(node.nodeType == Node.TEXT_NODE && node.textContent.split(" ").join("").split("\n").join("") == "")) {
+                if (!(reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1)) {
+                    withoutWhitespace.push(node);
+                }
+            }
+        }
         
-        return reconstructed;
+        return withoutWhitespace;
     }
 
     /*
@@ -306,6 +316,8 @@ class Editor {
                     currentNode = currentNode.parentElement;
                 }
 
+                // TODO: actually split the node!
+                // Split the node and prepare to traverse the nodes.
                 var currentLastNode;
                 var split;
                 if (topmostStyleNode) {
@@ -321,84 +333,42 @@ class Editor {
                     this.editor.append(temp);
                     currentLastNode = temp;
                 }
-                
-                // Remove all empty nodes and fix orphaned <li> nodes.
-                const reconstructedFixed = [];
-                for (const node of reconstructed) {
-                    if (this.isEmpty(node)) {
-                        continue;
-                    }
-                    if (node.nodeType == Node.ELEMENT_NODE && node.tagName == "LI") {
-                        reconstructedFixed.push(...node.childNodes);
-                        continue;
-                    }
-                    reconstructedFixed.push(node);
-                }
+
                 if (split) {
-                    reconstructedFixed.push(split);
+                    reconstructed.push(split);
                 }
-                reconstructed = reconstructedFixed;
-
-                // Add in the reconstructed nodes.
+                
+                // Add each node.
                 for (const node of reconstructed) {
-                    console.log("adding node", node.cloneNode(true), "after", currentLastNode);
-                    // console.log(node, currentLastNode, currentLastNode.parentNode);
-                    if (node.nodeType == Node.TEXT_NODE && node.textContent.trim() == "") {
-                        continue;
-                    }
-                    if (this.isEmpty(node)) {
-                        continue;
-                    }
-                    if ((node.nodeType == Node.TEXT_NODE || !this.blockNodes.includes(node.tagName)) && !(reconstructed[reconstructed.indexOf(node) - 1] && (this.blockNodes.includes(reconstructed[reconstructed.indexOf(node) - 1].tagName) || reconstructed[reconstructed.indexOf(node) - 1].tagName == "OL" || reconstructed[reconstructed.indexOf(node) - 1].tagName == "UL"))) {
-                        // Not a block node.
-                        currentLastNode.after(node);
-                        currentLastNode = node;
-                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.parentNode.tagName == "LI")) {
-                        // Pasting a list into a list.
-                        if (node.childNodes.length != 0) {
-                            const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
-                            currentLastNode.parentNode.after(...childNodes);
-                            currentLastNode = childNodes.slice(-1)[0];
-                        }
-                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "OL" || currentLastNode.tagName == "UL")) {
-                        // Pasting a list into a list.
-                        console.log("knew it");
-                        if (node.childNodes.length != 0) {
-                            const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
-                            currentLastNode.append(...childNodes);
-                            currentLastNode = childNodes.slice(-1)[0];
-                        }
-                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "LI")) {
-                        // Pasting a list into a list.
-                        if (node.childNodes.length != 0) {
-                            const childNodes = Array.from(node.childNodes).filter(n => n.tagName == "LI");
-                            currentLastNode.after(...childNodes);
-                            currentLastNode = childNodes.slice(-1)[0];
-                        }
-                    } else {
-                        // Block node. Find the closest block node and duplicate it.
-                        currentNode = currentLastNode;
-                        var closestBlockNode;
-                        while (this.inEditor(currentNode) && this.editor != currentNode) {
-                            if (currentNode.nodeType == Node.ELEMENT_NODE && this.blockNodes.includes(currentNode.tagName)) {
-                                closestBlockNode = currentNode;
-                                break;
-                            }
-                            currentNode = currentNode.parentElement;
-                        }
+                    // Combine any lists.
 
-                        if (closestBlockNode) {
-                            // Clone the node and place the clone after the block node.
-                            const clonedBlockNode = closestBlockNode.cloneNode(false);
-                            clonedBlockNode.append(node);
-                            closestBlockNode.after(clonedBlockNode);
-                            currentLastNode = clonedBlockNode;
-                        } else {
-                            currentLastNode.after(node);
-                            currentLastNode = node;
+                    // HANDLE PLACING FIRST LIST ELEM ON CURRENTLASTNODE
+                    if ((node.tagName == "OL" || node.tagName == "UL") && currentLastNode.parentNode.tagName == "LI") {
+                        currentLastNode.parentNode.after(...node.childNodes);
+                        if (node.childNodes.length != 0) {
+                            currentLastNode = node.childNodes[node.childNodes.length - 1];
                         }
+                        continue;
                     }
+                    if ((node.tagName == "OL" || node.tagName == "UL") && currentLastNode.tagName == "LI") {
+                        currentLastNode.after(...node.childNodes);
+                        if (node.childNodes.length != 0) {
+                            currentLastNode = node.childNodes[node.childNodes.length - 1];
+                        }
+                        continue;
+                    }
+                    if ((node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "UL" || currentLastNode.tagName == "OL")) {
+                        currentLastNode.append(...node.childNodes);
+                        if (node.childNodes.length != 0) {
+                            currentLastNode = node.childNodes[node.childNodes.length - 1];
+                        }
+                        continue;
+                    }
+                    currentLastNode.after(node);
+                    currentLastNode = node;
                 }
+
+                // TODO: WHATS WITH THE CURSOR LOCATION
 
                 // Place the cursor after the reconstructed nodes.
                 const newRange = new Range();
