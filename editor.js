@@ -329,7 +329,7 @@ class Editor {
                 var currentNode = emptyTextNode;
                 var topmostInlineNode = null;
                 while (this.inEditor(currentNode) && this.editor != currentNode) {
-                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
+                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN" || currentNode.tagName == "LI")) {
                         // Styling node.
                         topmostInlineNode = currentNode;
                     }
@@ -343,14 +343,19 @@ class Editor {
                 if (topmostInlineNode) {
                     // Split the topmost node at the empty text node.
                     split = this.splitNodeAtChild(topmostInlineNode, emptyTextNode);
-                    if (!this.isEmpty(split)) {
-                        // reconstructed.push(split);
+                    if (split.tagName == "LI") {
+                        const newList = document.createElement(topmostInlineNode.parentNode.tagName);
+                        newList.append(split);
+                        split = newList;
                     }
-                    console.log(reconstructed, split);
+                    if (!this.isEmpty(split)) {
+                        reconstructed.push(split);
+                    }
                     currentLastNode = topmostInlineNode;
                 } else {
                     currentLastNode = emptyTextNode;
                 }
+                console.log(split ? split.cloneNode(true) : null);
                                 
                 // Add each node.
                 for (const node of reconstructed) {
@@ -370,7 +375,7 @@ class Editor {
                     }  else if (currentLastNode.parentNode.tagName == "UL" || currentLastNode.parentNode.tagName == "OL") {
                         encapsulatedList = currentLastNode.parentNode;
                     }
-                    console.log(node, currentLastNode, encapsulatedList);
+                    console.log(node.cloneNode(true), currentLastNode, encapsulatedList);
                     if (encapsulatedList) {
                         // The node is currently contained within a list.
                         if (encapsulatedList.tagName == "UL" || encapsulatedList.tagName == "OL") {
@@ -402,10 +407,11 @@ class Editor {
                         } else if (encapsulatedList.tagName == "LI") {
                             if (node.tagName == encapsulatedList.parentNode.tagName) {
                                 // Insert the current list inside the encapsulated list.
-                                const children = Array.from(node.childNodes);
-                                encapsulatedList.after(...node.childNodes);
+                                const children = Array.from(node.childNodes).filter(s => !(s.nodeType == Node.TEXT_NODE && s.textContent.trim() == ""));
+                                encapsulatedList.after(...children);
                                 if (children.length != 0) {
                                     currentLastNode = children.slice(-1)[0];
+                                    console.log("CLN", currentLastNode, children);
                                 }
                                 continue;
                             } else if (node.tagName == "LI") {
@@ -422,11 +428,11 @@ class Editor {
                                 currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
 
                                 // Now that we've split out of the surrounding list, place the original split node into a list elem.
-                                const newLi = document.createElement("li");
-                                const newSurroundingList = document.createElement(encapsulatedList.parentNode.tagName);
-                                newLi.append(split);
-                                newSurroundingList.append(newLi);
-                                split = newSurroundingList;
+                                // const newLi = document.createElement("li");
+                                // const newSurroundingList = document.createElement(encapsulatedList.parentNode.tagName);
+                                // newLi.append(split);
+                                // newSurroundingList.append(newLi);
+                                // split = newSurroundingList;
                                 console.log("hell???", split)
                                 continue;
                             } else if (this.blockNodes.includes(node.tagName)) {
@@ -451,7 +457,6 @@ class Editor {
                 // Place the cursor after the reconstructed nodes.
                 const newRange = new Range();
                 newRange.selectNodeContents(currentLastNode);
-                console.log(topmostInlineNode ? true : false, currentLastNode);
                 newRange.collapse(topmostInlineNode ? true : false);
                 document.getSelection().removeAllRanges();
                 document.getSelection().addRange(newRange);
