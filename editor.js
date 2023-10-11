@@ -330,7 +330,7 @@ class Editor {
                 var currentNode = emptyTextNode;
                 var topmostInlineNode = null;
                 while (this.inEditor(currentNode) && this.editor != currentNode) {
-                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN" || currentNode.tagName == "UL" || currentNode.tagName == "OL")) {
+                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
                         // Styling node.
                         topmostInlineNode = currentNode;
                     }
@@ -343,7 +343,7 @@ class Editor {
                     // Split the topmost node at the empty text node.
                     const split = this.splitNodeAtChild(topmostInlineNode, emptyTextNode);
                     if (!this.isEmpty(split)) {
-                         reconstructed.push(split);
+                        // reconstructed.push(split);
                     }
                     console.log(reconstructed);
                     currentLastNode = topmostInlineNode;
@@ -352,13 +352,11 @@ class Editor {
                 }
                                 
                 // Add each node.
-                // const nodeHistoryS
                 for (const node of reconstructed) {
                     // Combine any lists.
 
                     // TODO: HANDLE PLACING FIRST LIST ELEM ON CURRENTLASTNODE
-                    // TODO: traverse up the node tree to see if its encapsulated by any lists, instead of doing all these checks
-                    // TODO: break out of lists when encountering other elements
+                    // TODO: SPECIALLY insert in sliced node
 
                     // Check if the current last node is in a list.
                     var encapsulatedList = null;
@@ -389,8 +387,9 @@ class Editor {
                                 currentLastNode = node;
                                 continue;
                             } else if (node.tagName == "UL" || node.tagName == "OL") {
-                                // The node doesn't match the encapsulated list, so insert it outside the encapsulated list.
+                                // The node doesn't match the encapsulated list, so slice the encapsulated list and insert it after. TODO
                                 encapsulatedList.after(node);
+                                
                                 currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
                                 continue;
                             } else if (this.blockNodes.includes(node.tagName)) {
@@ -415,7 +414,10 @@ class Editor {
                                 continue;
                             } else if (node.tagName == "UL" || node.tagName == "OL") {
                                 // The node doesn't match the encapsulated list, so insert it outside the encapsulated list.
-                                encapsulatedList.parentNode.after(node);
+                                const temp = document.createTextNode("");
+                                encapsulatedList.after(temp);
+                                const splitList = this.splitNodeAtChild(encapsulatedList.parentNode, temp);
+                                encapsulatedList.parentNode.after(node, splitList);
                                 currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
                                 continue;
                             } else if (this.blockNodes.includes(node.tagName)) {
