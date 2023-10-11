@@ -310,7 +310,6 @@ class Editor {
                 if (range.startContainer.nodeType == Node.TEXT_NODE) {
                     // Split the text node and place an empty node in between.
                     const endTextNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
-                    console.log(endTextNode, range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
                     range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
                     range.startContainer.after(emptyTextNode, endTextNode);
                 } else {
@@ -338,14 +337,16 @@ class Editor {
                 }
 
                 // Split the node and place the remainder in the paste data.
-                var currentLastNode;
+
+                // TODO: endTextNode needs to be the new split if topmostInlineNode doesn't exist
+                var currentLastNode, split;
                 if (topmostInlineNode) {
                     // Split the topmost node at the empty text node.
-                    const split = this.splitNodeAtChild(topmostInlineNode, emptyTextNode);
+                    split = this.splitNodeAtChild(topmostInlineNode, emptyTextNode);
                     if (!this.isEmpty(split)) {
                         // reconstructed.push(split);
                     }
-                    console.log(reconstructed);
+                    console.log(reconstructed, split);
                     currentLastNode = topmostInlineNode;
                 } else {
                     currentLastNode = emptyTextNode;
@@ -419,6 +420,14 @@ class Editor {
                                 const splitList = this.splitNodeAtChild(encapsulatedList.parentNode, temp);
                                 encapsulatedList.parentNode.after(node, splitList);
                                 currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
+
+                                // Now that we've split out of the surrounding list, place the original split node into a list elem.
+                                const newLi = document.createElement("li");
+                                const newSurroundingList = document.createElement(encapsulatedList.parentNode.tagName);
+                                newLi.append(split);
+                                newSurroundingList.append(newLi);
+                                split = newSurroundingList;
+                                console.log("hell???", split)
                                 continue;
                             } else if (this.blockNodes.includes(node.tagName)) {
                                 // Break out of the list node.
