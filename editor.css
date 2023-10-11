@@ -4,8 +4,9 @@
     outline: none;
 }
 
-#editor-body p, div {
+#editor-body p, div, br {
     margin: 0;
+    line-height: 1;
 }
 
 /* Editor menubar. */

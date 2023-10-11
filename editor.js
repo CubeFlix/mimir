@@ -14,6 +14,7 @@ class Editor {
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
     illegalTags = ["SCRIPT"];
     blockNodes = ["BR", "DIV", "P", "OL", "UL", "LI"];
+    childlessNodes = ["BR", "IMG"];
 
     /* 
     Create the editor. 
@@ -271,11 +272,12 @@ class Editor {
         // Remove trailing and leading whitespace nodes.
         const withoutWhitespace = [];
         for (const node of reconstructed) {
-            if (!(node.nodeType == Node.TEXT_NODE && node.textContent.split(" ").join("").split("\n").join("") == "")) {
-                if (!(reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1)) {
-                    withoutWhitespace.push(node);
+            if (node.nodeType == Node.TEXT_NODE && node.textContent.split(" ").join("").split("\n").join("") == "") {
+                if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
+                    continue;
                 }
             }
+            withoutWhitespace.push(node);
         }
         
         return withoutWhitespace;
@@ -303,68 +305,132 @@ class Editor {
                     return;
                 }
 
-                // Break out of any style nodes.
-                const temp = document.createTextNode("");
-                range.insertNode(temp);
-                var currentNode = temp;
-                var topmostStyleNode = null;
+                // Split the start container at the start offset.
+                const emptyTextNode = document.createTextNode("");
+                if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                    // Split the text node and place an empty node in between.
+                    const endTextNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
+                    console.log(endTextNode, range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
+                    range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
+                    range.startContainer.after(emptyTextNode, endTextNode);
+                } else {
+                    // Split the node.
+                    if (range.startOffset == 0) {
+                        if (!this.childlessNodes.includes(range.startContainer.tagName)) {
+                            range.startContainer.prepend(emptyTextNode);
+                        } else {
+                            range.startContainer.before(emptyTextNode);
+                        }
+                    } else {
+                        range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
+                    }
+                }
+
+                // Traverse the node tree and look for the topmost inline node.
+                var currentNode = emptyTextNode;
+                var topmostInlineNode = null;
                 while (this.inEditor(currentNode) && this.editor != currentNode) {
-                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
+                    if (currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN" || currentNode.tagName == "UL" || currentNode.tagName == "OL")) {
                         // Styling node.
-                        topmostStyleNode = currentNode;
+                        topmostInlineNode = currentNode;
                     }
                     currentNode = currentNode.parentElement;
                 }
 
-                // TODO: actually split the node!
-                // Split the node and prepare to traverse the nodes.
+                // Split the node and place the remainder in the paste data.
                 var currentLastNode;
-                var split;
-                if (topmostStyleNode) {
-                    // If there are any style nodes passed on the way up, split the node.
-                    split = this.splitNodeAtChild(topmostStyleNode, temp);
-                    currentLastNode = topmostStyleNode;
+                if (topmostInlineNode) {
+                    // Split the topmost node at the empty text node.
+                    const split = this.splitNodeAtChild(topmostInlineNode, emptyTextNode);
+                    if (!this.isEmpty(split)) {
+                         reconstructed.push(split);
+                    }
+                    console.log(reconstructed);
+                    currentLastNode = topmostInlineNode;
                 } else {
-                    currentLastNode = range.startContainer;
+                    currentLastNode = emptyTextNode;
                 }
-
-                if (currentLastNode == this.editor) {
-                    const temp = document.createTextNode("");
-                    this.editor.append(temp);
-                    currentLastNode = temp;
-                }
-
-                if (split) {
-                    reconstructed.push(split);
-                }
-                
+                                
                 // Add each node.
+                // const nodeHistoryS
                 for (const node of reconstructed) {
                     // Combine any lists.
 
                     // TODO: HANDLE PLACING FIRST LIST ELEM ON CURRENTLASTNODE
                     // TODO: traverse up the node tree to see if its encapsulated by any lists, instead of doing all these checks
-                    if ((node.tagName == "OL" || node.tagName == "UL") && currentLastNode.parentNode.tagName == "LI") {
-                        currentLastNode.parentNode.after(...node.childNodes);
-                        if (node.childNodes.length != 0) {
-                            currentLastNode = node.childNodes[node.childNodes.length - 1];
-                        }
-                        continue;
+                    // TODO: break out of lists when encountering other elements
+
+                    // Check if the current last node is in a list.
+                    var encapsulatedList = null;
+                    if (currentLastNode.parentNode.tagName == "LI") {
+                        encapsulatedList = currentLastNode.parentNode;
+                    } else if (currentLastNode.tagName == "LI") {
+                        encapsulatedList = currentLastNode;
+                    } else if (currentLastNode.tagName == "UL" || currentLastNode.tagName == "OL") {
+                        encapsulatedList = currentLastNode;
+                    }  else if (currentLastNode.parentNode.tagName == "UL" || currentLastNode.parentNode.tagName == "OL") {
+                        encapsulatedList = currentLastNode.parentNode;
                     }
-                    if ((node.tagName == "OL" || node.tagName == "UL") && currentLastNode.tagName == "LI") {
-                        currentLastNode.after(...node.childNodes);
-                        if (node.childNodes.length != 0) {
-                            currentLastNode = node.childNodes[node.childNodes.length - 1];
+                    console.log(node, currentLastNode, encapsulatedList);
+                    if (encapsulatedList) {
+                        // The node is currently contained within a list.
+                        if (encapsulatedList.tagName == "UL" || encapsulatedList.tagName == "OL") {
+                            if (node.tagName == encapsulatedList.tagName) {
+                                // Insert the current list inside the encapsulated list.
+                                const children = Array.from(node.childNodes);
+                                encapsulatedList.append(...children);
+                                if (children.length != 0) {
+                                    currentLastNode = children.slice(-1)[0];
+                                }
+                                continue;
+                            } else if (node.tagName == "LI") {
+                                // Insert the list element.
+                                encapsulatedList.append(node);
+                                currentLastNode = node;
+                                continue;
+                            } else if (node.tagName == "UL" || node.tagName == "OL") {
+                                // The node doesn't match the encapsulated list, so insert it outside the encapsulated list.
+                                encapsulatedList.after(node);
+                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
+                                continue;
+                            } else if (this.blockNodes.includes(node.tagName)) {
+                                // Break out of the list node.
+                                encapsulatedList.after(node);
+                                currentLastNode = node;
+                                continue;
+                            }
+                        } else if (encapsulatedList.tagName == "LI") {
+                            if (node.tagName == encapsulatedList.parentNode.tagName) {
+                                // Insert the current list inside the encapsulated list.
+                                const children = Array.from(node.childNodes);
+                                encapsulatedList.after(...node.childNodes);
+                                if (children.length != 0) {
+                                    currentLastNode = children.slice(-1)[0];
+                                }
+                                continue;
+                            } else if (node.tagName == "LI") {
+                                // Insert the list element.
+                                encapsulatedList.after(node);
+                                currentLastNode = node;
+                                continue;
+                            } else if (node.tagName == "UL" || node.tagName == "OL") {
+                                // The node doesn't match the encapsulated list, so insert it outside the encapsulated list.
+                                encapsulatedList.parentNode.after(node);
+                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
+                                continue;
+                            } else if (this.blockNodes.includes(node.tagName)) {
+                                // Break out of the list node.
+                                encapsulatedList.parentNode.after(node);
+                                currentLastNode = node;
+                                continue;
+                            }
                         }
-                        continue;
                     }
-                    if ((node.tagName == "OL" || node.tagName == "UL") && (currentLastNode.tagName == "UL" || currentLastNode.tagName == "OL")) {
-                        currentLastNode.append(...node.childNodes);
-                        if (node.childNodes.length != 0) {
-                            currentLastNode = node.childNodes[node.childNodes.length - 1];
-                        }
-                        continue;
-                    }
+
+                    // TODO: handle freestanding LI node
+
+                    // var currentNode = 
+
                     currentLastNode.after(node);
                     currentLastNode = node;
                 }
@@ -374,7 +440,8 @@ class Editor {
                 // Place the cursor after the reconstructed nodes.
                 const newRange = new Range();
                 newRange.selectNodeContents(currentLastNode);
-                newRange.collapse(split ? true : false);
+                console.log(topmostInlineNode ? true : false, currentLastNode);
+                newRange.collapse(topmostInlineNode ? true : false);
                 document.getSelection().removeAllRanges();
                 document.getSelection().addRange(newRange);
             }

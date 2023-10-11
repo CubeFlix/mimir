@@ -30,7 +30,8 @@ a rich text editor for javascript
 - [ ] when pasting list into list, it sometimes places list at the end of the lists
 - [ ] spaces between pasted nodes
 - [ ] pasting with empty editor
-- [ ] update illegal tags
+- [ ] update illegal tags (ignore the tags instead of removing them)
+- [ ] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
 - [ ] more styling options
