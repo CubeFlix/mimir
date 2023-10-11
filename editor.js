@@ -272,8 +272,8 @@ class Editor {
         // Remove trailing and leading whitespace nodes.
         const withoutWhitespace = [];
         for (const node of reconstructed) {
-            if (node.nodeType == Node.TEXT_NODE && node.textContent.split(" ").join("").split("\n").join("") == "") {
-                if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
+            if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
+                if (node.nodeType == Node.TEXT_NODE && node.textContent.split(" ").join("").split("\n").join("") == "") {
                     continue;
                 }
             }
@@ -372,9 +372,10 @@ class Editor {
                         encapsulatedList = currentLastNode;
                     } else if (currentLastNode.tagName == "UL" || currentLastNode.tagName == "OL") {
                         encapsulatedList = currentLastNode;
-                    }  else if (currentLastNode.parentNode.tagName == "UL" || currentLastNode.parentNode.tagName == "OL") {
+                    } else if (currentLastNode.parentNode.tagName == "UL" || currentLastNode.parentNode.tagName == "OL") {
                         encapsulatedList = currentLastNode.parentNode;
                     }
+
                     console.log(node.cloneNode(true), currentLastNode, encapsulatedList);
                     if (encapsulatedList) {
                         // The node is currently contained within a list.
@@ -396,14 +397,15 @@ class Editor {
                                 // The node doesn't match the encapsulated list, so slice the encapsulated list and insert it after. TODO
                                 encapsulatedList.after(node);
                                 
-                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
-                                continue;
-                            } else if (this.blockNodes.includes(node.tagName)) {
-                                // Break out of the list node.
-                                encapsulatedList.after(node);
-                                currentLastNode = node;
+                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
                                 continue;
                             }
+                            // else if (this.blockNodes.includes(node.tagName)) {
+                            //     // Break out of the list node.
+                            //     encapsulatedList.after(node);
+                            //     currentLastNode = node;
+                            //     continue;
+                            // }
                         } else if (encapsulatedList.tagName == "LI") {
                             if (node.tagName == encapsulatedList.parentNode.tagName) {
                                 // Insert the current list inside the encapsulated list.
@@ -425,22 +427,20 @@ class Editor {
                                 encapsulatedList.after(temp);
                                 const splitList = this.splitNodeAtChild(encapsulatedList.parentNode, temp);
                                 encapsulatedList.parentNode.after(node, splitList);
-                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : node;
-
-                                // Now that we've split out of the surrounding list, place the original split node into a list elem.
-                                // const newLi = document.createElement("li");
-                                // const newSurroundingList = document.createElement(encapsulatedList.parentNode.tagName);
-                                // newLi.append(split);
-                                // newSurroundingList.append(newLi);
-                                // split = newSurroundingList;
-                                console.log("hell???", split)
+                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
                                 continue;
-                            } else if (this.blockNodes.includes(node.tagName)) {
-                                // Break out of the list node.
-                                encapsulatedList.parentNode.after(node);
+                            } else {
+                                // Place the node inside the list node.
+                                encapsulatedList.append(node);
                                 currentLastNode = node;
                                 continue;
                             }
+                            // else if (this.blockNodes.includes(node.tagName)) {
+                            //     // Break out of the list node.
+                            //     encapsulatedList.parentNode.after(node);
+                            //     currentLastNode = node;
+                            //     continue;
+                            // }
                         }
                     }
 

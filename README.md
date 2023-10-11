@@ -38,3 +38,9 @@ a rich text editor for javascript
 - [ ] block styling options
 - [ ] lists
 - [ ] images
+
+## notes
+
+Things that need to be handled during paste:
+- Pasting inline into inline should return inline.
+- Pasting list in list should split and combine the lists.
