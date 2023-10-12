@@ -25,11 +25,11 @@ a rich text editor for javascript
 - [x] bug with removing/changing styling with styling already applied 
 - [x] sanitization (handle spans, invalid elements, and nested styling)
 - [x] bug with changeStyle and font tag
-- [ ] div, brs, ps and lists in pastes
-- [ ] pasting multiline content into lists
-- [ ] when pasting list into list, it sometimes places list at the end of the lists
-- [ ] spaces between pasted nodes
-- [ ] pasting with empty editor
+- [x] div, brs, ps and lists in pastes
+- [x] pasting multiline content into lists
+- [x] when pasting list into list, it sometimes places list at the end of the lists
+- [x] spaces between pasted nodes
+- [x] pasting with empty editor
 - [ ] update illegal tags (ignore the tags instead of removing them)
 - [ ] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
