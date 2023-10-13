@@ -1508,6 +1508,46 @@ class Editor {
         this.performStyleCommand({type: "font", family: this.menubarOptions.font.value});
     }
 
+    /*
+    Serialize a node's contents to a object.
+    */
+    serializeContents(node) {
+        const serialized = [];
+        for (const child of node.childNodes) {
+            if (child.nodeType == Node.TEXT_NODE) {
+                serialized.push(child.textContent);
+            } else if (child.nodeType == Node.ELEMENT_NODE) {
+                const attrs = {};
+                for (var i = 0; i < child.attributes.length; i++) {
+                    attrs[child.attributes[i].name] = child.attributes[i].value;
+                }
+                serialized.push({tag: child.tagName, children: this.serializeContents(child), attrs: attrs});
+            }
+        }
+        return serialized;
+    }
+
+    /*
+    Deserialize a serialized node object to a node.
+    */
+    deserializeContents(obj, node) {
+        for (const elem of obj) {
+            if (typeof elem == "string" || elem instanceof String) {
+                // Text node.
+                node.append(document.createTextNode(elem));
+            } else {
+                // Element.
+                const newElem = document.createElement(elem.tag);
+                for (const attr in elem.attrs) {
+                    newElem.setAttribute(attr, elem.attrs[attr]);
+                }
+                this.deserializeContents(elem.children, newElem);
+                node.append(newElem);
+            }
+        }
+    }
+
+
     /* 
     Initialize the editor. Must be called before using the editor. 
     */
@@ -1515,6 +1555,7 @@ class Editor {
         // Initialize history.
         this.history = [];
         this.redoHistory = [];
+        this.shouldTakeSnapshotOnNextChange = false;
 
         // Initialize the global range cache variable.
         this.rangeCache = null;
