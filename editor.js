@@ -1373,19 +1373,27 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset.
-            var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
-            firstNode.textContent = firstNode.textContent.slice(0, startOffset);
-            firstNode.after(newStartNode);
-            if (firstNode.textContent == "") {
-                firstNode.remove();
+            if (firstNode.tagName != "BR") {                
+                var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
+                firstNode.textContent = firstNode.textContent.slice(0, startOffset);
+                firstNode.after(newStartNode);
+                if (firstNode.textContent == "") {
+                    firstNode.remove();
+                }
+            } else {
+                var newStartNode = firstNode;
             }
 
             // Split the last node at the end offset.
-            var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
-            lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
-            lastNode.before(newEndNode);
-            if (lastNode.textContent == "") {
-                lastNode.remove();
+            if (lastNode.tagName != "BR") {
+                var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
+                lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
+                lastNode.before(newEndNode);
+                if (lastNode.textContent == "") {
+                    lastNode.remove();
+                }
+            } else {
+                var newEndNode = lastNode;
             }
 
             // Change the styling for each node.

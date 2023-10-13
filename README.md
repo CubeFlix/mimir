@@ -32,7 +32,7 @@ a rich text editor for javascript
 - [x] pasting with empty editor
 - [ ] update illegal tags (ignore the tags instead of removing them)
 - [ ] sanitize out stuff like `pre`, `code`, `h1`, etc.
-- [ ] urgent bug with styling line break (handle BR)
+- [x] urgent bug with styling line break (handle BR)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
 - [ ] more styling options
