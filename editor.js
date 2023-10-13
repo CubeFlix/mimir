@@ -1159,7 +1159,7 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset.
-            if (firstNode.tagName == "BR") {
+            if (firstNode.tagName != "BR") {
                 var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
                 firstNode.textContent = firstNode.textContent.slice(0, startOffset);
                 firstNode.after(newStartNode);
@@ -1171,7 +1171,7 @@ class Editor {
             }
 
             // Split the last node at the end offset.
-            if (lastNode.tagName == "BR") {
+            if (lastNode.tagName != "BR") {
                 var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
                 lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
                 lastNode.before(newEndNode);
