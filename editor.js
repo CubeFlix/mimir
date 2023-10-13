@@ -822,21 +822,29 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset and place the remainder in a new style element.
-            var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
-            firstNode.textContent = firstNode.textContent.slice(0, startOffset);
-            firstNode.after(newStartNode);
-            newStartNode = this.applyStyleToNode(newStartNode, style);
-            if (firstNode.textContent == "") {
-                firstNode.remove();
+            if (firstNode.tagName != "BR") {
+                var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
+                firstNode.textContent = firstNode.textContent.slice(0, startOffset);
+                firstNode.after(newStartNode);
+                newStartNode = this.applyStyleToNode(newStartNode, style);
+                if (firstNode.textContent == "") {
+                    firstNode.remove();
+                }
+            } else {
+                newStartNode = this.applyStyleToNode(firstNode, style);
             }
 
             // Split the last node at the end offset and place the remainder in a new style element.
-            var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
-            lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
-            lastNode.before(newEndNode);
-            newEndNode = this.applyStyleToNode(newEndNode, style);
-            if (lastNode.textContent == "") {
-                lastNode.remove();
+            if (lastNode.tagName != "BR") {
+                var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
+                lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
+                lastNode.before(newEndNode);
+                newEndNode = this.applyStyleToNode(newEndNode, style);
+                if (lastNode.textContent == "") {
+                    lastNode.remove();
+                }
+            } else {
+                newEndNode = this.applyStyleToNode(lastNode, style);
             }
 
             // Place each node in between in a new tag.
@@ -853,6 +861,18 @@ class Editor {
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
             const node = nodes[0];
+
+            // Handle BR nodes.
+            if (node.tagName == "BR") {
+                const styledNode = this.applyStyleToNode(node, style);
+
+                // Select the new node.
+                const newRange = new Range();
+                newRange.selectNodeContents(styledNode);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
 
             // Split the node at the start and end offsets.
             var styledNode = document.createTextNode(node.textContent.slice(startOffset, endOffset));
@@ -1139,19 +1159,27 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset.
-            var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
-            firstNode.textContent = firstNode.textContent.slice(0, startOffset);
-            firstNode.after(newStartNode);
-            if (firstNode.textContent == "") {
-                firstNode.remove();
+            if (firstNode.tagName == "BR") {
+                var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
+                firstNode.textContent = firstNode.textContent.slice(0, startOffset);
+                firstNode.after(newStartNode);
+                if (firstNode.textContent == "") {
+                    firstNode.remove();
+                }
+            } else {
+                var newStartNode = firstNode;
             }
 
             // Split the last node at the end offset.
-            var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
-            lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
-            lastNode.before(newEndNode);
-            if (lastNode.textContent == "") {
-                lastNode.remove();
+            if (lastNode.tagName == "BR") {
+                var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
+                lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
+                lastNode.before(newEndNode);
+                if (lastNode.textContent == "") {
+                    lastNode.remove();
+                }
+            } else {
+                var newEndNode = lastNode;
             }
 
             // Remove the styling for each node.
@@ -1169,6 +1197,18 @@ class Editor {
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
             const node = nodes[0];
+
+            // Handle BR nodes.
+            if (node.tagName == "BR") {
+                const styledNode = this.removeStyleOnNode(node, style);
+
+                // Select the new node.
+                const newRange = new Range();
+                newRange.selectNodeContents(styledNode);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
 
             // Split the node at the start and end offsets.
             var styledNode = document.createTextNode(node.textContent.slice(startOffset, endOffset));
