@@ -35,6 +35,25 @@ class Editor {
     }
 
     /*
+    Helper function for hashing HTML data. Source: cyrb53 (https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js).
+    */
+    hash(str, seed = 0) {
+        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+        for(let i = 0, ch; i < str.length; i++) {
+            ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+        h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+        h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      
+        return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    };
+    
+
+    /*
     Create the cursor object.
     */
     createCursor() {
@@ -303,6 +322,8 @@ class Editor {
     */
     bindPasteEvents() {
         this.editor.addEventListener("paste", function(e) {
+            this.saveHistory();
+
             if (e.clipboardData.getData("text/html")) {
                 // Prepare to reconstruct and paste the HTML data.
                 e.preventDefault();
@@ -818,6 +839,8 @@ class Editor {
         }
 
         if (nodes.length >= 2) {
+            this.saveHistory();
+
             const firstNode = nodes[0];
             const lastNode = nodes.slice(-1)[0];
 
@@ -860,6 +883,8 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
+            this.saveHistory();
+
             const node = nodes[0];
 
             // Handle BR nodes.
@@ -910,10 +935,13 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 0) {
-            // Create a new node at the current range.
             if (!this.inEditor(range.commonAncestorContainer)) {
                 return;
             }
+
+            this.saveHistory();
+
+            // Create a new node at the current range.
             const node = document.createTextNode("");
             const siblings = range.commonAncestorContainer.childNodes;
             if (siblings.length == 0) {
@@ -1155,6 +1183,8 @@ class Editor {
         }
 
         if (nodes.length >= 2) {
+            this.saveHistory();
+
             const firstNode = nodes[0];
             const lastNode = nodes.slice(-1)[0];
 
@@ -1196,6 +1226,8 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
+            this.saveHistory();
+
             const node = nodes[0];
 
             // Handle BR nodes.
@@ -1254,10 +1286,13 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 0) {
-            // Create a new node at the current range.
             if (!this.inEditor(range.commonAncestorContainer)) {
                 return;
             }
+
+            this.saveHistory();
+
+            // Create a new node at the current range.
             const node = document.createTextNode("");
             const siblings = range.commonAncestorContainer.childNodes;
             if (siblings.length == 0) {
@@ -1595,6 +1630,126 @@ class Editor {
         }
     }
 
+    /*
+    Serialize a range in the editor.
+    */
+    serializeRange(range) {
+        // Serialize a node by traversing upwards and tracing a path to the node.
+        function serializeNodePoint(node) {
+            // Go up the node tree until we get to the common parent.
+            var currentNode = node;
+            const path = [];
+            while (this.inEditor(currentNode) && currentNode != this.editor) {
+                path.push(Array.from(currentNode.parentNode.childNodes).indexOf(currentNode));
+                currentNode = currentNode.parentNode;
+            }
+            return path;
+        }
+        const startContainerPath = serializeNodePoint(range.startContainer);
+        const endContainerPath = serializeNodePoint(range.endContainer);
+        return {startContainer: startContainerPath, 
+            startOffset: range.startOffset,
+            endContainer: endContainerPath,
+            endOffset: range.endOffset};
+    }
+
+    /*
+    Deserialize a range in the editor.
+    */
+    deserializeRange(serializedRange) {
+        const newRange = new Range();
+        function findNode(nodePath) {
+            // Traverse the node point array and find the target node.
+            var currentChild = this.editor;
+            while (nodePath.length != 0) {
+                currentChild = currentChild.childNodes[nodePath[nodePath.length - 1]];
+                nodePath.pop();
+            }
+            return currentChild;
+        }
+        const startNode = findNode(serializedRange.startContainer);
+        const endNode = findNode(serializedRange.endContainer);
+        newRange.setStart(startNode, serializedRange.startOffset);
+        newRange.setEnd(endNode, serializedRange.endOffset);
+        return newRange;
+    }
+
+    /*
+    Take a snapshot of the editor.
+    */
+    snapshot() {
+        const content = this.editor.cloneNode(true);
+        var range = null;
+        if (window.getSelection().rangeCount != 0) {
+            const selRange = this.getRange();
+            if (inEditor(selRange.commonAncestorContainer)) {
+                range = this.serializeRange(selRange, this.editor);
+            }
+        }
+        return {content: content, range: range, hash: this.hash(this.editor.innerHTML)};
+    }
+
+    /*
+    Save a snapshot of the editor to history.
+    */
+    saveHistory() {
+        const snap = this.snapshot();
+        this.history.push(snap);
+    }
+
+    /*
+    Undo.
+    */
+    undo() {
+        var snap = this.history.pop();
+
+        // If the undo snapshot is the same as the current content, ignore it.
+        if (snap.hash == this.hash(this.editor.innerHTML) && this.history.length != 0) {
+            snap = this.history.pop();
+        }
+
+        // Save to redo history.
+        this.redoHistory.push(this.snapshot());
+
+        // Replace the content of the editor with the snapshot.
+        this.editor.innerHTML = "";
+        this.editor.append(...snap.content.childNodes);
+        if (snap.range != null) {
+            const range = this.deserializeRange(snap.range, this.editor);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        }
+
+        if (this.history.length == 0) {
+            this.saveHistory();
+        }
+    }
+
+    /*
+    Redo.
+    */
+    redo() {
+        if (this.redoHistory.length == 0) {
+            return;
+        }
+
+        var snap = this.redoHistory.pop();
+        this.saveHistory();
+
+        // If the undo snapshot is the same as the current content, ignore it.
+        if (snap.content.innerHTML == this.editor.innerHTML) {
+            snap = this.redoHistory.pop();
+        }
+
+        // Replace the content of the editor with the snapshot.
+        this.editor.innerHTML = "";
+        this.editor.append(...snap.content.childNodes);
+        if (snap.range != null) {
+            const range = this.deserializeRange(snap.range, editor);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        }
+    }
 
     /* 
     Initialize the editor. Must be called before using the editor. 

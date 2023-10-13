@@ -35,6 +35,7 @@ a rich text editor for javascript
 - [x] urgent bug with styling line break (handle BR)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] history (restore selection and currentCursor)
+- [ ] history length limit
 - [ ] more styling options
 - [ ] block styling options
 - [ ] lists
