@@ -1747,10 +1747,14 @@ class Editor {
     Save a snapshot of the editor to history.
     */
     saveHistory() {
+        if (this.hash(this.editor.innerHTML) == this.history[this.history.length - 1]?.hash) {
+            return;
+        }
+
         if (this.history.length >= this.historyLimit) {
             this.history.shift();
         }
-        
+
         const snap = this.snapshot();
         this.history.push(snap);
     }
