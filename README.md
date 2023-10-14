@@ -37,6 +37,7 @@ a rich text editor for javascript
 - [x] history (restore selection and currentCursor)
 - [x] history length limit
 - [ ] drag and drop
+- [ ] fix metaKey support on webkit
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options
