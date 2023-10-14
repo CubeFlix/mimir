@@ -12,7 +12,7 @@ class Editor {
 
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
-    illegalTags = ["SCRIPT"];
+    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"];
     childlessTags = ["BR", "IMG"];
 
@@ -256,13 +256,8 @@ class Editor {
                 // Append the newly reconstructed node.
                 reconstructed.push(currentReconstructedNode);
             } else if (child.nodeType == Node.ELEMENT_NODE) {
-                // If the tag is invalid, ignore it.
-                if (this.illegalTags.includes(child.tagName)) {
-                    continue;
-                }
-
-                // If this tag is a styling tag, ignore it but parse its children.
-                if (this.stylingTags.includes(child.tagName) || child.tagName == "SPAN") {
+                // If this tag is a styling/illegal tag, ignore it but parse its children.
+                if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
                     const reconstructedChildren = this.reconstructNodeContents(child, parent);
 
@@ -282,10 +277,15 @@ class Editor {
                 const newNode = document.createElement(child.tagName);
 
                 // Add any important attributes.
+                console.log(child.attributes)
                 if (child.getAttribute("href")) {
                     if (child.getAttribute("href").trim().substring(0, 11).toLowerCase() !== "javascript:") {
                         newNode.setAttribute("href", child.getAttribute("href"));
                     }
+                } else if (child.getAttribute("src")) {
+                    newNode.setAttribute("src", child.getAttribute("src"));
+                } else if (child.getAttribute("alt")) {
+                    newNode.setAttribute("alt", child.getAttribute("alt"));
                 }
 
                 // Reconstruct the node's children.
@@ -1736,7 +1736,7 @@ class Editor {
         var range = null;
         if (window.getSelection().rangeCount != 0) {
             const selRange = this.getRange();
-            if (this.inEditor(selRange.commonAncestorContainer)) {
+            if (selRange && this.inEditor(selRange.commonAncestorContainer)) {
                 range = this.serializeRange(selRange, this.editor);
             }
         }

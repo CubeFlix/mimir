@@ -30,7 +30,7 @@ a rich text editor for javascript
 - [x] when pasting list into list, it sometimes places list at the end of the lists
 - [x] spaces between pasted nodes
 - [x] pasting with empty editor
-- [ ] update illegal tags (ignore the tags instead of removing them)
+- [x] update illegal tags (ignore the tags instead of removing them)
 - [ ] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [x] urgent bug with styling line break (handle BR)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
@@ -38,6 +38,7 @@ a rich text editor for javascript
 - [x] history length limit
 - [ ] drag and drop
 - [ ] more styling options
+- [ ] retain selection when leaving editor
 - [ ] block styling options
 - [ ] lists
 - [ ] images
