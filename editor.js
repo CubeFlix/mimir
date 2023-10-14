@@ -25,6 +25,7 @@ class Editor {
 
         this.commands = ["bold", "italic", "underline", "strikethrough", "font"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
+        this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
 
@@ -1746,6 +1747,10 @@ class Editor {
     Save a snapshot of the editor to history.
     */
     saveHistory() {
+        if (this.history.length >= this.historyLimit) {
+            this.history.shift();
+        }
+        
         const snap = this.snapshot();
         this.history.push(snap);
     }
