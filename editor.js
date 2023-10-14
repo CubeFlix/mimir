@@ -166,6 +166,22 @@ class Editor {
                 e.preventDefault();
                 this.underline();
                 return;
+            } else if (e.key.toLowerCase() == "z" && (e.ctrlKey || e.metaKey)) {
+                // Undo.
+                e.preventDefault();
+                this.undo();
+                return;
+            } else if (e.key.toLowerCase() == "y" && (e.ctrlKey || e.metaKey)) {
+                // Redo.
+                e.preventDefault();
+                this.redo();
+                return;
+            }
+
+            if (e.key == "Enter") {
+                // Enter key pressed, save history.
+                this.saveHistory();
+                this.shouldTakeSnapshotOnNextChange = true;
             }
 
             if (e.key == "ArrowLeft") {
@@ -184,6 +200,12 @@ class Editor {
             }
 
             if (this.ascii.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                // Take a snapshot if needed.
+                if (this.shouldTakeSnapshotOnNextChange) {
+                    this.saveHistory();
+                    this.shouldTakeSnapshotOnNextChange = false;
+                }
+
                 // Check if the caret is inside a cursor.
                 const range = this.getRange();
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
@@ -324,6 +346,7 @@ class Editor {
         this.editor.addEventListener("paste", function(e) {
             this.saveHistory();
 
+            // Paste HTML data.
             if (e.clipboardData.getData("text/html")) {
                 // Prepare to reconstruct and paste the HTML data.
                 e.preventDefault();
@@ -554,6 +577,18 @@ class Editor {
             onChangeSelect();
             document.removeEventListener("selectionchange", onChangeSelect);
         });
+    }
+    
+    /*
+    Bind save history interval.
+    */
+    bindSaveHistoryInterval() {
+        setInterval(function() {
+            // Take periodic history snapshots.
+            if (this.hash(this.editor.innerHTML) != this.history[this.history.length - 1].hash) {
+                this.saveHistory();
+            }
+        }.bind(this), this.snapshotInterval);
     }
 
     /* 
@@ -840,6 +875,7 @@ class Editor {
 
         if (nodes.length >= 2) {
             this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
 
             const firstNode = nodes[0];
             const lastNode = nodes.slice(-1)[0];
@@ -884,6 +920,7 @@ class Editor {
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
             this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
 
             const node = nodes[0];
 
@@ -940,6 +977,7 @@ class Editor {
             }
 
             this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
 
             // Create a new node at the current range.
             const node = document.createTextNode("");
@@ -1184,6 +1222,7 @@ class Editor {
 
         if (nodes.length >= 2) {
             this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
 
             const firstNode = nodes[0];
             const lastNode = nodes.slice(-1)[0];
@@ -1227,6 +1266,7 @@ class Editor {
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
             this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
 
             const node = nodes[0];
 
@@ -1291,6 +1331,7 @@ class Editor {
             }
 
             this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
 
             // Create a new node at the current range.
             const node = document.createTextNode("");
@@ -1404,6 +1445,9 @@ class Editor {
         }
 
         if (nodes.length >= 2) {
+            this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
+
             const firstNode = nodes[0];
             const lastNode = nodes.slice(-1)[0];
 
@@ -1445,6 +1489,9 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
+            this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
+
             const node = nodes[0];
 
             // Split the node at the start and end offsets.
@@ -1467,14 +1514,14 @@ class Editor {
                 // If the node is empty, create a cursor to bind the caret to.
                 const cursor = this.createCursor();
                 var furthestInsideNode = styledNode;
-            while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
-                furthestInsideNode = furthestInsideNode.childNodes[0];
-            }
-            if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
-                furthestInsideNode.after(cursor);
-            } else {
-                furthestInsideNode.append(cursor);
-            }
+                while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                    furthestInsideNode = furthestInsideNode.childNodes[0];
+                }
+                if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                    furthestInsideNode.after(cursor);
+                } else {
+                    furthestInsideNode.append(cursor);
+                }
 
                 // Select the cursor.
                 const newRange = new Range();
@@ -1495,6 +1542,10 @@ class Editor {
             if (!this.inEditor(range.commonAncestorContainer)) {
                 return;
             }
+
+            this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
+
             const node = document.createTextNode("");
             const siblings = range.commonAncestorContainer.childNodes;
             if (siblings.length == 0) {
@@ -1645,6 +1696,7 @@ class Editor {
             }
             return path;
         }
+        serializeNodePoint = serializeNodePoint.bind(this);
         const startContainerPath = serializeNodePoint(range.startContainer);
         const endContainerPath = serializeNodePoint(range.endContainer);
         return {startContainer: startContainerPath, 
@@ -1667,6 +1719,7 @@ class Editor {
             }
             return currentChild;
         }
+        findNode = findNode.bind(this);
         const startNode = findNode(serializedRange.startContainer);
         const endNode = findNode(serializedRange.endContainer);
         newRange.setStart(startNode, serializedRange.startOffset);
@@ -1682,7 +1735,7 @@ class Editor {
         var range = null;
         if (window.getSelection().rangeCount != 0) {
             const selRange = this.getRange();
-            if (inEditor(selRange.commonAncestorContainer)) {
+            if (this.inEditor(selRange.commonAncestorContainer)) {
                 range = this.serializeRange(selRange, this.editor);
             }
         }
@@ -1719,6 +1772,9 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
         }
+        if (this.editor.getElementsByClassName("editor-temp-cursor").length != 0) {
+            this.currentCursor = this.editor.getElementsByClassName("editor-temp-cursor")[0];
+        }
 
         if (this.history.length == 0) {
             this.saveHistory();
@@ -1737,7 +1793,7 @@ class Editor {
         this.saveHistory();
 
         // If the undo snapshot is the same as the current content, ignore it.
-        if (snap.content.innerHTML == this.editor.innerHTML) {
+        if (snap.hash == this.hash(this.editor.innerHTML)) {
             snap = this.redoHistory.pop();
         }
 
@@ -1748,6 +1804,9 @@ class Editor {
             const range = this.deserializeRange(snap.range, editor);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
+        }
+        if (this.editor.getElementsByClassName("editor-temp-cursor").length != 0) {
+            this.currentCursor = this.editor.getElementsByClassName("editor-temp-cursor")[0];
         }
     }
 
@@ -1775,6 +1834,8 @@ class Editor {
         this.editor.setAttribute("contenteditable", "true");
         this.container.append(this.editor);
 
+        this.saveHistory();
+
         // Apply min/max height.
         this.applySizeStyles();
 
@@ -1789,5 +1850,8 @@ class Editor {
 
         // Bind event listeners for paste event.
         this.bindPasteEvents();
+
+        // Bind save history interval.
+        this.bindSaveHistoryInterval();
     }
 }
