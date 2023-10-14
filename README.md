@@ -31,7 +31,7 @@ a rich text editor for javascript
 - [x] spaces between pasted nodes
 - [x] pasting with empty editor
 - [x] update illegal tags (ignore the tags instead of removing them)
-- [ ] sanitize out stuff like `pre`, `code`, `h1`, etc.
+- [x] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [x] urgent bug with styling line break (handle BR)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [x] history (restore selection and currentCursor)
