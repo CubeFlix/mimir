@@ -277,7 +277,6 @@ class Editor {
                 const newNode = document.createElement(child.tagName);
 
                 // Add any important attributes.
-                console.log(child.attributes)
                 if (child.getAttribute("href")) {
                     if (child.getAttribute("href").trim().substring(0, 11).toLowerCase() !== "javascript:") {
                         newNode.setAttribute("href", child.getAttribute("href"));
@@ -341,6 +340,170 @@ class Editor {
     }
 
     /*
+    Insert and sanitize HTML data.
+    */
+    insertHTML(data) {
+        // Prepare to reconstruct and paste the HTML data.
+        const range = this.getRange();
+        if (range == null) {
+            return;
+        }
+        range.deleteContents();
+
+        // Reconstruct the data.
+        var reconstructed = this.sanitize(data);
+        if (reconstructed.length == 0) {
+            return;
+        }
+
+        // Split the start container at the start offset.
+        const emptyTextNode = document.createTextNode("");
+        if (range.startContainer.nodeType == Node.TEXT_NODE) {
+            // Split the text node and place an empty node in between.
+            const endTextNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
+            range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
+            range.startContainer.after(emptyTextNode, endTextNode);
+        } else {
+            // Place the empty text node inside.
+            if (range.startOffset == 0) {
+                if (!this.childlessTags.includes(range.startContainer.tagName)) {
+                    range.startContainer.prepend(emptyTextNode);
+                } else {
+                    range.startContainer.before(emptyTextNode);
+                }
+            } else {
+                range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
+            }
+        }
+
+        // Add each node.
+        var currentLastNode = emptyTextNode;
+        for (const node of reconstructed) {
+            // Add in the node.
+            if (node.nodeType == Node.TEXT_NODE) {
+                currentLastNode.after(node);
+                currentLastNode = node;
+            } else if (node.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
+                // Break out of any inline style nodes.
+                var topmostInlineNode = this.findLastParent(currentLastNode, currentNode => currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN"));
+                if (topmostInlineNode) {
+                    // We found an inline node to break out of, so split it.
+                    const splitAt = document.createTextNode("");
+                    currentLastNode.after(splitAt);
+                    const split = this.splitNodeAtChild(topmostInlineNode, splitAt);
+                    if (split != null) {
+                        if (!this.isEmpty(split)) topmostInlineNode.after(split);
+                    }
+                    currentLastNode = topmostInlineNode;
+                }
+                currentLastNode.after(node);
+                currentLastNode = node;
+            } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL")) {
+                // Break out of any list nodes.
+                var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (currentNode.tagName == "OL" || currentNode.tagName == "UL")));
+                if (topmostNode) {
+                    // Combine the current node with the split node.
+                    const splitAt = document.createTextNode("");
+                    currentLastNode.after(splitAt);
+                    const split = this.splitNodeAtChild(topmostNode, splitAt);
+                    if (split != null) {
+                        if (!this.isEmpty(split)) topmostNode.after(split);
+                    }
+                    currentLastNode = topmostNode;
+
+                    // If the node's tag name matches the topmost node's tag name, combine the lists.
+                    if (node.tagName == topmostNode.tagName) {
+                        // Combine the lists.
+                        currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
+                        topmostNode.append(...node.childNodes, ...split.childNodes);
+                    } else {
+                        // Insert the lists one after another.
+                        currentLastNode = node;
+                        topmostNode.after(node, split);
+                    }
+                } else {
+                    // Break out of any block nodes, and insert the node.
+                    var topmostBlockNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
+                    if (topmostBlockNode) {
+                        // Split the topmost block node.
+                        const splitAt = document.createTextNode("");
+                        currentLastNode.after(splitAt);
+                        const split = this.splitNodeAtChild(topmostBlockNode, splitAt);
+                        if (split != null) {
+                            if (!this.isEmpty(split)) topmostBlockNode.after(split);
+                        }
+                        currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
+                        topmostBlockNode.after(node);
+                    } else {
+                        currentLastNode.after(node);
+                        currentLastNode = node;
+                    }
+                }
+            } else if (node.nodeType == Node.ELEMENT_NODE && node.tagName == "LI") {
+                // If the current last node is in a list, split the list.
+                var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (currentNode.tagName == "OL" || currentNode.tagName == "UL")));
+                if (topmostNode) {
+                    // Combine the current node with the split node.
+                    const splitAt = document.createTextNode("");
+                    currentLastNode.after(splitAt);
+                    const split = this.splitNodeAtChild(topmostNode, splitAt);
+                    if (split != null) {
+                        if (!this.isEmpty(split)) topmostNode.after(split);
+                    }
+                    currentLastNode = topmostNode;
+
+                    // Combine the lists.
+                    currentLastNode = node;
+                    topmostNode.append(node, ...split.childNodes);
+                } else {
+                    // Break out of any block nodes and place the node in a new UL node.
+                    var topmostBlockNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
+                    const nodeInList = document.createElement("li");
+                    nodeInList.append(node);
+                    node = nodeInList;
+                    if (topmostBlockNode) {
+                        // Split the topmost block node.
+                        const splitAt = document.createTextNode("");
+                        currentLastNode.after(splitAt);
+                        const split = this.splitNodeAtChild(topmostBlockNode, splitAt);
+                        if (split != null) {
+                            if (!this.isEmpty(split)) topmostBlockNode.after(split);
+                        }
+                        currentLastNode = node;
+                        topmostBlockNode.after(node);
+                    } else {
+                        currentLastNode.after(node);
+                        currentLastNode = node;
+                    }
+                }
+            } else {
+                // } else if (node.nodeType == Node.ELEMENT_NODE && this.blockTags.includes(node.tagName)) {
+                // Break out of any block nodes.
+                var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
+                if (topmostNode) {
+                    // We found an inline node to break out of, so split it.
+                    const splitAt = document.createTextNode("");
+                    currentLastNode.after(splitAt);
+                    const split = this.splitNodeAtChild(topmostNode, splitAt);
+                    if (split != null) {
+                        if (!this.isEmpty(split)) topmostNode.after(split);
+                    }
+                    currentLastNode = topmostNode;
+                }
+                currentLastNode.after(node);
+                currentLastNode = node;
+            }
+        }
+
+        // Place the cursor after the reconstructed nodes.
+        const newRange = new Range();
+        newRange.selectNodeContents(currentLastNode);
+        newRange.collapse(false);
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
+    }
+
+    /*
     Bind event listeners for paste events.
     */
     bindPasteEvents() {
@@ -349,165 +512,37 @@ class Editor {
 
             // Paste HTML data.
             if (e.clipboardData.getData("text/html")) {
-                // Prepare to reconstruct and paste the HTML data.
                 e.preventDefault();
-                const range = this.getRange();
-                if (range == null) {
-                    return;
-                }
-                range.deleteContents();
+                this.insertHTML(e.clipboardData.getData("text/html"));
+            }
+        }.bind(this));
+    }
 
-                // Reconstruct the data.
-                var reconstructed = this.sanitize(e.clipboardData.getData("text/html"));
-                if (reconstructed.length == 0) {
-                    return;
-                }
+    /*
+    Bind event listeners for drag events.
+    */
+    bindDragEvents() {
+        this.editor.addEventListener("drop", function(e) {
+            this.saveHistory();
 
-                // Split the start container at the start offset.
-                const emptyTextNode = document.createTextNode("");
-                if (range.startContainer.nodeType == Node.TEXT_NODE) {
-                    // Split the text node and place an empty node in between.
-                    const endTextNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
-                    range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
-                    range.startContainer.after(emptyTextNode, endTextNode);
-                } else {
-                    // Place the empty text node inside.
-                    if (range.startOffset == 0) {
-                        if (!this.childlessTags.includes(range.startContainer.tagName)) {
-                            range.startContainer.prepend(emptyTextNode);
-                        } else {
-                            range.startContainer.before(emptyTextNode);
-                        }
-                    } else {
-                        range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
-                    }
-                }
+            // Insert HTML data.
+            if (e.dataTransfer.getData("text/html")) {
+                // When handling drag events, we want to sanitize and normalize the data before 
+                // inserting it. The problem with this, though, is that we don't know where to 
+                // insert the data afterwards. Currently, the `drop` event doesn't have any range
+                // data about where the nodes are inserted. To fix this, I first allow the data to 
+                // be inserted normally by the browser. Then, I bind a function to run after the 
+                // event finishes bubbling, so that I can delete the nodes and reinsert a sanitized
+                // version.
 
-                // Add each node.
-                var currentLastNode = emptyTextNode;
-                for (const node of reconstructed) {
-                    // Add in the node.
-                    if (node.nodeType == Node.TEXT_NODE) {
-                        currentLastNode.after(node);
-                        currentLastNode = node;
-                    } else if (node.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
-                        // Break out of any inline style nodes.
-                        var topmostInlineNode = this.findLastParent(currentLastNode, currentNode => currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN"));
-                        if (topmostInlineNode) {
-                            // We found an inline node to break out of, so split it.
-                            const splitAt = document.createTextNode("");
-                            currentLastNode.after(splitAt);
-                            const split = this.splitNodeAtChild(topmostInlineNode, splitAt);
-                            if (split != null) {
-                                if (!this.isEmpty(split)) topmostInlineNode.after(split);
-                            }
-                            currentLastNode = topmostInlineNode;
-                        }
-                        currentLastNode.after(node);
-                        currentLastNode = node;
-                    } else if (node.nodeType == Node.ELEMENT_NODE && (node.tagName == "OL" || node.tagName == "UL")) {
-                        // Break out of any list nodes.
-                        var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (currentNode.tagName == "OL" || currentNode.tagName == "UL")));
-                        if (topmostNode) {
-                            // Combine the current node with the split node.
-                            const splitAt = document.createTextNode("");
-                            currentLastNode.after(splitAt);
-                            const split = this.splitNodeAtChild(topmostNode, splitAt);
-                            if (split != null) {
-                                if (!this.isEmpty(split)) topmostNode.after(split);
-                            }
-                            currentLastNode = topmostNode;
+                const data = e.dataTransfer.getData("text/html");
 
-                            // If the node's tag name matches the topmost node's tag name, combine the lists.
-                            if (node.tagName == topmostNode.tagName) {
-                                // Combine the lists.
-                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
-                                topmostNode.append(...node.childNodes, ...split.childNodes);
-                            } else {
-                                // Insert the lists one after another.
-                                currentLastNode = node;
-                                topmostNode.after(node, split);
-                            }
-                        } else {
-                            // Break out of any block nodes, and insert the node.
-                            var topmostBlockNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
-                            if (topmostBlockNode) {
-                                // Split the topmost block node.
-                                const splitAt = document.createTextNode("");
-                                currentLastNode.after(splitAt);
-                                const split = this.splitNodeAtChild(topmostBlockNode, splitAt);
-                                if (split != null) {
-                                    if (!this.isEmpty(split)) topmostBlockNode.after(split);
-                                }
-                                currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
-                                topmostBlockNode.after(node);
-                            } else {
-                                currentLastNode.after(node);
-                                currentLastNode = node;
-                            }
-                        }
-                    } else if (node.nodeType == Node.ELEMENT_NODE && node.tagName == "LI") {
-                        // If the current last node is in a list, split the list.
-                        var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (currentNode.tagName == "OL" || currentNode.tagName == "UL")));
-                        if (topmostNode) {
-                            // Combine the current node with the split node.
-                            const splitAt = document.createTextNode("");
-                            currentLastNode.after(splitAt);
-                            const split = this.splitNodeAtChild(topmostNode, splitAt);
-                            if (split != null) {
-                                if (!this.isEmpty(split)) topmostNode.after(split);
-                            }
-                            currentLastNode = topmostNode;
-
-                            // Combine the lists.
-                            currentLastNode = node;
-                            topmostNode.append(node, ...split.childNodes);
-                        } else {
-                            // Break out of any block nodes and place the node in a new UL node.
-                            var topmostBlockNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
-                            const nodeInList = document.createElement("li");
-                            nodeInList.append(node);
-                            node = nodeInList;
-                            if (topmostBlockNode) {
-                                // Split the topmost block node.
-                                const splitAt = document.createTextNode("");
-                                currentLastNode.after(splitAt);
-                                const split = this.splitNodeAtChild(topmostBlockNode, splitAt);
-                                if (split != null) {
-                                    if (!this.isEmpty(split)) topmostBlockNode.after(split);
-                                }
-                                currentLastNode = node;
-                                topmostBlockNode.after(node);
-                            } else {
-                                currentLastNode.after(node);
-                                currentLastNode = node;
-                            }
-                        }
-                    } else {
-                        // } else if (node.nodeType == Node.ELEMENT_NODE && this.blockTags.includes(node.tagName)) {
-                        // Break out of any block nodes.
-                        var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
-                        if (topmostNode) {
-                            // We found an inline node to break out of, so split it.
-                            const splitAt = document.createTextNode("");
-                            currentLastNode.after(splitAt);
-                            const split = this.splitNodeAtChild(topmostNode, splitAt);
-                            if (split != null) {
-                                if (!this.isEmpty(split)) topmostNode.after(split);
-                            }
-                            currentLastNode = topmostNode;
-                        }
-                        currentLastNode.after(node);
-                        currentLastNode = node;
-                    }
-                }
-
-                // Place the cursor after the reconstructed nodes.
-                const newRange = new Range();
-                newRange.selectNodeContents(currentLastNode);
-                newRange.collapse(false);
-                document.getSelection().removeAllRanges();
-                document.getSelection().addRange(newRange);
+                // A dirty hack to bind a function to run after the event finishes bubbling.
+                setTimeout(function() {
+                    // Remove the automatically-inserted nodes and insert our sanitized nodes.
+                    this.getRange().deleteContents();
+                    this.insertHTML(data);
+                }.bind(this), 0);
             }
         }.bind(this));
     }
@@ -1859,6 +1894,9 @@ class Editor {
 
         // Bind event listeners for paste event.
         this.bindPasteEvents();
+
+        // Bind event listeners for drag event.
+        this.bindDragEvents();
 
         // Bind save history interval.
         this.bindSaveHistoryInterval();
