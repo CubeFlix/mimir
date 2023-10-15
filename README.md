@@ -43,6 +43,7 @@ a rich text editor for javascript
 - [ ] block styling options
 - [ ] lists
 - [ ] images
+- [ ] handle tab button
 - [ ] overhaul UI (undo redo buttons, etc.)
 
 ## notes

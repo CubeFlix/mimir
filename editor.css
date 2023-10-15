@@ -1,4 +1,9 @@
 /* Editor. */
+#editor-body {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 #editor-body:focus {
     border: none;
     outline: none;

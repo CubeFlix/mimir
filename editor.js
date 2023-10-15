@@ -339,7 +339,7 @@ class Editor {
     sanitize(contents) {
         // Place the data into a temporary node.
         const original = document.createElement("div");
-        original.innerHTML = contents;
+        original.innerHTML = contents.split("\n").join("");
 
         // Reconstruct the node.
         const reconstructed = this.reconstructNodeContents(original, original);
@@ -440,20 +440,23 @@ class Editor {
                     const splitAt = document.createTextNode("");
                     currentLastNode.after(splitAt);
                     const split = this.splitNodeAtChild(topmostNode, splitAt);
-                    if (split != null) {
-                        if (!this.isEmpty(split)) topmostNode.after(split);
-                    }
                     currentLastNode = topmostNode;
 
                     // If the node's tag name matches the topmost node's tag name, combine the lists.
                     if (node.tagName == topmostNode.tagName) {
                         // Combine the lists.
                         currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
-                        topmostNode.append(...node.childNodes, ...split.childNodes);
+                        topmostNode.append(...node.childNodes);
+                        if (split != null && !this.isEmpty(split)) {
+                            topmostNode.append(...split.childNodes);
+                        }
                     } else {
                         // Insert the lists one after another.
                         currentLastNode = node;
-                        topmostNode.after(node, split);
+                        if (split != null && !this.isEmpty(split)) {
+                            topmostNode.after(split);
+                        }
+                        topmostNode.after(node);
                     }
                 } else {
                     // Break out of any block nodes, and insert the node.
@@ -481,14 +484,14 @@ class Editor {
                     const splitAt = document.createTextNode("");
                     currentLastNode.after(splitAt);
                     const split = this.splitNodeAtChild(topmostNode, splitAt);
-                    if (split != null) {
-                        if (!this.isEmpty(split)) topmostNode.after(split);
-                    }
                     currentLastNode = topmostNode;
 
                     // Combine the lists.
                     currentLastNode = node;
-                    topmostNode.append(node, ...split.childNodes);
+                    topmostNode.append(node);
+                    if (split != null && !this.isEmpty(split)) {
+                        topmostNode.append(...split.childNodes);
+                    }
                 } else {
                     // Break out of any block nodes and place the node in a new UL node.
                     var topmostBlockNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
@@ -511,7 +514,6 @@ class Editor {
                     }
                 }
             } else {
-                // } else if (node.nodeType == Node.ELEMENT_NODE && this.blockTags.includes(node.tagName)) {
                 // Break out of any block nodes.
                 var topmostNode = this.findLastParent(currentLastNode, currentNode => (currentNode.nodeType == Node.ELEMENT_NODE && (this.blockTags.includes(node.tagName) || this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")));
                 if (topmostNode) {
