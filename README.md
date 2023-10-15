@@ -34,6 +34,7 @@ a rich text editor for javascript
 - [x] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [x] urgent bug with styling line break (handle BR)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
+- [x] fix whitespace (handle `pre`)
 - [x] history (restore selection and currentCursor)
 - [x] history length limit
 - [x] drag and drop
@@ -44,6 +45,7 @@ a rich text editor for javascript
 - [ ] lists
 - [ ] images
 - [ ] handle tab button
+- [ ] disallow pasting HTML option 
 - [ ] overhaul UI (undo redo buttons, etc.)
 
 ## notes

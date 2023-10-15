@@ -12,7 +12,7 @@ class Editor {
 
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
-    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
+    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL", "PRE"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"];
     childlessTags = ["BR", "IMG"];
 
@@ -260,7 +260,7 @@ class Editor {
     /*
     Reconstruct a node's children.
     */
-    reconstructNodeContents(node, parent) {
+    reconstructNodeContents(node, parent, removeExtraneousWhitespace = true) {
         const reconstructed = [];
 
         // Reconstruct each of the children.
@@ -287,13 +287,17 @@ class Editor {
                     currentReconstructedNode = newNode;
                 }
 
+                if (removeExtraneousWhitespace) {
+                    currentReconstructedNode.textContent = currentReconstructedNode.textContent.split("\n").join("").split("\r").join("");
+                }
+
                 // Append the newly reconstructed node.
                 reconstructed.push(currentReconstructedNode);
             } else if (child.nodeType == Node.ELEMENT_NODE) {
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
-                    const reconstructedChildren = this.reconstructNodeContents(child, parent);
+                    const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespace);
 
                     // Append the newly reconstructed nodes.
                     reconstructed.push(...reconstructedChildren);
@@ -322,7 +326,10 @@ class Editor {
                 }
 
                 // Reconstruct the node's children.
-                const reconstructedChildren = this.reconstructNodeContents(child, parent);
+                if (child.tagName == "PRE") {
+                    removeExtraneousWhitespace = false;
+                }
+                const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespace);
                 newNode.append(...reconstructedChildren);
 
                 // Append the newly reconstructed node.
@@ -339,7 +346,7 @@ class Editor {
     sanitize(contents) {
         // Place the data into a temporary node.
         const original = document.createElement("div");
-        original.innerHTML = contents.split("\n").join("").split("\r").join("");
+        original.innerHTML = contents;
 
         // Reconstruct the node.
         const reconstructed = this.reconstructNodeContents(original, original);
