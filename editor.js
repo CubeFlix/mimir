@@ -339,7 +339,7 @@ class Editor {
     sanitize(contents) {
         // Place the data into a temporary node.
         const original = document.createElement("div");
-        original.innerHTML = contents.split("\n").join("");
+        original.innerHTML = contents.split("\n").join("").split("\r").join("");
 
         // Reconstruct the node.
         const reconstructed = this.reconstructNodeContents(original, original);
