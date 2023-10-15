@@ -224,6 +224,40 @@ class Editor {
     }
 
     /*
+    Bind event listeners for input events.
+    */
+    bindInputEvents() {
+        this.editor.addEventListener("beforeinput", function(e) {
+            if (e.inputType == "formatBold") {
+                // Bold.
+                e.preventDefault();
+                this.bold();
+                return;
+            } else if (e.inputType == "formatItalic") {
+                // Italic.
+                e.preventDefault();
+                this.italic();
+                return;
+            } else if (e.inputType == "formatUnderline") {
+                // Underline.
+                e.preventDefault();
+                this.underline();
+                return;
+            } else if (e.inputType == "historyUndo") {
+                // Undo.
+                e.preventDefault();
+                this.undo();
+                return;
+            } else if (e.inputType == "historyRedo") {
+                // Redo.
+                e.preventDefault();
+                this.redo();
+                return;
+            }
+        }.bind(this));
+    }
+
+    /*
     Reconstruct a node's children.
     */
     reconstructNodeContents(node, parent) {
@@ -1888,6 +1922,9 @@ class Editor {
 
         // Bind event listeners for keyboard events.
         this.bindKeyboardEvents();
+
+        // Bind event listeners for input events.
+        this.bindInputEvents();
 
         // Bind event listeners for select event.
         this.bindSelectEvents();
