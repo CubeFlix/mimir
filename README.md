@@ -39,6 +39,7 @@ a rich text editor for javascript
 - [x] history length limit
 - [x] drag and drop
 - [x] fix metaKey support on webkit
+- [ ] bug with styling br element
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options

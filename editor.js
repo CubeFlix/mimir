@@ -289,10 +289,18 @@ class Editor {
 
                 if (removeExtraneousWhitespace) {
                     currentReconstructedNode.textContent = currentReconstructedNode.textContent.split("\n").join("").split("\r").join("");
-                }
 
-                // Append the newly reconstructed node.
-                reconstructed.push(currentReconstructedNode);
+                    // Append the newly reconstructed node.
+                    reconstructed.push(currentReconstructedNode);
+                } else {
+                    // Replace all line breaks with break nodes.
+                    const lines = currentReconstructedNode.textContent.split(/\r?\n|\r|\n/g);
+
+                    reconstructed.push(document.createTextNode(lines[0]));
+                    for (const line of lines.slice(1)) {
+                        reconstructed.push(document.createElement("br"), document.createTextNode(line));
+                    }
+                }
             } else if (child.nodeType == Node.ELEMENT_NODE) {
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
@@ -361,7 +369,7 @@ class Editor {
             }
             withoutWhitespace.push(node);
         }
-        
+
         return withoutWhitespace;
     }
 
@@ -1010,6 +1018,7 @@ class Editor {
                 // Select the new node.
                 const newRange = new Range();
                 newRange.selectNodeContents(styledNode);
+                newRange.collapse();
                 window.getSelection().removeAllRanges();
                 window.getSelection().addRange(newRange);
                 return;
