@@ -34,13 +34,14 @@ a rich text editor for javascript
 - [x] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [x] urgent bug with styling line break (handle BR)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
+- [x] bug with pasting styled within span
 - [x] fix whitespace (handle `pre`)
 - [x] history (restore selection and currentCursor)
 - [x] history length limit
 - [x] drag and drop
 - [x] fix metaKey support on webkit
 - [x] bug with styling br element
-- [ ] handle whitespace css
+- [x] handle whitespace css
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options

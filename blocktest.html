@@ -1,16 +1,47 @@
 <div id="test">
     <div>
-        <span>
+        test
+        <strong>
             abc
             <br>
-            def
+            <div>def</div>
             <br>
             ghi
-        </span>
+        </strong>
+        test
     </div>
 </div>
 <script>
     const test = document.getElementById("test");
+
+    /*
+    Split a node at a child. Returns the split node after the child.
+    */
+    splitNodeAtChild(parent, child) {
+        var currentNode = child;
+        var currentSplitNode = null;
+        while (parent.contains(currentNode) && parent != currentNode) {
+            // Get all the nodes after the current node.
+            const siblings = Array.from(currentNode.parentNode.childNodes);
+            const nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode) + 1, siblings.length);
+            
+            // Append the nodes after the current split node.
+            if (currentSplitNode == null) {
+                currentSplitNode = currentNode.parentNode.cloneNode(false);
+                currentSplitNode.append(...nodesAfterCurrentNode);
+            } else {
+                const oldSplitNode = currentSplitNode;
+                currentSplitNode = currentNode.parentNode.cloneNode(false);
+                currentSplitNode.append(oldSplitNode, ...nodesAfterCurrentNode);
+            }
+
+            // Traverse up the tree.
+            currentNode = currentNode.parentNode;
+        }
+        
+        return currentSplitNode;
+    }
+
     function blockStyle(textNode) {
         // Traverse up the node tree until the first block node is reached.
         var currentNode = textNode;
@@ -26,7 +57,7 @@
             // Wrap the text node in a DIV node.
             const newDiv = document.createElement("div");
             newDiv.append(textNode);
-            
+
         }
     }
 </script>

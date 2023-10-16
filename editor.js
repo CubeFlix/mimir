@@ -12,7 +12,7 @@ class Editor {
 
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
-    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL", "PRE"];
+    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"];
     childlessTags = ["BR", "IMG"];
 
@@ -258,13 +258,26 @@ class Editor {
     }
 
     /*
+    Add styling to a text node.
+    */
+    addStylingToNode(node, stylingList) {
+        var currentReconstructedNode = node;
+        for (const s of stylingList) {
+            var newNode = this.styleToElement(s);
+            newNode.append(currentReconstructedNode);
+            currentReconstructedNode = newNode;
+        }
+        return currentReconstructedNode;
+    }
+
+    /*
     Reconstruct a node's children.
     */
     reconstructNodeContents(node, parent, removeExtraneousWhitespace = true) {
         const reconstructed = [];
 
         // Reconstruct each of the children.
-        for (const child of node.childNodes) {
+        for (var child of Array.from(node.childNodes)) {
             if (child.nodeType == Node.TEXT_NODE) {
                 // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
                 var styling = [];
@@ -279,29 +292,31 @@ class Editor {
                     currentNode = currentNode.parentNode;
                 }
 
-                // Reconstruct the styling.
-                var currentReconstructedNode = child.cloneNode();
-                for (const s of styling) {
-                    var newNode = this.styleToElement(s);
-                    newNode.append(currentReconstructedNode);
-                    currentReconstructedNode = newNode;
-                }
-
                 if (removeExtraneousWhitespace) {
-                    currentReconstructedNode.textContent = currentReconstructedNode.textContent.split("\n").join("").split("\r").join("");
+                    child.textContent = child.textContent.split("\n").join("").split("\r").join("");
+
+                    // Reconstruct the styling.
+                    child = this.addStylingToNode(child, styling);
 
                     // Append the newly reconstructed node.
-                    reconstructed.push(currentReconstructedNode);
+                    reconstructed.push(child);
                 } else {
                     // Replace all line breaks with break nodes.
-                    const lines = currentReconstructedNode.textContent.split(/\r?\n|\r|\n/g);
+                    const lines = child.textContent.split(/\r?\n|\r|\n/g);
 
-                    reconstructed.push(document.createTextNode(lines[0]));
+                    reconstructed.push(this.addStylingToNode(document.createTextNode(lines[0]), styling));
                     for (const line of lines.slice(1)) {
-                        reconstructed.push(document.createElement("br"), document.createTextNode(line));
+                        reconstructed.push(document.createElement("br"), this.addStylingToNode(document.createTextNode(line), styling));
                     }
                 }
             } else if (child.nodeType == Node.ELEMENT_NODE) {
+                if (child.tagName == "PRE") {
+                    removeExtraneousWhitespace = false;
+                }
+                if (["pre", "pre-wrap", "pre-line", "break-spaces"].some(s => child.style.whiteSpace.toLowerCase().includes(s))) {
+                    removeExtraneousWhitespace = false;
+                }
+
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
@@ -334,9 +349,6 @@ class Editor {
                 }
 
                 // Reconstruct the node's children.
-                if (child.tagName == "PRE") {
-                    removeExtraneousWhitespace = false;
-                }
                 const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespace);
                 newNode.append(...reconstructedChildren);
 
@@ -363,7 +375,7 @@ class Editor {
         const withoutWhitespace = [];
         for (const node of reconstructed) {
             if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
-                if (node.nodeType == Node.TEXT_NODE && node.textContent.split(" ").join("").split("\n").join("") == "") {
+                if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("") == "") {
                     continue;
                 }
             }
