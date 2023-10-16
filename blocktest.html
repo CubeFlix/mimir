@@ -1,6 +1,32 @@
 <div id="test">
+    <div>
+        <span>
+            abc
+            <br>
+            def
+            <br>
+            ghi
+        </span>
+    </div>
 </div>
 <script>
     const test = document.getElementById("test");
-    test.innerText = "abc\ndef\nghi";
+    function blockStyle(textNode) {
+        // Traverse up the node tree until the first block node is reached.
+        var currentNode = textNode;
+        var blockNode = null;
+        while (test.contains(currentNode) && currentNode != test) {
+            if (currentNode.tagName == "DIV") {
+                // Found a block node.
+                blockNode = currentNode;
+            }
+            currentNode = currentNode.parentNode;
+        }
+        if (!blockNode) {
+            // Wrap the text node in a DIV node.
+            const newDiv = document.createElement("div");
+            newDiv.append(textNode);
+            
+        }
+    }
 </script>
