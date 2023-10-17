@@ -48,6 +48,7 @@ a rich text editor for javascript
 - [ ] lists
 - [ ] images
 - [ ] handle tab button
+- [ ] a href (add mouse overlay, etc.)
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI (undo redo buttons, etc.)
 

@@ -4,20 +4,28 @@
         <strong>
             abc
             <br>
-            <div>def</div>
+            def
             <br>
             ghi
         </strong>
         test
     </div>
 </div>
+<button onclick="dothething()">do the thing</button>
 <script>
     const test = document.getElementById("test");
+    const blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"];
+
+    /*
+    Todo: 
+    - handle BR nodes
+    - handle no parent
+    */
 
     /*
     Split a node at a child. Returns the split node after the child.
     */
-    splitNodeAtChild(parent, child) {
+    function splitNodeAtChild(parent, child) {
         var currentNode = child;
         var currentSplitNode = null;
         while (parent.contains(currentNode) && parent != currentNode) {
@@ -42,22 +50,127 @@
         return currentSplitNode;
     }
 
+    function findClosestBlockOnLeft(parent, child) {
+        // Traverse left and find the closest block node (if it exists) within the parent node.
+        // This returns null if it doesn't find a block node within the parent. 
+        var currentNode = child;
+
+        while (parent.contains(currentNode) && currentNode != parent) {
+            // First, check if the current node is a block node.
+            if (blockTags.includes(currentNode.tagName)) {
+                // Found a block node.
+                return currentNode;
+            }
+
+            // Next, check if the current node contains any block nodes inside it,
+            if (currentNode.nodeType == Node.ELEMENT_NODE) {
+                const blockNodes = currentNode.getElementsByTagName(blockTags.join(" "));
+                if (blockNodes.length != 0) {
+                    // Return the last node in the list.
+                    return blockNodes[blockNodes.length - 1];
+                }
+            }
+
+            // Traverse leftwards.
+            while (!currentNode.previousSibling) {
+                currentNode = currentNode.parentNode;
+                if (!parent.contains(currentNode)) {
+                    return null;
+                }
+            }
+            currentNode = currentNode.previousSibling;
+        }
+
+        return null;
+    }
+
+    function findClosestBlockOnRight(parent, child) {
+        // Traverse right and find the closest block node (if it exists) within the parent node.
+        // This returns null if it doesn't find a block node within the parent. 
+        var currentNode = child;
+
+        while (parent.contains(currentNode) && currentNode != parent) {
+            // First, check if the current node is a block node.
+            if (blockTags.includes(currentNode.tagName)) {
+                // Found a block node.
+                return currentNode;
+            }
+
+            // Next, check if the current node contains any block nodes inside it,
+            if (currentNode.nodeType == Node.ELEMENT_NODE) {
+                const blockNodes = currentNode.getElementsByTagName(blockTags.join(" "));
+                if (blockNodes.length != 0) {
+                    // Return the first node in the list.
+                    return blockNodes[0];
+                }
+            }
+
+            // Traverse rightwards.
+            while (!currentNode.nextSibling) {
+                currentNode = currentNode.parentNode;
+                if (!parent.contains(currentNode)) {
+                    return null;
+                }
+            }
+            currentNode = currentNode.nextSibling;
+        }
+
+        return null;
+    }
+
     function blockStyle(textNode) {
+        console.log(textNode);
         // Traverse up the node tree until the first block node is reached.
         var currentNode = textNode;
         var blockNode = null;
         while (test.contains(currentNode) && currentNode != test) {
-            if (currentNode.tagName == "DIV") {
+            if (blockTags.includes(currentNode.tagName)) {
                 // Found a block node.
                 blockNode = currentNode;
+                break;
             }
             currentNode = currentNode.parentNode;
         }
-        if (!blockNode) {
-            // Wrap the text node in a DIV node.
-            const newDiv = document.createElement("div");
-            newDiv.append(textNode);
+        if (blockNode) {
+            var leftBlock = findClosestBlockOnLeft(blockNode, textNode);
+            var rightBlock = findClosestBlockOnRight(blockNode, textNode);
+            console.log(leftBlock, rightBlock);
 
+            // Split the parent block at the left block.
+            if (leftBlock) {
+                // If the left block is a BR node, replace it with an empty text node.
+                if (leftBlock.tagName == "BR") {
+                    const newTextNode = document.createTextNode("");
+                    leftBlock.replaceWith(newTextNode);
+                    leftBlock = newTextNode;
+                }
+                var splitAfterLeft = splitNodeAtChild(blockNode, leftBlock);
+                blockNode.after(splitAfterLeft);
+            } else {
+                var splitAfterLeft = blockNode;
+            }
+
+            // Split the newly split node at the right block.
+            if (rightBlock) {
+                // If the right block is a BR node, replace it with an empty text node.
+                if (rightBlock.tagName == "BR") {
+                    const newTextNode = document.createTextNode("");
+                    rightBlock.replaceWith(newTextNode);
+                    rightBlock = newTextNode;
+                }
+                var splitAfterRight = splitNodeAtChild(splitAfterLeft, rightBlock);
+                splitAfterLeft.after(splitAfterRight);
+            } else {
+                var splitAfterRight = splitAfterLeft;
+            }
+            return splitAfterLeft;
+        } else {
+            
+            
         }
     }
+
+    const text = test.childNodes[1].childNodes[1].childNodes[1];
+    // const text = test.childNodes[1].childNodes[2];
+    function dothething() {console.log(blockStyle(text));}
 </script>
