@@ -185,7 +185,7 @@ class Editor {
                 this.shouldTakeSnapshotOnNextChange = true;
             }
 
-            if (e.key == "ArrowLeft") {
+            if (e.key == "ArrowLeft" || e.key == "Backspace" || e.key == "Delete") {
                 // Check if the caret is inside a cursor.
                 const range = this.getRange();
                 if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
@@ -196,6 +196,7 @@ class Editor {
                     }
                     currentNode.remove();
                     this.currentCursor = null;
+                    this.updateMenubarOptions();
                     return;
                 }
             }
@@ -847,8 +848,8 @@ class Editor {
         }
         if (node.style.fontFamily) {
             var family = node.style.fontFamily;
-            family = family.replace("\"", "").replace("\"", "");
-            family = family.replace("'", "").replace("'", "");
+            family = family.split("\"").join("");
+            family = family.split("'").join("");
             if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: family});
         }
 
