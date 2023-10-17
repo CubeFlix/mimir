@@ -33,6 +33,7 @@ a rich text editor for javascript
 - [x] update illegal tags (ignore the tags instead of removing them)
 - [x] sanitize out stuff like `pre`, `code`, `h1`, etc.
 - [x] urgent bug with styling line break (handle BR)
+- [ ] urgent bug with backspace with cursor
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [x] bug with pasting styled within span
 - [x] fix whitespace (handle `pre`)
