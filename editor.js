@@ -1452,6 +1452,7 @@ class Editor {
                 // Select the new node.
                 const newRange = new Range();
                 newRange.selectNodeContents(styledNode);
+                newRange.collapse();
                 window.getSelection().removeAllRanges();
                 window.getSelection().addRange(newRange);
                 return;
