@@ -360,6 +360,7 @@ class Editor {
                     reconstructed.push(child);
                 } else {
                     // Replace all line breaks with break nodes.
+                    console.log("replacing")
                     const lines = child.textContent.split(/\r?\n|\r|\n/g);
 
                     reconstructed.push(this.addStylingToNode(document.createTextNode(lines[0]), styling));
@@ -368,17 +369,18 @@ class Editor {
                     }
                 }
             } else if (child.nodeType == Node.ELEMENT_NODE) {
+                var removeExtraneousWhitespaceOnChildren = removeExtraneousWhitespace;
                 if (child.tagName == "PRE") {
-                    removeExtraneousWhitespace = false;
+                    removeExtraneousWhitespaceOnChildren = false;
                 }
                 if (["pre", "pre-wrap", "pre-line", "break-spaces"].some(s => child.style.whiteSpace.toLowerCase().includes(s))) {
-                    removeExtraneousWhitespace = false;
+                    removeExtraneousWhitespaceOnChildren = false;
                 }
 
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
-                    const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespace);
+                    const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespaceOnChildren);
 
                     // Append the newly reconstructed nodes.
                     reconstructed.push(...reconstructedChildren);
@@ -407,7 +409,7 @@ class Editor {
                 }
 
                 // Reconstruct the node's children.
-                const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespace);
+                const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespaceOnChildren);
                 newNode.append(...reconstructedChildren);
 
                 // Append the newly reconstructed node.
