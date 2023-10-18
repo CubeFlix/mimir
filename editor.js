@@ -1680,6 +1680,176 @@ class Editor {
     }
 
     /*
+    Find the closest block node on the left side of a child.
+    */
+    findClosestBlockOnLeft(parent, child) {
+        // Traverse left and find the closest block node (if it exists) within the parent node.
+        // This returns null if it doesn't find a block node within the parent. 
+        var currentNode = child;
+
+        // Traverse rightwards (initial traversal).
+        while (!currentNode.nextSibling) {
+            currentNode = currentNode.parentNode;
+            if (!parent.contains(currentNode)) {
+                return null;
+            }
+        }
+        currentNode = currentNode.nextSibling;
+
+        while (parent.contains(currentNode) && currentNode != parent) {
+            // First, check if the current node is a block node (not including BR nodes).
+            if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName) && !this.isEmpty(currentNode)) {
+                // Found a block node.
+                return currentNode;
+            }
+
+            // Traverse leftwards.
+            while (!currentNode.previousSibling) {
+                currentNode = currentNode.parentNode;
+                if (!parent.contains(currentNode)) {
+                    return null;
+                }
+            }
+            currentNode = currentNode.previousSibling;
+        }
+
+        return null;
+    }
+
+    /*
+    Find the closest block node on the right side of a child.
+    */
+    findClosestBlockOnRight(parent, child) {
+        // Traverse right and find the closest block node (if it exists) within the parent node.
+        // This returns null if it doesn't find a block node within the parent. 
+        var currentNode = child;
+
+        // Traverse rightwards (initial traversal).
+        while (!currentNode.nextSibling) {
+            currentNode = currentNode.parentNode;
+            if (!parent.contains(currentNode)) {
+                return null;
+            }
+        }
+        currentNode = currentNode.nextSibling;
+
+        while (parent.contains(currentNode) && currentNode != parent) {
+            // First, check if the current node is a block node (not including BR nodes).
+            if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName) && !this.isEmpty(currentNode)) {
+                // Found a block node.
+                return currentNode;
+            }
+
+            // Traverse rightwards.
+            while (!currentNode.nextSibling) {
+                currentNode = currentNode.parentNode;
+                if (!parent.contains(currentNode)) {
+                    return null;
+                }
+            }
+            currentNode = currentNode.nextSibling;
+        }
+
+        return null;
+    }
+
+    /*
+    Get and isolate the block associated with a text node.
+    */
+    getAndIsolateBlockNode(textNode) {
+        // Traverse up the node tree until the first block node is reached.
+        var currentNode = textNode;
+        var blockNode = null;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (this.blockTags.includes(currentNode.tagName)) {
+                // Found a block node.
+                blockNode = currentNode;
+                break;
+            }
+            currentNode = currentNode.parentNode;
+        }
+
+        // Split the node.
+        if (blockNode) {
+            // Get the block nodes on the left and right, with respect to the parent block.
+            var leftBlock = this.findClosestBlockOnLeft(blockNode, textNode);
+            var rightBlock = this.findClosestBlockOnRight(blockNode, textNode);
+
+            // Split the parent block at the left block.
+            if (leftBlock) {
+                var splitAfterLeft = this.splitNodeAtChild(blockNode, leftBlock);
+                blockNode.after(splitAfterLeft);
+            } else {
+                var splitAfterLeft = blockNode;
+            }
+
+            // Split the newly split node at the right block.
+            if (rightBlock) {
+                var splitAfterRight = this.splitNodeAtChild(splitAfterLeft, rightBlock);
+                splitAfterLeft.after(splitAfterRight);
+            } else {
+                var splitAfterRight = splitAfterLeft;
+            }
+            return splitAfterLeft;
+        } else {
+            // Get the block nodes on the left and right, with respect to the editor.
+            var leftBlock = findClosestBlockOnLeft(this.editor, textNode);
+            var rightBlock = findClosestBlockOnRight(this.editor, textNode);
+            console.log(leftBlock, rightBlock);
+
+            // Split the parent block at the left block.
+            if (leftBlock) {
+                var splitAfterLeft = splitNodeAtChild(test, leftBlock);
+            } else {
+                var splitAfterLeft = test;
+            }
+
+            // Split the newly split node at the right block.
+            if (rightBlock) {
+                var splitAfterRight = splitNodeAtChild(splitAfterLeft, rightBlock);
+            } else {
+                var splitAfterRight = splitAfterLeft;
+            }
+
+            // Add the split blocks.
+            if (leftBlock) test.append(...splitAfterLeft) 
+            if (rightBlock) test.append(...splitAfterRight);
+            return splitAfterLeft;
+        }
+    }
+
+    /*
+    Apply a block style to a range.
+    */
+    applyBlockStyle(style, range) {
+        var nodes, startOffset, endOffset;
+        
+        // Get the text nodes within the range.
+        const output = this.getTextNodesInRange(range);
+        if (!output) {
+            return;
+        }
+        [{nodes, startOffset, endOffset} = output];
+
+        this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
+
+        // Place each node in between in a new tag.
+        for (const node of nodes.slice(1, nodes.length - 1)) {
+            const block = this.getAndIsolateBlockNode(node);
+            const styledBlock = this.applyStyleToNode(block, style);
+            block.replaceWith(styledBlock);
+        }
+
+        // Select the new nodes.
+        const newRange = new Range();
+        newRange.setStartBefore(newStartNode);
+        newRange.setEndAfter(newEndNode);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(newRange);
+    }
+
+    /*
     Perform a style command.
     */
     performStyleCommand(style) {

@@ -1,8 +1,11 @@
-<div id="test">
+<div id="test" contenteditable>
     <div>
         test
         <strong>
+            <br>
             abc
+            <br>
+            <br>
             <br>
             def
             <br>
@@ -18,9 +21,66 @@
 
     /*
     Todo: 
-    - handle BR nodes
-    - handle no parent
+    - handle empty blocks
     */
+
+    /* 
+    Get an array of all the text nodes within a range. Returns the newly calculated start and end offsets.
+    */
+    function getTextNodesInRange(range) {
+        if (range == null) {
+            return null;
+        }
+        const nodes = [];
+        var currentNode = range.startContainer;
+        var startOffset = range.startOffset;
+        var endOffset = range.endOffset;
+    
+        // If the first node is not a text node, move the start node to the start offset.
+        if (range.startContainer.nodeType != Node.TEXT_NODE) {
+            currentNode = currentNode.childNodes[range.startOffset] ? currentNode.childNodes[range.startOffset] : currentNode;
+            startOffset = 0;
+        }
+    
+        var haveTraversedLastNode = false;
+        while (test.contains(currentNode)) {
+            // If we've finished traversing the last node or we've reached the bound of the last node, quit.
+            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
+                break;
+            }
+        
+            // Append the node.
+            if (test.contains(currentNode) && (currentNode.nodeType == Node.TEXT_NODE || currentNode.tagName == "BR")) {
+                nodes.push(currentNode);
+            }
+        
+            // We always want to fully traverse the end node.
+            if (range.endContainer.contains(currentNode)) {
+                haveTraversedLastNode = true;
+            }
+        
+            if (currentNode.childNodes.length != 0) {
+                // If there are children of this node, enter the node.
+                currentNode = currentNode.firstChild;
+            } else if (!currentNode.nextSibling) {
+                // If this is the last node in the parent, move to the parent's next neighbor.
+                while (!currentNode.nextSibling && test.contains(currentNode)) {
+                    currentNode = currentNode.parentNode;
+                } 
+                currentNode = currentNode.nextSibling;
+            } else {
+                // Go to the next node.
+                currentNode = currentNode.nextSibling;
+            }
+        }
+    
+        // If the final node is not a text node, set the end offset.
+        if (range.endContainer.nodeType != Node.TEXT_NODE && test.contains(range.endContainer) && nodes.slice(-1)[0]) {
+            endOffset = nodes.slice(-1)[0].textContent.length;
+        }
+    
+        return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
+    }
 
     /*
     Split a node at a child. Returns the split node after the child.
@@ -55,20 +115,20 @@
         // This returns null if it doesn't find a block node within the parent. 
         var currentNode = child;
 
+        // Traverse rightwards (initial traversal).
+        while (!currentNode.nextSibling) {
+            currentNode = currentNode.parentNode;
+            if (!parent.contains(currentNode)) {
+                return null;
+            }
+        }
+        currentNode = currentNode.nextSibling;
+
         while (parent.contains(currentNode) && currentNode != parent) {
-            // First, check if the current node is a block node.
-            if (blockTags.includes(currentNode.tagName)) {
+            // First, check if the current node is a block node (not including BR nodes).
+            if (blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
                 // Found a block node.
                 return currentNode;
-            }
-
-            // Next, check if the current node contains any block nodes inside it,
-            if (currentNode.nodeType == Node.ELEMENT_NODE) {
-                const blockNodes = currentNode.getElementsByTagName(blockTags.join(" "));
-                if (blockNodes.length != 0) {
-                    // Return the last node in the list.
-                    return blockNodes[blockNodes.length - 1];
-                }
             }
 
             // Traverse leftwards.
@@ -99,19 +159,10 @@
         currentNode = currentNode.nextSibling;
 
         while (parent.contains(currentNode) && currentNode != parent) {
-            // First, check if the current node is a block node.
-            if (blockTags.includes(currentNode.tagName)) {
+            // First, check if the current node is a block node (not including BR nodes).
+            if (blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
                 // Found a block node.
                 return currentNode;
-            }
-
-            // Next, check if the current node contains any block nodes inside it,
-            if (currentNode.nodeType == Node.ELEMENT_NODE) {
-                const blockNodes = currentNode.getElementsByTagName(blockTags.join(" "));
-                if (blockNodes.length != 0) {
-                    // Return the first node in the list.
-                    return blockNodes[0];
-                }
             }
 
             // Traverse rightwards.
@@ -147,12 +198,6 @@
 
             // Split the parent block at the left block.
             if (leftBlock) {
-                // If the left block is a BR node, replace it with an empty text node.
-                if (leftBlock.tagName == "BR") {
-                    const newTextNode = document.createTextNode("");
-                    leftBlock.replaceWith(newTextNode);
-                    leftBlock = newTextNode;
-                }
                 var splitAfterLeft = splitNodeAtChild(blockNode, leftBlock);
                 blockNode.after(splitAfterLeft);
             } else {
@@ -161,12 +206,6 @@
 
             // Split the newly split node at the right block.
             if (rightBlock) {
-                // If the right block is a BR node, replace it with an empty text node.
-                if (rightBlock.tagName == "BR") {
-                    const newTextNode = document.createTextNode("");
-                    rightBlock.replaceWith(newTextNode);
-                    rightBlock = newTextNode;
-                }
                 var splitAfterRight = splitNodeAtChild(splitAfterLeft, rightBlock);
                 splitAfterLeft.after(splitAfterRight);
             } else {
@@ -174,12 +213,38 @@
             }
             return splitAfterLeft;
         } else {
-            
-            
+            var leftBlock = findClosestBlockOnLeft(test, textNode);
+            var rightBlock = findClosestBlockOnRight(test, textNode);
+            console.log(leftBlock, rightBlock);
+
+            // Split the parent block at the left block.
+            if (leftBlock) {
+                var splitAfterLeft = splitNodeAtChild(test, leftBlock);
+            } else {
+                var splitAfterLeft = test;
+            }
+
+            // Split the newly split node at the right block.
+            if (rightBlock) {
+                var splitAfterRight = splitNodeAtChild(splitAfterLeft, rightBlock);
+            } else {
+                var splitAfterRight = splitAfterLeft;
+            }
+
+            // Add the split blocks.
+            if (leftBlock) test.append(...splitAfterLeft) 
+            if (rightBlock) test.append(...splitAfterRight);
+
+            return splitAfterLeft;
         }
     }
 
     const text = test.childNodes[1].childNodes[1].childNodes[1];
     // const text = test.childNodes[1].childNodes[2];
-    function dothething() {console.log(blockStyle(text));}
+    function dothething() {
+        const out = getTextNodesInRange(document.getSelection().getRangeAt(0));
+        for (const node of out.nodes) {
+            console.log(blockStyle(node));
+        }
+    }
 </script>
