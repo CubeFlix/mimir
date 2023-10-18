@@ -463,7 +463,7 @@ class Editor {
     /*
     Insert and sanitize HTML data.
     */
-    insertHTML(data) {
+    insertHTML(data, select = "end") {
         // Prepare to reconstruct and paste the HTML data.
         const range = this.getRange();
         if (range == null) {
@@ -499,6 +499,7 @@ class Editor {
 
         // Add each node.
         var currentLastNode = emptyTextNode;
+        var firstNode = null;
         for (const node of reconstructed) {
             // Add in the node.
             if (node.nodeType == Node.TEXT_NODE) {
@@ -616,14 +617,26 @@ class Editor {
                 currentLastNode.after(node);
                 currentLastNode = node;
             }
+
+            if (!firstNode) {
+                firstNode = currentLastNode;
+            }
         }
 
         // Place the cursor after the reconstructed nodes.
-        const newRange = new Range();
-        newRange.selectNodeContents(currentLastNode);
-        newRange.collapse(false);
-        document.getSelection().removeAllRanges();
-        document.getSelection().addRange(newRange);
+        if (select == "end") {
+            const newRange = new Range();
+            newRange.selectNodeContents(currentLastNode);
+            newRange.collapse(false);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+        } else {
+            const newRange = new Range();
+            newRange.setStart(firstNode, 0);
+            newRange.setEndAfter(currentLastNode);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+        }
     }
 
     /*
@@ -664,7 +677,7 @@ class Editor {
                 setTimeout(function() {
                     // Remove the automatically-inserted nodes and insert our sanitized nodes.
                     this.getRange().deleteContents();
-                    this.insertHTML(data);
+                    this.insertHTML(data, "all");
                 }.bind(this), 0);
             }
         }.bind(this));
