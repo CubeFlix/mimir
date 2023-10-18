@@ -17,6 +17,7 @@ class Editor {
     childlessTags = ["BR", "IMG"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
+    blockStylingCommands = ["quote"];
 
     /* 
     Create the editor. 
@@ -25,7 +26,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -144,6 +145,13 @@ class Editor {
                     }
                     this.menubarOptions.font.addEventListener("change", this.font.bind(this));
                     this.menubar.append(this.menubarOptions.font);
+                    break;
+                case "quote":
+                    this.menubarOptions.quote = document.createElement("button");
+                    this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
+                    this.menubarOptions.quote.innerHTML = "\"";
+                    this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
+                    this.menubar.append(this.menubarOptions.quote);
                     break;
             }
         }
@@ -362,7 +370,6 @@ class Editor {
                     reconstructed.push(child);
                 } else {
                     // Replace all line breaks with break nodes.
-                    console.log("replacing")
                     const lines = child.textContent.split(/\r?\n|\r|\n/g);
 
                     reconstructed.push(this.addStylingToNode(document.createTextNode(lines[0]), styling));
@@ -871,6 +878,8 @@ class Editor {
                 const elem = document.createElement("span");
                 elem.style.fontFamily = style.family;
                 return elem;
+            case "quote":
+                return document.createElement("blockquote");
         }
     }
 
@@ -904,6 +913,9 @@ class Editor {
                     styling.push({type: "font", family: family});
                 }
                 // TODO: color, text size, etc
+                break;
+            case "BLOCKQUOTE":
+                styling.push({type: "quote"});
                 break;
         }
 
@@ -1212,13 +1224,18 @@ class Editor {
     /*
     Split a node at a child. Returns the split node after the child.
     */
-    splitNodeAtChild(parent, child) {
+    splitNodeAtChild(parent, child, includeSelf = false) {
         var currentNode = child;
         var currentSplitNode = null;
         while (parent.contains(currentNode) && parent != currentNode) {
             // Get all the nodes after the current node.
             const siblings = Array.from(currentNode.parentNode.childNodes);
-            const nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode) + 1, siblings.length);
+            if (includeSelf && currentSplitNode == null) {
+                // If this is the first iteration, and we want to include the child, slice it with the child.
+                var nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode), siblings.length);
+            } else {
+                var nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode) + 1, siblings.length);
+            }
             
             // Append the nodes after the current split node.
             if (currentSplitNode == null) {
@@ -1762,15 +1779,6 @@ class Editor {
         // This returns null if it doesn't find a block node within the parent. 
         var currentNode = child;
 
-        // Traverse rightwards (initial traversal).
-        while (!currentNode.nextSibling) {
-            currentNode = currentNode.parentNode;
-            if (!parent.contains(currentNode)) {
-                return null;
-            }
-        }
-        currentNode = currentNode.nextSibling;
-
         while (parent.contains(currentNode) && currentNode != parent) {
             // First, check if the current node is a block node (not including BR nodes).
             if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName) && !this.isEmpty(currentNode)) {
@@ -1868,29 +1876,39 @@ class Editor {
             return splitAfterLeft;
         } else {
             // Get the block nodes on the left and right, with respect to the editor.
-            var leftBlock = findClosestBlockOnLeft(this.editor, textNode);
-            var rightBlock = findClosestBlockOnRight(this.editor, textNode);
+            var leftBlock = this.findClosestBlockOnLeft(this.editor, textNode);
+            var rightBlock = this.findClosestBlockOnRight(this.editor, textNode);
 
             // Split the parent block at the left block.
             if (leftBlock) {
-                var splitAfterLeft = splitNodeAtChild(test, leftBlock);
+                var splitAfterLeft = this.splitNodeAtChild(this.editor, leftBlock);
             } else {
-                var splitAfterLeft = test;
+                var splitAfterLeft = this.editor;
             }
 
             // Split the newly split node at the right block.
             if (rightBlock) {
-                var splitAfterRight = splitNodeAtChild(splitAfterLeft, rightBlock);
+                var splitAfterRight = this.splitNodeAtChild(splitAfterLeft, rightBlock, true);
             } else {
-                var splitAfterRight = splitAfterLeft;
+                var splitAfterRight = null;
             }
 
-            // Add the split blocks.
-            if (leftBlock) test.append(...splitAfterLeft) 
-            if (rightBlock) test.append(...splitAfterRight);
-            return splitAfterLeft;
+            // Place the left block in its own DIV and add it.
+            const newDiv = document.createElement("div");
+            newDiv.append(...splitAfterLeft.childNodes);
+            this.editor.append(newDiv);
+
+            // If there is content after the split block, add it.            
+            if (splitAfterRight) this.editor.append(...splitAfterRight.childNodes);
+
+            return newDiv;
         }
     }
+
+    // TODO: 
+    // - [ ] join multiple blocks
+    // - [ ] handle selection
+    // - [ ] handle empty editor
 
     /*
     Apply a block style to a range.
@@ -1908,19 +1926,25 @@ class Editor {
         this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
 
+        if (nodes.length == 0) {
+            return;
+        }
+
         // Place each node in between in a new tag.
-        for (const node of nodes.slice(1, nodes.length - 1)) {
+        const styled = [];
+        for (const node of nodes) {
             const block = this.getAndIsolateBlockNode(node);
             const styledBlock = this.applyStyleToNode(block, style);
             block.replaceWith(styledBlock);
+            styled.push(styledBlock);
         }
 
         // Select the new nodes.
-        const newRange = new Range();
-        newRange.setStartBefore(newStartNode);
-        newRange.setEndAfter(newEndNode);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(newRange);
+        // const newRange = new Range();
+        // newRange.setStart(styled[0], startOffset);
+        // newRange.setEnd(styled[styled.length - 1], endOffset);
+        // window.getSelection().removeAllRanges();
+        // window.getSelection().addRange(newRange);
     }
 
     /*
@@ -1935,17 +1959,20 @@ class Editor {
         const currentStyling = this.detectStyling(range);
 
         // Set the style.
-        switch (style.type) {
-            case "font":
-                this.changeStyling(style, range);
-                break;
-            default:
-                if (currentStyling.some(s => s.type == style.type)) {
-                    this.removeStyle(style, range);
-                } else {
-                    this.applyStyle(style, range);
-                }
-                break;
+        if (style.type == "font") {
+            this.changeStyling(style, range);
+        } else if (this.inlineStylingCommands.includes(style.type)) {
+            if (currentStyling.some(s => s.type == style.type)) {
+                this.removeStyle(style, range);
+            } else {
+                this.applyStyle(style, range);
+            }
+        } else if (this.blockStylingCommands.includes(style.type)) {
+            if (currentStyling.some(s => s.type == style.type)) {
+                this.removeBlockStyle(style, range);
+            } else {
+                this.applyBlockStyle(style, range);
+            }
         }
 
         // Call the selection change event.
@@ -1985,6 +2012,13 @@ class Editor {
     */
     font() {
         this.performStyleCommand({type: "font", family: this.menubarOptions.font.value});
+    }
+
+    /*
+    Blockquote.
+    */
+    quote() {
+        this.performStyleCommand({type: "quote"});
     }
 
     /*
