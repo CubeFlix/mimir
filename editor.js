@@ -16,6 +16,8 @@ class Editor {
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"];
     childlessTags = ["BR", "IMG"];
 
+    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
+
     /* 
     Create the editor. 
     */
@@ -188,7 +190,10 @@ class Editor {
             if (e.key == "ArrowLeft" || e.key == "Backspace" || e.key == "Delete") {
                 // Check if the caret is inside a cursor.
                 const range = this.getRange();
-                if (range != null && this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
+                if (!range) {
+                    return;
+                }
+                if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
                     // Traverse up the tree until we find the highest empty node and remove the cursor.
                     var currentNode = this.currentCursor;
                     while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
@@ -198,6 +203,58 @@ class Editor {
                     this.currentCursor = null;
                     this.updateMenubarOptions();
                     return;
+                } else {
+                    // When deleting content, if the entire nodes are selected, store the current styling in order to create a cursor.
+                    if (range.endContainer.nodeType == Node.TEXT_NODE) {
+                        var endLength = range.endContainer.textContent.length;
+                    } else {
+                        var endLength = range.endContainer.childNodes.length;
+                    }
+                    if ((range.startOffset == 0 && range.endOffset >= endLength) || (range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)) {
+                        // Get the current styling.
+                        const styling = this.detectStyling(this.getRange());
+                        setTimeout(function () {
+                            const range = this.getRange();
+
+                            // Create a cursor.
+                            const cursor = this.createCursor();
+                            
+                            // Reconstruct inline styling.
+                            var lastNode = cursor;
+                            for (const style of styling) {
+                                if (!this.inlineStylingCommands.includes(style.type)) {
+                                    continue;
+                                }
+                                const newElem = this.styleToElement(style);
+                                newElem.append(lastNode);
+                                lastNode = newElem;
+                            }
+
+                            // Insert the node at the current range and place the caret inside the cursor.
+                            if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                                // Split the text node.
+                                const endNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset), range.startContainer.textContent.length);
+                                range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
+                                range.startContainer.after(lastNode, endNode);
+                            } else {
+                                // Place the node inside.
+                                if (range.startOffset == 0) {
+                                    if (!this.childlessTags.includes(range.startContainer.tagName)) {
+                                        range.startContainer.prepend(lastNode);
+                                    } else {
+                                        range.startContainer.before(lastNode);
+                                    }
+                                } else {
+                                    range.startContainer.childNodes[range.startOffset - 1].after(lastNode);
+                                }
+                            }
+                            const newRange = new Range();
+                            newRange.selectNodeContents(cursor);
+                            newRange.collapse();
+                            document.getSelection().removeAllRanges();
+                            document.getSelection().addRange(newRange);
+                        }.bind(this), 0);
+                    }
                 }
             }
 
@@ -1795,7 +1852,6 @@ class Editor {
             // Get the block nodes on the left and right, with respect to the editor.
             var leftBlock = findClosestBlockOnLeft(this.editor, textNode);
             var rightBlock = findClosestBlockOnRight(this.editor, textNode);
-            console.log(leftBlock, rightBlock);
 
             // Split the parent block at the left block.
             if (leftBlock) {
