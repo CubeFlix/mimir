@@ -210,7 +210,9 @@ class Editor {
                     } else {
                         var endLength = range.endContainer.childNodes.length;
                     }
-                    if ((range.startOffset == 0 && range.endOffset >= endLength) || (range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)) {
+                    if ((range.startOffset == 0 && range.endOffset >= endLength) 
+                            || (e.key == "Backspace" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)
+                            || (e.key == "Delete" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset == 0)) {
                         // Get the current styling.
                         const styling = this.detectStyling(this.getRange());
                         setTimeout(function () {
