@@ -1925,18 +1925,27 @@ class Editor {
         }
         [{nodes, startOffset, endOffset} = output];
 
-        this.saveHistory();
-        this.shouldTakeSnapshotOnNextChange = true;
-
         if (nodes.length == 0) {
-            return;
-        }
+            if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
 
+            // Create a new BR node.
+            const node = document.createElement("br");
+            this.editor.append(node);
+            nodes.push(node);
+            startOffset = 0;
+            endOffset = 0;
+        }
+        
         // Place each node in between in a new tag.
         for (const node of nodes) {
             const block = this.getAndIsolateBlockNode(node);
             const styledBlock = this.applyStyleToNode(block, style);
         }
+
+        this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
 
         // Select the new nodes.
         const newRange = new Range();
