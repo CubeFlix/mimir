@@ -1031,8 +1031,10 @@ class Editor {
 
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
-        newElem.appendChild(node.cloneNode(true));
-        node.replaceWith(newElem);
+        const marker = document.createTextNode("");
+        node.after(marker)
+        newElem.appendChild(node);
+        marker.replaceWith(newElem);
         return newElem;
     }
 
@@ -1906,8 +1908,8 @@ class Editor {
     }
 
     // TODO: 
-    // - [ ] join multiple blocks
-    // - [ ] handle selection
+    // - [ ] join multiple blocks (maybe)
+    // - [x] handle selection
     // - [ ] handle empty editor
 
     /*
@@ -1931,20 +1933,17 @@ class Editor {
         }
 
         // Place each node in between in a new tag.
-        const styled = [];
         for (const node of nodes) {
             const block = this.getAndIsolateBlockNode(node);
             const styledBlock = this.applyStyleToNode(block, style);
-            block.replaceWith(styledBlock);
-            styled.push(styledBlock);
         }
 
         // Select the new nodes.
-        // const newRange = new Range();
-        // newRange.setStart(styled[0], startOffset);
-        // newRange.setEnd(styled[styled.length - 1], endOffset);
-        // window.getSelection().removeAllRanges();
-        // window.getSelection().addRange(newRange);
+        const newRange = new Range();
+        newRange.setStart(nodes[0], startOffset);
+        newRange.setEnd(nodes[nodes.length - 1], endOffset);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(newRange);
     }
 
     /*
