@@ -13,7 +13,7 @@ class Editor {
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
     basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
-    blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"];
+    blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
@@ -1097,7 +1097,6 @@ class Editor {
             // Place each node in between in a new tag.
             for (const node of nodes.slice(1, nodes.length - 1)) {
                 const styledNode = this.applyStyleToNode(node, style);
-                node.replaceWith(styledNode);
             }
 
             // Select the new nodes.
@@ -1331,6 +1330,12 @@ class Editor {
                     elemRemoved = true;
                 }
                 break;
+            case "quote":
+                if (elem.tagName == "BLOCKQUOTE") {
+                    elem = elem.firstChild;
+                    elemRemoved = true;
+                }
+                break;
         }
 
         // If the previous element had styles on it, reapply the styles.
@@ -1349,8 +1354,12 @@ class Editor {
     */
     removeStyleOnNode(node, style) {
         // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
-        var currentReconstructedNode = node.cloneNode(true);
-        var currentNode = node;
+        // We want to preserve the original node, so we replace it with a empty marker.
+        const marker = document.createTextNode("");
+        node.after(marker);
+        var currentNode = marker;
+        var currentReconstructedNode = node;
+        node = marker;
         var found = false;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             currentNode = currentNode.parentNode;
@@ -1870,7 +1879,7 @@ class Editor {
 
             // Split the newly split node at the right block.
             if (rightBlock) {
-                var splitAfterRight = this.splitNodeAtChild(splitAfterLeft, rightBlock);
+                var splitAfterRight = this.splitNodeAtChild(splitAfterLeft, rightBlock, true);
                 splitAfterLeft.after(splitAfterRight);
             } else {
                 var splitAfterRight = splitAfterLeft;
@@ -1910,7 +1919,7 @@ class Editor {
     // TODO: 
     // - [ ] join multiple blocks (maybe)
     // - [x] handle selection
-    // - [ ] handle empty editor
+    // - [x] handle empty editor
 
     /*
     Apply a block style to a range.
@@ -1937,11 +1946,54 @@ class Editor {
             startOffset = 0;
             endOffset = 0;
         }
-        
+
         // Place each node in between in a new tag.
         for (const node of nodes) {
             const block = this.getAndIsolateBlockNode(node);
             const styledBlock = this.applyStyleToNode(block, style);
+        }
+
+        this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
+
+        // Select the new nodes.
+        const newRange = new Range();
+        newRange.setStart(nodes[0], startOffset);
+        newRange.setEnd(nodes[nodes.length - 1], endOffset);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(newRange);
+    }
+
+    /*
+    Remove a block style from a range.
+    */
+    removeBlockStyle(style, range) {
+        var nodes, startOffset, endOffset;
+        
+        // Get the text nodes within the range.
+        const output = this.getTextNodesInRange(range);
+        if (!output) {
+            return;
+        }
+        [{nodes, startOffset, endOffset} = output];
+
+        if (nodes.length == 0) {
+            if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
+
+            // Create a new BR node.
+            const node = document.createElement("br");
+            this.editor.append(node);
+            nodes.push(node);
+            startOffset = 0;
+            endOffset = 0;
+        }
+
+        // Place each node in between in a new tag.
+        for (const node of nodes) {
+            const block = this.getAndIsolateBlockNode(node);
+            const styledBlock = this.removeStyleOnNode(block, style);
         }
 
         this.saveHistory();
