@@ -974,7 +974,7 @@ class Editor {
         var firstNode = true;
         for (const node of nodes) {
             // If the node is empty, don't count it.
-            if (node.textContent.replace(this.invisibleParsed, "") == "" && nodes.length > 1) {
+            if (node.nodeType == Node.TEXT_NODE && node.textContent.replace(this.invisibleParsed, "") == "" && nodes.length > 1) {
                 continue;
             }
 
@@ -1817,15 +1817,6 @@ class Editor {
         // Traverse right and find the closest block node (if it exists) within the parent node.
         // This returns null if it doesn't find a block node within the parent. 
         var currentNode = child;
-
-        // Traverse rightwards (initial traversal).
-        while (!currentNode.nextSibling) {
-            currentNode = currentNode.parentNode;
-            if (!parent.contains(currentNode)) {
-                return null;
-            }
-        }
-        currentNode = currentNode.nextSibling;
 
         while (parent.contains(currentNode) && currentNode != parent) {
             // First, check if the current node is a block node (not including BR nodes).
