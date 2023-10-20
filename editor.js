@@ -26,7 +26,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote"/*, "h1", "h2", "h3", "h4", "h5", "h6"*/] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -1855,7 +1855,7 @@ class Editor {
         var currentNode = textNode;
         var blockNode = null;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
-            if (this.blockTags.includes(currentNode.tagName)) {
+            if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
                 // Found a block node.
                 blockNode = currentNode;
                 break;
@@ -1917,14 +1917,19 @@ class Editor {
     }
 
     // TODO: 
-    // - [ ] join multiple blocks (maybe)
+    // - [x] join multiple blocks (maybe)
+    // - [ ] removeBlockStyle is deleting content?!!?! (i might be going bobo)
     // - [x] handle selection
     // - [x] handle empty editor
+    // RULES:
+    // - H1-H6 are mutually exclusive
+    // - UL and OL are mutually exclusive
+    // - UL, OL, and BLOCKQUOTE join
 
     /*
     Apply a block style to a range.
     */
-    applyBlockStyle(style, range) {
+    applyBlockStyle(style, range, join = false) {
         var nodes, startOffset, endOffset;
         
         // Get the text nodes within the range.
@@ -1933,6 +1938,9 @@ class Editor {
             return;
         }
         [{nodes, startOffset, endOffset} = output];
+
+        this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
 
         if (nodes.length == 0) {
             if (!this.inEditor(range.commonAncestorContainer)) {
@@ -1948,13 +1956,25 @@ class Editor {
         }
 
         // Place each node in between in a new tag.
-        for (const node of nodes) {
-            const block = this.getAndIsolateBlockNode(node);
-            const styledBlock = this.applyStyleToNode(block, style);
+        if (!join) {
+            for (const node of nodes) {
+                const block = this.getAndIsolateBlockNode(node);
+                const styledBlock = this.applyStyleToNode(block, style);
+            }
+        } else {
+            var lastJoined = null;
+            for (const node of nodes) {
+                const block = this.getAndIsolateBlockNode(node);
+                console.log(block);
+                if (lastJoined && lastJoined.nextSibling == block) {
+                    // Join the current node and the last joined node.
+                    lastJoined.append(block);
+                } else {
+                    const styledBlock = this.applyStyleToNode(block, style);
+                    lastJoined = styledBlock;
+                }
+            }
         }
-
-        this.saveHistory();
-        this.shouldTakeSnapshotOnNextChange = true;
 
         // Select the new nodes.
         const newRange = new Range();
@@ -2028,10 +2048,11 @@ class Editor {
                 this.applyStyle(style, range);
             }
         } else if (this.blockStylingCommands.includes(style.type)) {
+            const join = ["quote"].includes(style.type);
             if (currentStyling.some(s => s.type == style.type)) {
                 this.removeBlockStyle(style, range);
             } else {
-                this.applyBlockStyle(style, range);
+                this.applyBlockStyle(style, range, join);
             }
         }
 
