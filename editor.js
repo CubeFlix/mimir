@@ -1353,14 +1353,28 @@ class Editor {
     Remove a style on a node.
     */
     removeStyleOnNode(node, style) {
+        if (node.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(node, style)) {
+            // No need to do any splitting or reconstruction, just remove the style from the node and replace it.
+            const marker = document.createTextNode("");
+            node.after(marker);
+            const newNode = this.removeStyleFromElement(node, style);
+            marker.after(newNode);
+            marker.remove();
+            node.remove();
+            return newNode;
+        }
+
         // Go up the DOM tree until the tag is found, saving a list of elements passed on the way up.
         // We want to preserve the original node, so we replace it with a empty marker.
         const marker = document.createTextNode("");
         node.after(marker);
         var currentNode = marker;
         var currentReconstructedNode = node;
+        const oldNode = node;
         node = marker;
         var found = false;
+
+        // Traverse upwards and reconstruct all the nodes passed on the way up.
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             currentNode = currentNode.parentNode;
 
@@ -1376,7 +1390,10 @@ class Editor {
             }
         }
         if (!found) {
-            return node;
+            // Re-insert the original node.
+            marker.after(oldNode);
+            marker.remove();
+            return oldNode;
         }
 
         // Remove the style on the reconstructed node.
@@ -1909,7 +1926,7 @@ class Editor {
 
     // TODO: 
     // - [x] join multiple blocks (maybe)
-    // - [ ] removeBlockStyle is deleting content?!!?! (i might be going bobo)
+    // - [x] removeBlockStyle is deleting content?!!?! (i might be going bobo) (i was not in fact bobo)
     // - [x] handle selection
     // - [x] handle empty editor
     // RULES:
@@ -1956,7 +1973,6 @@ class Editor {
             var lastJoined = null;
             for (const node of nodes) {
                 const block = this.getAndIsolateBlockNode(node);
-                console.log(block);
                 if (lastJoined && lastJoined.nextSibling == block) {
                     // Join the current node and the last joined node.
                     lastJoined.append(block);
