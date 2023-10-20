@@ -17,7 +17,7 @@ class Editor {
     childlessTags = ["BR", "IMG"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
-    blockStylingCommands = ["quote"];
+    blockStylingCommands = ["quote", "header"];
 
     /* 
     Create the editor. 
@@ -26,7 +26,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote"/*, "h1", "h2", "h3", "h4", "h5", "h6"*/] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote", "header"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -152,6 +152,18 @@ class Editor {
                     this.menubarOptions.quote.innerHTML = "\"";
                     this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
                     this.menubar.append(this.menubarOptions.quote);
+                    break;
+                case "header":
+                    this.menubarOptions.header = document.createElement("select");
+                    this.menubarOptions.header.setAttribute("id", "editor-menubar-option-header");
+                    for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
+                        const newHeaderOption = document.createElement("option");
+                        newHeaderOption.innerHTML = level;
+                        newHeaderOption.setAttribute("value", level);
+                        this.menubarOptions.header.append(newHeaderOption);
+                    }
+                    this.menubarOptions.header.addEventListener("change", this.header.bind(this));
+                    this.menubar.append(this.menubarOptions.header);
                     break;
             }
         }
@@ -709,6 +721,11 @@ class Editor {
                 continue;
             }
 
+            if (option == "header") {
+                this.menubarOptions.header.value = styling.find(s => s.type == "header") ? styling.find(s => s.type == "header").level : "Paragraph";
+                continue;
+            }
+
             if (styling.some(s => s.type == option)) {
                 if (!this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.add("editor-pressed");
             } else {
@@ -880,6 +897,8 @@ class Editor {
                 return elem;
             case "quote":
                 return document.createElement("blockquote");
+            case "header":
+                return document.createElement(style.level);
         }
     }
 
@@ -916,6 +935,14 @@ class Editor {
                 break;
             case "BLOCKQUOTE":
                 styling.push({type: "quote"});
+                break;
+            case "H1":
+            case "H2":
+            case "H3":
+            case "H4":
+            case "H5":
+            case "H6":
+                styling.push({type: "header", level: node.tagName});
                 break;
         }
 
@@ -1332,6 +1359,12 @@ class Editor {
                 break;
             case "quote":
                 if (elem.tagName == "BLOCKQUOTE") {
+                    elem = elem.firstChild;
+                    elemRemoved = true;
+                }
+                break;
+            case "header":
+                if (elem.tagName == style.level) {
                     elem = elem.firstChild;
                     elemRemoved = true;
                 }
@@ -1924,15 +1957,23 @@ class Editor {
         }
     }
 
-    // TODO: 
-    // - [x] join multiple blocks (maybe)
-    // - [x] removeBlockStyle is deleting content?!!?! (i might be going bobo) (i was not in fact bobo)
-    // - [x] handle selection
-    // - [x] handle empty editor
-    // RULES:
-    // - H1-H6 are mutually exclusive
-    // - UL and OL are mutually exclusive
-    // - UL, OL, and BLOCKQUOTE join
+    /*
+    TODO: 
+    - [x] join multiple blocks (maybe)
+    - [x] removeBlockStyle is deleting content?!!?! (i might be going bobo) (i was not in fact bobo)
+    - [x] handle selection
+    - [x] handle empty editor
+    - [ ] paste
+    - [ ] h1-h6
+    - [ ] handle lists
+    RULES:
+    - H1-H6 are mutually exclusive
+    - UL and OL are mutually exclusive
+    - UL, OL, and BLOCKQUOTE join
+    PASTING:
+    - Track current styles on each node, and only allow one of each type of style to be added
+    - Only apply inline styles
+    */
 
     /*
     Apply a block style to a range.
@@ -2056,10 +2097,30 @@ class Editor {
             }
         } else if (this.blockStylingCommands.includes(style.type)) {
             const join = ["quote"].includes(style.type);
-            if (currentStyling.some(s => s.type == style.type)) {
-                this.removeBlockStyle(style, range);
-            } else {
-                this.applyBlockStyle(style, range, join);
+            switch (style.type) {
+                case "quote":
+                    if (currentStyling.some(s => s.type == style.type)) {
+                        this.removeBlockStyle(style, range);
+                    } else {
+                        this.applyBlockStyle(style, range, join);
+                    }
+                    break;
+                case "header":
+                    if (style.level == "Paragraph") {
+                        const currentHeaderStyle = currentStyling.find(s => s.type == "header");
+                        if (currentHeaderStyle) {
+                            this.removeBlockStyle(currentHeaderStyle, range);
+                        }
+                    } else {
+                        // Remove the other header styling first.
+                        const currentHeaderStyle = currentStyling.find(s => s.type == "header");
+                        if (currentHeaderStyle) {
+                            this.removeBlockStyle(currentHeaderStyle, range);
+                        }
+                        const newRange = this.getRange();
+                        this.applyBlockStyle(style, newRange);
+                    }
+                    break;
             }
         }
 
@@ -2107,6 +2168,13 @@ class Editor {
     */
     quote() {
         this.performStyleCommand({type: "quote"});
+    }
+
+    /*
+    Header.
+    */
+    header() {
+        this.performStyleCommand({type: "header", level: this.menubarOptions.header.value});
     }
 
     /*
