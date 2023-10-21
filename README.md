@@ -45,6 +45,15 @@ a rich text editor for javascript
 - [x] fix metaKey support on webkit
 - [x] bug with styling br element
 - [x] handle whitespace css
+- [x] join multiple blocks (maybe)
+- [x] removeBlockStyle is deleting content?!!?! (i might be going bobo) (i was not in fact bobo)
+- [x] handle selection
+- [x] handle empty editor
+- [ ] fix pasting (only combine lists on first)
+- [x] order of operations
+- [ ] paste block nodes
+- [x] h1-h6
+- [ ] handle lists
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options

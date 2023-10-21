@@ -1889,20 +1889,33 @@ class Editor {
     }
 
     /*
-    Get and isolate the block associated with a text node.
+    Find the topmost block node.
     */
-    getAndIsolateBlockNode(textNode) {
-        // Traverse up the node tree until the first block node is reached.
-        var currentNode = textNode;
+    findTopmostBlock(child, escape = []) {
+        // Traverse up the node tree until the lowest valid (i.e. not contained within an escape tag) block node is reached.
+        var currentNode = child;
         var blockNode = null;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
                 // Found a block node.
-                blockNode = currentNode;
-                break;
+                if (escape.includes(currentNode.tagName)) {
+                    blockNode = null;
+                } else {
+                    if (blockNode == null) {
+                        blockNode = currentNode;
+                    }
+                }
             }
             currentNode = currentNode.parentNode;
         }
+        return blockNode;
+    }
+
+    /*
+    Get and isolate the block associated with a text node.
+    */
+    getAndIsolateBlockNode(textNode, escape = []) {
+        const blockNode = this.findTopmostBlock(textNode, escape);
 
         // Split the node.
         if (blockNode) {
@@ -1958,18 +1971,12 @@ class Editor {
     }
 
     /*
-    TODO: 
-    - [x] join multiple blocks (maybe)
-    - [x] removeBlockStyle is deleting content?!!?! (i might be going bobo) (i was not in fact bobo)
-    - [x] handle selection
-    - [x] handle empty editor
-    - [ ] paste
-    - [ ] h1-h6
-    - [ ] handle lists
+    -- NOTES -- 
     RULES:
     - H1-H6 are mutually exclusive
     - UL and OL are mutually exclusive
     - UL, OL, and BLOCKQUOTE join
+    - Order of nodes (outermost to innermost): BLOCKQUOTE/LISTS (any order) -> H1-H6 -> styling nodes -> text nodes
     PASTING:
     - Track current styles on each node, and only allow one of each type of style to be added
     - Only apply inline styles
@@ -2006,14 +2013,16 @@ class Editor {
 
         // Place each node in between in a new tag.
         if (!join) {
+            const escape = (style.type == "quote" || style.type == "list") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
             for (const node of nodes) {
-                const block = this.getAndIsolateBlockNode(node);
+                const block = this.getAndIsolateBlockNode(node, escape);
                 const styledBlock = this.applyStyleToNode(block, style);
             }
         } else {
             var lastJoined = null;
+            const escape = (style.type == "quote" || style.type == "list") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
             for (const node of nodes) {
-                const block = this.getAndIsolateBlockNode(node);
+                const block = this.getAndIsolateBlockNode(node, escape);
                 if (lastJoined && lastJoined.nextSibling == block) {
                     // Join the current node and the last joined node.
                     lastJoined.append(block);
