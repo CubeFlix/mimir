@@ -50,7 +50,10 @@ a rich text editor for javascript
 - [x] handle selection
 - [x] handle empty editor
 - [x] fix pasting (only combine lists on first)
-- [ ] fix pasting (google docs does some weird stuff with B blocks and font-weight: normal ????)
+- [ ] urgent bug: removing styling on block node containing multiple children
+- [ ] urgent bug: for some reason not joining certain block nodes (may have to re-write joining code)
+- [x] fix pasting (google docs does some weird stuff with B blocks and font-weight: normal ????)
+- [x] styling overrides (respect order of dom)
 - [x] order of operations
 - [ ] paste block nodes
 - [x] h1-h6

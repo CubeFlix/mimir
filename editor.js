@@ -362,13 +362,25 @@ class Editor {
                 // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
                 var styling = [];
                 var currentNode = child;
+
+                // When calculating styling, we need to respect overrides. If an override is hit (i.e. no bold), later elements cannot apply the style.
+                var overrides = [];
                 while (parent.contains(currentNode)) {
                     // Only push the styling if it hasn't been added yet.
                     if (currentNode.nodeType == Node.TEXT_NODE) {
                         currentNode = currentNode.parentNode;
                         continue;
                     }
-                    styling.push(...this.getStylingOfElement(currentNode).filter(s => !styling.some(e => s.type == e.type)));
+                    var elementStyling = this.getStylingOfElement(currentNode, true);
+                    elementStyling = elementStyling.filter(s => !styling.some(e => s.type == e.type));
+                    elementStyling = elementStyling.filter(s => !overrides.some(e => s.type == e.target.type));
+                    const elementOverrides = elementStyling.filter(s => s.type == "override");
+                    elementStyling = elementStyling.filter(s => s.type != "override");
+                    styling.push(...elementStyling);
+
+                    // Handle all element overrides.
+                    overrides.push(...elementOverrides);
+
                     currentNode = currentNode.parentNode;
                 }
 
@@ -904,9 +916,9 @@ class Editor {
     }
 
     /*
-    Get a list of styling that an element applies.
+    Get a list of styling that an element applies. For cases with unsanitized DOM (pasting, etc.), there is an option to track style overrides.
     */
-    getStylingOfElement(node) {
+    getStylingOfElement(node, trackOverrides = false) {
         var styling = [];
         
         // Check if the element itself applies styling.
@@ -950,9 +962,15 @@ class Editor {
         // Check the element's inline styling.
         if (node.style.fontWeight == "700" || node.style.fontWeight.toLowerCase() == "bold") {
             if (!styling.some(s => s.type == "bold")) styling.push({type: "bold"});
+        } else if (node.style.fontWeight == "400" || node.style.fontWeight.toLowerCase() == "normal") {
+            if (styling.some(s => s.type == "bold")) styling.splice(styling.findIndex(s => s.type == "bold"), 1);
+            if (trackOverrides) styling.push({type: "override", target: {type: "bold"}});
         }
         if (node.style.fontStyle.toLowerCase() == "italic") {
             if (!styling.some(s => s.type == "italic")) styling.push({type: "italic"});
+        } else if (node.style.fontStyle.toLowerCase() == "normal") {
+            if (styling.some(s => s.type == "italic")) styling.splice(styling.findIndex(s => s.type == "italic"), 1);
+            if (trackOverrides) styling.push({type: "override", target: {type: "italic"}});
         }
         if (node.style.textDecoration.toLowerCase().includes("underline")) {
             if (!styling.some(s => s.type == "underline")) styling.push({type: "underline"});
