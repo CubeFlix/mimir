@@ -1378,13 +1378,19 @@ class Editor {
                 break;
             case "quote":
                 if (elem.tagName == "BLOCKQUOTE") {
-                    elem = elem.firstChild;
+                    // If we need to remove styling on a block, we need to handle the case where there are multiple children of the node.
+                    const temp = document.createDocumentFragment();
+                    temp.append(...elem.childNodes);
+                    elem = temp;
                     elemRemoved = true;
                 }
                 break;
             case "header":
                 if (elem.tagName == style.level) {
-                    elem = elem.firstChild;
+                    // If we need to remove styling on a block, we need to handle the case where there are multiple children of the node.
+                    const temp = document.createDocumentFragment();
+                    temp.append(...elem.childNodes);
+                    elem = temp;
                     elemRemoved = true;
                 }
                 break;
