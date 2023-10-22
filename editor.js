@@ -17,7 +17,7 @@ class Editor {
     childlessTags = ["BR", "IMG"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
-    blockStylingCommands = ["quote", "header"];
+    blockStylingCommands = ["quote", "header", "align"];
 
     /* 
     Create the editor. 
@@ -26,7 +26,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote", "header"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote", "header", "align"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -164,6 +164,18 @@ class Editor {
                     }
                     this.menubarOptions.header.addEventListener("change", this.header.bind(this));
                     this.menubar.append(this.menubarOptions.header);
+                    break;
+                case "align":
+                    this.menubarOptions.align = document.createElement("select");
+                    this.menubarOptions.align.setAttribute("id", "editor-menubar-option-align");
+                    for (const direction of ["Left", "Right", "Center", "Justify"]) {
+                        const newAlignOption = document.createElement("option");
+                        newAlignOption.innerHTML = direction;
+                        newAlignOption.setAttribute("value", direction.toLowerCase());
+                        this.menubarOptions.align.append(newAlignOption);
+                    }
+                    this.menubarOptions.align.addEventListener("change", this.align.bind(this));
+                    this.menubar.append(this.menubarOptions.align);
                     break;
             }
         }
@@ -739,6 +751,11 @@ class Editor {
                 continue;
             }
 
+            if (option == "align") {
+                this.menubarOptions.align.value = styling.find(s => s.type == "align") ? styling.find(s => s.type == "align").direction : "left";
+                continue;
+            }
+
             if (styling.some(s => s.type == option)) {
                 if (!this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.add("editor-pressed");
             } else {
@@ -905,13 +922,17 @@ class Editor {
             case "strikethrough":
                 return document.createElement("s");
             case "font":
-                const elem = document.createElement("span");
+                var elem = document.createElement("span");
                 elem.style.fontFamily = style.family;
                 return elem;
             case "quote":
                 return document.createElement("blockquote");
             case "header":
                 return document.createElement(style.level);
+            case "align":
+                var elem = document.createElement("div");
+                elem.style.textAlign = style.direction;
+                return elem;
         }
     }
 
@@ -983,6 +1004,10 @@ class Editor {
             family = family.split("\"").join("");
             family = family.split("'").join("");
             if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: family});
+        }
+        if (node.style.textAlign) {
+            var direction = node.style.textAlign.toLowerCase();
+            if (!styling.some(s => s.type == "align")) styling.push({type: "align", direction: direction});
         }
 
         return styling;
@@ -1333,6 +1358,12 @@ class Editor {
                         elem.style.fontFamily = "";
                     }
                     break;
+                case "align":
+                    if (elem.style.textAlign) {
+                        elem.style.textAlign = "";
+                        // Directly return the element since we don't want to dead with removing the element.
+                        return elem;
+                    }
             }
 
             // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
@@ -2038,14 +2069,14 @@ class Editor {
 
         // Place each node in between in a new tag.
         if (!join) {
-            const escape = (style.type == "quote" || style.type == "list") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
+            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
             for (const node of nodes) {
                 const block = this.getAndIsolateBlockNode(node, escape);
                 const styledBlock = this.applyStyleToNode(block, style);
             }
         } else {
             var lastJoined = null;
-            const escape = (style.type == "quote" || style.type == "list") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
+            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
             for (const node of nodes) {
                 if (lastJoined && lastJoined.contains(node)) {
                     // Don't re-style already styled text nodes.
@@ -2160,6 +2191,22 @@ class Editor {
                         this.applyBlockStyle(style, newRange);
                     }
                     break;
+                case "align":
+                    if (style.direction == "left") {
+                        const currentAlignStyle = currentStyling.find(s => s.type == "align");
+                        if (currentAlignStyle) {
+                            this.removeBlockStyle(currentAlignStyle, range);
+                        }
+                    } else {
+                        // Remove the other header styling first.
+                        const currentAlignStyle = currentStyling.find(s => s.type == "align");
+                        if (currentAlignStyle) {
+                            this.removeBlockStyle(currentAlignStyle, range);
+                        }
+                        const newRange = this.getRange();
+                        this.applyBlockStyle(style, newRange);
+                    }
+                    break;
             }
         }
 
@@ -2214,6 +2261,13 @@ class Editor {
     */
     header() {
         this.performStyleCommand({type: "header", level: this.menubarOptions.header.value});
+    }
+
+    /*
+    Text align.
+    */
+    align() {
+        this.performStyleCommand({type: "align", direction: this.menubarOptions.align.value});
     }
 
     /*
