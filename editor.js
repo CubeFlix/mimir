@@ -2047,6 +2047,11 @@ class Editor {
             var lastJoined = null;
             const escape = (style.type == "quote" || style.type == "list") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
             for (const node of nodes) {
+                if (lastJoined && lastJoined.contains(node)) {
+                    // Don't re-style already styled text nodes.
+                    continue;
+                }
+
                 const block = this.getAndIsolateBlockNode(node, escape);
                 if (lastJoined && lastJoined.nextSibling == block) {
                     // Join the current node and the last joined node.

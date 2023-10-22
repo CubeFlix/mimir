@@ -51,7 +51,7 @@ a rich text editor for javascript
 - [x] handle empty editor
 - [x] fix pasting (only combine lists on first)
 - [x] urgent bug: removing styling on block node containing multiple children
-- [ ] urgent bug: for some reason not joining certain block nodes (may have to re-write joining code)
+- [x] urgent bug: for some reason not joining certain block nodes (may have to re-write joining code)
 - [x] fix pasting (google docs does some weird stuff with B blocks and font-weight: normal ????)
 - [x] styling overrides (respect order of dom)
 - [x] order of operations
