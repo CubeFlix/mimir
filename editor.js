@@ -552,7 +552,8 @@ class Editor {
                     currentLastNode = topmostNode;
 
                     // If the node's tag name matches the topmost node's tag name, combine the lists.
-                    if (node.tagName == topmostNode.tagName) {
+                    // Only combine lists one time.
+                    if (node.tagName == topmostNode.tagName && firstNode == null) {
                         // Combine the lists.
                         currentLastNode = node.childNodes.length != 0 ? node.childNodes[node.childNodes.length - 1] : currentLastNode;
                         topmostNode.append(...node.childNodes);

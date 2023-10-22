@@ -49,7 +49,8 @@ a rich text editor for javascript
 - [x] removeBlockStyle is deleting content?!!?! (i might be going bobo) (i was not in fact bobo)
 - [x] handle selection
 - [x] handle empty editor
-- [ ] fix pasting (only combine lists on first)
+- [x] fix pasting (only combine lists on first)
+- [ ] fix pasting (google docs does some weird stuff with B blocks and font-weight: normal ????)
 - [x] order of operations
 - [ ] paste block nodes
 - [x] h1-h6
@@ -59,6 +60,9 @@ a rich text editor for javascript
 - [ ] block styling options
 - [ ] lists
 - [ ] images
+- [ ] format indent up/down
+- [ ] `sup`
+- [ ] `pre`
 - [ ] handle tab button
 - [ ] a href (add mouse overlay, etc.)
 - [ ] disallow pasting HTML option 
