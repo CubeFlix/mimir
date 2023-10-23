@@ -36,6 +36,7 @@ a rich text editor for javascript
 - [x] urgent bug with backspace with cursor
 - [x] create new cursor when backspacing out of style node
 - [x] issue with whitespace, pasting/dragging
+- [x] paste is broken again (pasting span into blockquote)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] bugs (extraneous divs when removing block styles)
 - [x] bug with pasting styled within span

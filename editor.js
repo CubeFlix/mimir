@@ -388,6 +388,7 @@ class Editor {
                     elementStyling = elementStyling.filter(s => !overrides.some(e => s.type == e.target.type));
                     const elementOverrides = elementStyling.filter(s => s.type == "override");
                     elementStyling = elementStyling.filter(s => s.type != "override");
+                    elementStyling = elementStyling.filter(s => this.inlineStylingCommands.includes(s.type));
                     styling.push(...elementStyling);
 
                     // Handle all element overrides.
@@ -560,11 +561,13 @@ class Editor {
         var currentLastNode = emptyTextNode;
         var firstNode = null;
         for (const node of reconstructed) {
+            console.log(node);
             // Add in the node.
             if (node.nodeType == Node.TEXT_NODE) {
                 currentLastNode.after(node);
                 currentLastNode = node;
             } else if (node.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
+                console.log("YES")
                 // Break out of any inline style nodes.
                 var topmostInlineNode = this.findLastParent(currentLastNode, currentNode => currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN"));
                 if (topmostInlineNode) {
@@ -1092,7 +1095,12 @@ class Editor {
         const newElem = this.styleToElement(style);
         const marker = document.createTextNode("");
         node.after(marker)
-        newElem.appendChild(node);
+        if (node.tagName == "DIV" && !node.getAttribute("style")) {
+            newElem.appendChild(...node.childNodes);
+            node.remove();
+        } else {
+            newElem.appendChild(node);
+        }
         marker.replaceWith(newElem);
         return newElem;
     }
