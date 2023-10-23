@@ -10,7 +10,7 @@ class Editor {
     ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
 
-    contentTags = ["IMG", "BR"];
+    contentTags = ["IMG", "BR", "LI"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
     basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
