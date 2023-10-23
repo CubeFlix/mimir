@@ -1318,6 +1318,38 @@ class Editor {
     Remove a style from an element.
     */
     removeStyleFromElement(elem, style) {
+        if (this.blockStylingCommands.includes(style.type)) {
+            // Remove block styling.
+            switch (style.type) {
+                case "align":
+                    if (elem.style.textAlign && elem.style.textAlign.toLowerCase().includes(style.direction)) {
+                        elem.style.textAlign = "";
+                    }
+                    break;
+                case "quote":
+                    if (elem.tagName == "BLOCKQUOTE") {
+                        const temp = document.createElement("div");
+                        temp.append(...elem.childNodes);
+                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                        elem = temp;
+                        elemRemoved = true;
+                    }
+                    break;
+                case "header":
+                    if (elem.tagName == style.level) {
+                        const temp = document.createElement("div");
+                        temp.append(...elem.childNodes);
+                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                        elem = temp;
+                        elemRemoved = true;
+                    }
+                    break;
+            }
+
+            return elem;
+        }
+
+
         if (elem.getAttribute("style")) {
             // Element contains styling. Determine if any of the styles applies the specified style.
             switch (style.type) {
@@ -1346,12 +1378,6 @@ class Editor {
                         elem.style.fontFamily = "";
                     }
                     break;
-                case "align":
-                    if (elem.style.textAlign) {
-                        elem.style.textAlign = "";
-                        // Directly return the element since we don't want to dead with removing the element.
-                        return elem;
-                    }
             }
 
             // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
@@ -1392,24 +1418,6 @@ class Editor {
             case "font":
                 if (elem.tagName == "FONT") {
                     elem = elem.firstChild;
-                    elemRemoved = true;
-                }
-                break;
-            case "quote":
-                if (elem.tagName == "BLOCKQUOTE") {
-                    // If we need to remove styling on a block, we need to handle the case where there are multiple children of the node.
-                    const temp = document.createDocumentFragment();
-                    temp.append(...elem.childNodes);
-                    elem = temp;
-                    elemRemoved = true;
-                }
-                break;
-            case "header":
-                if (elem.tagName == style.level) {
-                    // If we need to remove styling on a block, we need to handle the case where there are multiple children of the node.
-                    const temp = document.createDocumentFragment();
-                    temp.append(...elem.childNodes);
-                    elem = temp;
                     elemRemoved = true;
                 }
                 break;
