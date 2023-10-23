@@ -56,6 +56,7 @@ a rich text editor for javascript
 - [x] styling overrides (respect order of dom)
 - [x] order of operations
 - [ ] paste block nodes
+- [ ] when pasting, if possible, always join the first node (and the split node, if possible)
 - [x] h1-h6
 - [ ] handle lists
 - [ ] more styling options
