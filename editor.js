@@ -1097,9 +1097,11 @@ class Editor {
             // If the node does not have styling, don't add it.
             if (node.getAttribute("style") || this.stylingTags.includes(node.tagName)) {
                 node.append(newElem);
-                return node;
+                console.log("newelem:", newElem.cloneNode(true));
+                return newElem;
             } else {
                 node.replaceWith(newElem);
+                console.log("newElem:", newElem.cloneNode(true))
                 return newElem;
             }
         } else {
@@ -1969,17 +1971,25 @@ class Editor {
                         blockNode = null;
                     } else {
                         if (blockNode == null) {
+                            console.log("BN IS NULL?")
+                            blockNode = currentNode;
+                        } else if (currentNode.tagName == "DIV" || currentNode.tagName == "P") {
+                            // Escape extraneous nodes.
                             blockNode = currentNode;
                         }
                     }
                 } else {
                     if (blockNode == null) {
                         blockNode = currentNode;
+                    } else if (currentNode.tagName == "DIV" || currentNode.tagName == "P") {
+                        // Escape extraneous nodes.
+                        blockNode = currentNode;
                     }
                 }
             }
             currentNode = currentNode.parentNode;
         }
+        console.log("blocnOd", blockNode.cloneNode(true))
         return blockNode;
     }
 
@@ -1994,6 +2004,7 @@ class Editor {
             // Get the block nodes on the left and right, with respect to the parent block.
             var leftBlock = this.findClosestBlockOnLeft(blockNode, textNode);
             var rightBlock = this.findClosestBlockOnRight(blockNode, textNode);
+            console.log(leftBlock.cloneNode(true), rightBlock.cloneNode(true))
 
             // Split the parent block at the left block.
             if (leftBlock) {
@@ -2100,18 +2111,18 @@ class Editor {
                 }
 
                 const block = this.getAndIsolateBlockNode(node, escape);
-                console.log(block.cloneNode(true))
                 const styledBlock = this.applyStyleToNode(block, style);
-                /*if (lastJoined && lastJoined.nextSibling == styledBlock) {
+                console.log(block.cloneNode(true), styledBlock.cloneNode(true))
+                if (lastJoined && lastJoined.nextSibling == styledBlock) {
                     console.log(lastJoined, styledBlock);
                     // Join the current node and the last joined node.
                     const newDiv = document.createElement("div");
                     newDiv.append(...styledBlock.childNodes);
                     lastJoined.append(newDiv);
                     styledBlock.remove();
-                } else {*/
+                } else {
                     lastJoined = styledBlock;
-                //}
+                }
             }
         }
 
