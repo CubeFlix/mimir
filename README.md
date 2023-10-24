@@ -58,6 +58,7 @@ a rich text editor for javascript
 - [x] styling overrides (respect order of dom)
 - [x] order of operations
 - [x] fix order of block nodes
+- [ ] setTimeout finish bubbling not working on WebKit (i HATE webkit)
 - [ ] fix joining block nodes
 - [ ] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
 - [x] when pasting, if possible, always join the first node (and the split node, if possible)
