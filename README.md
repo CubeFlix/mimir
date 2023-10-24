@@ -38,7 +38,7 @@ a rich text editor for javascript
 - [x] issue with whitespace, pasting/dragging
 - [x] paste is broken again (pasting span into blockquote)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
-- [ ] bugs (extraneous divs when removing block styles)
+- [x] bugs (extraneous divs when removing block styles)
 - [x] bug with pasting styled within span
 - [x] fix whitespace (handle `pre`)
 - [x] history (restore selection and currentCursor)
@@ -57,6 +57,7 @@ a rich text editor for javascript
 - [x] fix pasting (google docs does some weird stuff with B blocks and font-weight: normal ????)
 - [x] styling overrides (respect order of dom)
 - [x] order of operations
+- [x] fix order of block nodes
 - [ ] paste block nodes
 - [x] when pasting, if possible, always join the first node (and the split node, if possible)
 - [x] h1-h6
@@ -73,9 +74,3 @@ a rich text editor for javascript
 - [ ] a href (add mouse overlay, etc.)
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI (undo redo buttons, etc.)
-
-## notes
-
-Things that need to be handled during paste:
-- Pasting inline into inline should return inline.
-- Pasting list in list should split and combine the lists.

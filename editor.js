@@ -11,7 +11,7 @@ class Editor {
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
 
     contentTags = ["IMG", "BR", "LI"];
-    stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
+    stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
@@ -1093,16 +1093,24 @@ class Editor {
 
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
-        const marker = document.createTextNode("");
-        node.after(marker)
-        if (node.tagName == "DIV" && !node.getAttribute("style")) {
+        if (this.blockTags.includes(node.tagName)) {
             newElem.appendChild(...node.childNodes);
-            node.remove();
+
+            // If the node does not have styling, don't add it.
+            if (node.getAttribute("style") || this.stylingTags.includes(node.tagName)) {
+                node.appendChild(newElem);
+                return node;
+            } else {
+                node.replaceWith(newElem);
+                return newElem;
+            }
         } else {
+            const marker = document.createTextNode("");
+            node.after(marker);
             newElem.appendChild(node);
+            marker.replaceWith(newElem);
+            return newElem;
         }
-        marker.replaceWith(newElem);
-        return newElem;
     }
 
     /*
@@ -1453,7 +1461,7 @@ class Editor {
             const newNode = this.removeStyleFromElement(node, style);
             marker.after(newNode);
             marker.remove();
-            node.remove();
+            if (newNode != node) node.remove();
             return newNode;
         }
 
@@ -1949,16 +1957,16 @@ class Editor {
     }
 
     /*
-    Find the topmost block node.
+    Find the topmost block node. If escape is not null, it should be a predicate function that determines whether or not to escape from a node.
     */
-    findTopmostBlock(child, escape = []) {
+    findTopmostBlock(child, escape = null) {
         // Traverse up the node tree until the lowest valid (i.e. not contained within an escape tag) block node is reached.
         var currentNode = child;
         var blockNode = null;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
                 // Found a block node.
-                if (escape.includes(currentNode.tagName)) {
+                if (escape && escape(currentNode)) {
                     blockNode = null;
                 } else {
                     if (blockNode == null) {
@@ -2073,14 +2081,14 @@ class Editor {
 
         // Place each node in between in a new tag.
         if (!join) {
-            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
+            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? (e => ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null; // Escape out of headers.
             for (const node of nodes) {
                 const block = this.getAndIsolateBlockNode(node, escape);
                 const styledBlock = this.applyStyleToNode(block, style);
             }
         } else {
             var lastJoined = null;
-            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? ["H1", "H2", "H3", "H4", "H5", "H6"] : []; // Escape out of headers.
+            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? (e => ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null; // Escape out of headers.
             for (const node of nodes) {
                 if (lastJoined && lastJoined.contains(node)) {
                     // Don't re-style already styled text nodes.
