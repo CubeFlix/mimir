@@ -245,49 +245,63 @@ class Editor {
                     if ((range.startOffset == 0 && range.endOffset >= endLength) 
                             || (e.key == "Backspace" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)
                             || (e.key == "Delete" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset == 0)) {
+                        e.preventDefault();
+
                         // Get the current styling.
-                        const styling = this.detectStyling(this.getRange());
-                        setTimeout(function () {
-                            const range = this.getRange();
-
-                            // Create a cursor.
-                            const cursor = this.createCursor();
-                            
-                            // Reconstruct inline styling.
-                            var lastNode = cursor;
-                            for (const style of styling) {
-                                if (!this.inlineStylingCommands.includes(style.type)) {
-                                    continue;
-                                }
-                                const newElem = this.styleToElement(style);
-                                newElem.append(lastNode);
-                                lastNode = newElem;
-                            }
-
-                            // Insert the node at the current range and place the caret inside the cursor.
-                            if (range.startContainer.nodeType == Node.TEXT_NODE) {
-                                // Split the text node.
-                                const endNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset), range.startContainer.textContent.length);
-                                range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
-                                range.startContainer.after(lastNode, endNode);
+                        const firstNodeRange = new Range();
+                        if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                            firstNodeRange.selectNode(range.startContainer);
+                        } else {
+                            if (range.startContainer.childNodes.length == 0) {
+                                firstNodeRange.selectNode(range.startContainer);
                             } else {
-                                // Place the node inside.
-                                if (range.startOffset == 0) {
-                                    if (!this.childlessTags.includes(range.startContainer.tagName)) {
-                                        range.startContainer.prepend(lastNode);
-                                    } else {
-                                        range.startContainer.before(lastNode);
-                                    }
+                                if (range.startContainer.childNodes.length >= range.startOffset) {
+                                    firstNodeRange.selectNode(range.startContainer);
                                 } else {
-                                    range.startContainer.childNodes[range.startOffset - 1].after(lastNode);
+                                    firstNodeRange.selectNode(range.startContainer.childNodes[range.startOffset - 1]);
                                 }
                             }
-                            const newRange = new Range();
-                            newRange.selectNodeContents(cursor);
-                            newRange.collapse();
-                            document.getSelection().removeAllRanges();
-                            document.getSelection().addRange(newRange);
-                        }.bind(this), 0);
+                        }
+                        const styling = this.detectStyling(firstNodeRange);
+
+                        // Delete the node.
+                        range.commonAncestorContainer.textContent = "";
+
+                        // Create a cursor.
+                        const cursor = this.createCursor();
+                        
+                        // Reconstruct inline styling.
+                        var lastNode = cursor;
+                        for (const style of styling) {
+                            if (!this.inlineStylingCommands.includes(style.type)) {
+                                continue;
+                            }
+                            const newElem = this.styleToElement(style);
+                            newElem.append(lastNode);
+                            lastNode = newElem;
+                        }
+
+                        // Insert the node at the current range and place the caret inside the cursor.
+                        if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                            // Split the text node.
+                            range.startContainer.after(lastNode);
+                        } else {
+                            // Place the node inside.
+                            if (range.startOffset == 0) {
+                                if (!this.childlessTags.includes(range.startContainer.tagName)) {
+                                    range.startContainer.prepend(lastNode);
+                                } else {
+                                    range.startContainer.before(lastNode);
+                                }
+                            } else {
+                                range.startContainer.childNodes[range.startOffset - 1].after(lastNode);
+                            }
+                        }
+                        const newRange = new Range();
+                        newRange.selectNodeContents(cursor);
+                        newRange.collapse();
+                        document.getSelection().removeAllRanges();
+                        document.getSelection().addRange(newRange);
                     }
                 }
             }
