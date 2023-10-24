@@ -12,7 +12,7 @@ class Editor {
 
     contentTags = ["IMG", "BR", "LI"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
-    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL"];
+    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL", "BLOCKQUOTE"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
@@ -423,6 +423,13 @@ class Editor {
                     removeExtraneousWhitespaceOnChildren = false;
                 }
 
+                // If this is a list with no LI tags within, ignore it.
+                if (child.tagName == "OL" || child.tagName == "UL") {
+                    if (!Array.from(child.childNodes).some(s => s.tagName == "LI")) {
+                        continue;
+                    }
+                }
+
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
@@ -431,13 +438,6 @@ class Editor {
                     // Append the newly reconstructed nodes.
                     reconstructed.push(...reconstructedChildren);
                     continue;
-                }
-
-                // If this is a list with no LI tags within, ignore it.
-                if (child.tagName == "OL" || child.tagName == "UL") {
-                    if (!Array.from(child.childNodes).some(s => s.tagName == "LI")) {
-                        continue;
-                    }
                 }
 
                 // Clone the node without any attributes.
@@ -561,13 +561,11 @@ class Editor {
         var currentLastNode = emptyTextNode;
         var firstNode = null;
         for (const node of reconstructed) {
-            console.log(node);
             // Add in the node.
             if (node.nodeType == Node.TEXT_NODE) {
                 currentLastNode.after(node);
                 currentLastNode = node;
             } else if (node.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
-                console.log("YES")
                 // Break out of any inline style nodes.
                 var topmostInlineNode = this.findLastParent(currentLastNode, currentNode => currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN"));
                 if (topmostInlineNode) {
@@ -1094,11 +1092,11 @@ class Editor {
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
         if (this.blockTags.includes(node.tagName)) {
-            newElem.appendChild(...node.childNodes);
+            newElem.append(...node.childNodes);
 
             // If the node does not have styling, don't add it.
             if (node.getAttribute("style") || this.stylingTags.includes(node.tagName)) {
-                node.appendChild(newElem);
+                node.append(newElem);
                 return node;
             } else {
                 node.replaceWith(newElem);
@@ -1966,8 +1964,14 @@ class Editor {
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
                 // Found a block node.
-                if (escape && escape(currentNode)) {
-                    blockNode = null;
+                if (escape) {
+                    if (escape(currentNode)) {
+                        blockNode = null;
+                    } else {
+                        if (blockNode == null) {
+                            blockNode = currentNode;
+                        }
+                    }
                 } else {
                     if (blockNode == null) {
                         blockNode = currentNode;
@@ -1982,7 +1986,7 @@ class Editor {
     /*
     Get and isolate the block associated with a text node.
     */
-    getAndIsolateBlockNode(textNode, escape = []) {
+    getAndIsolateBlockNode(textNode, escape = null) {
         const blockNode = this.findTopmostBlock(textNode, escape);
 
         // Split the node.
@@ -2096,13 +2100,18 @@ class Editor {
                 }
 
                 const block = this.getAndIsolateBlockNode(node, escape);
-                if (lastJoined && lastJoined.nextSibling == block) {
+                console.log(block.cloneNode(true))
+                const styledBlock = this.applyStyleToNode(block, style);
+                /*if (lastJoined && lastJoined.nextSibling == styledBlock) {
+                    console.log(lastJoined, styledBlock);
                     // Join the current node and the last joined node.
-                    lastJoined.append(block);
-                } else {
-                    const styledBlock = this.applyStyleToNode(block, style);
+                    const newDiv = document.createElement("div");
+                    newDiv.append(...styledBlock.childNodes);
+                    lastJoined.append(newDiv);
+                    styledBlock.remove();
+                } else {*/
                     lastJoined = styledBlock;
-                }
+                //}
             }
         }
 
