@@ -307,7 +307,7 @@ class Editor {
                 }
             }
 
-            if (this.ascii.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+            if ((this.ascii.includes(e.key) || /\p{Emoji}/u.test(e.key)) && !e.ctrlKey && !e.metaKey) {
                 // Take a snapshot if needed.
                 if (this.shouldTakeSnapshotOnNextChange) {
                     this.saveHistory();
