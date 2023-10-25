@@ -10,8 +10,9 @@ class Editor {
     ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
 
-    contentTags = ["IMG", "BR", "LI"];
+    contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
+    inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
     basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL", "BLOCKQUOTE"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
@@ -537,11 +538,10 @@ class Editor {
     /*
     Insert and sanitize HTML data.
     */
-    insertHTML(data, select = "end") {
+    insertHTML(range, data, select = "end") {
         // Prepare to reconstruct and paste the HTML data.
-        const range = this.getRange();
         if (range == null) {
-            return;
+            return null;
         }
         range.deleteContents();
 
@@ -579,9 +579,9 @@ class Editor {
             if (node.nodeType == Node.TEXT_NODE) {
                 currentLastNode.after(node);
                 currentLastNode = node;
-            } else if (node.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
+            } else if (node.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
                 // Break out of any inline style nodes.
-                var topmostInlineNode = this.findLastParent(currentLastNode, currentNode => currentNode.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN"));
+                var topmostInlineNode = this.findLastParent(currentLastNode, currentNode => currentNode.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN"));
                 if (topmostInlineNode) {
                     // We found an inline node to break out of, so split it.
                     const splitAt = document.createTextNode("");
@@ -646,7 +646,9 @@ class Editor {
                         const children = Array.from(node.childNodes).filter(n => !this.isEmpty(n));
                         currentLastNode = children.length != 0 ? children[children.length - 1] : currentLastNode;
                         lowestJoinable.append(...children);
-                        if (split != null && !this.isEmpty(split)) lowestJoinable.append(...split.childNodes);
+                        if (split != null && !this.isEmpty(split)) {
+                            lowestJoinable.append(...split.childNodes);
+                        }
                         firstNode = currentLastNode;
                         continue;
                     }
@@ -677,14 +679,12 @@ class Editor {
             const newRange = new Range();
             newRange.selectNodeContents(currentLastNode);
             newRange.collapse(false);
-            document.getSelection().removeAllRanges();
-            document.getSelection().addRange(newRange);
+            return newRange;
         } else {
             const newRange = new Range();
             newRange.setStart(firstNode, 0);
             newRange.setEndAfter(currentLastNode);
-            document.getSelection().removeAllRanges();
-            document.getSelection().addRange(newRange);
+            return newRange;
         }
     }
 
@@ -698,7 +698,11 @@ class Editor {
             // Paste HTML data.
             if (e.clipboardData.getData("text/html")) {
                 e.preventDefault();
-                this.insertHTML(e.clipboardData.getData("text/html"));
+                const range = this.insertHTML(this.getRange(), e.clipboardData.getData("text/html"));
+                if (range) {
+                    document.getSelection().removeAllRanges();
+                    document.getSelection().addRange(range);
+                }
             }
         }.bind(this));
     }
@@ -712,22 +716,37 @@ class Editor {
 
             // Insert HTML data.
             if (e.dataTransfer.getData("text/html")) {
-                // When handling drag events, we want to sanitize and normalize the data before 
-                // inserting it. The problem with this, though, is that we don't know where to 
-                // insert the data afterwards. Currently, the `drop` event doesn't have any range
-                // data about where the nodes are inserted. To fix this, I first allow the data to 
-                // be inserted normally by the browser. Then, I bind a function to run after the 
-                // event finishes bubbling, so that I can delete the nodes and reinsert a sanitized
-                // version.
+                // Get the drop range.
+                e.preventDefault();
+                if (document.caretRangeFromPoint) { // Chrome
+                    var range = document.caretRangeFromPoint(e.clientX, e.clientY);
+                } else if (document.caretPositionFromPoint) { // Firefox
+                    const position = document.caretPositionFromPoint(e.clientX, e.clientY)
+                    var range = document.createRange(); 
+                    if (position) {
+                        range = document.createRange()
+                        range.setStart(position.offsetNode, position.offset)
+                        range.setEnd(position.offsetNode, position.offset)
+                    } else {
+                        return;
+                    }
+                } else {
+                    console.error("Cannot find selection drop range. Try using a newer browser.");
+                    return;
+                }
+                if (!this.inEditor(range.commonAncestorContainer)) {
+                    return;
+                }
 
+                // Insert the content.
                 const data = e.dataTransfer.getData("text/html");
+                const outputRange = this.insertHTML(range, data, "all");
+                // this.getRange().deleteContents();
+                // if (outputRange) {
+                //     document.getSelection().removeAllRanges();
+                //     document.getSelection().addRange(outputRange);
+                // }
 
-                // A dirty hack to bind a function to run after the event finishes bubbling.
-                setTimeout(function() {
-                    // Remove the automatically-inserted nodes and insert our sanitized nodes.
-                    this.getRange().deleteContents();
-                    this.insertHTML(data, "all");
-                }.bind(this), 0);
             }
         }.bind(this));
     }
