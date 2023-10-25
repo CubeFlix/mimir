@@ -77,5 +77,6 @@ a rich text editor for javascript
 - [ ] `pre`
 - [ ] handle tab button
 - [ ] a href (add mouse overlay, etc.)
+- [ ] change previous history's cursor location if hashes match
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI (undo redo buttons, etc.)
