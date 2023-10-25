@@ -38,7 +38,7 @@ a rich text editor for javascript
 - [x] issue with whitespace, pasting/dragging
 - [x] paste is broken again (pasting span into blockquote)
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
-- [ ] bug with styling `br`
+- [x] bug with styling `br`
 - [x] bugs (extraneous divs when removing block styles)
 - [x] bug with pasting styled within span
 - [x] fix whitespace (handle `pre`)

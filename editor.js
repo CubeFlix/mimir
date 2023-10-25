@@ -1124,7 +1124,7 @@ class Editor {
 
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
-        if (this.blockTags.includes(node.tagName)) {
+        if (this.blockTags.includes(node.tagName) && this.blockStylingCommands.includes(style.type)) {
             newElem.append(...node.childNodes);
 
             // If the node does not have styling, don't add it.
