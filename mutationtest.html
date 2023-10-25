@@ -1,0 +1,63 @@
+<html>
+    <body>
+        <div id="d" contenteditable>drag 
+            <ol>
+                <li>abc</li>
+                <li>def</li>
+            </ol>
+            abc</div>
+        <script>
+            const targetNode = document.getElementById("d");
+
+const config = {
+  attributes: true, 
+  childList: true, 
+  characterData: true,
+  subtree: true,
+};
+  
+const callback = (mutations, observer) => {  
+  var firstNode;
+  var lastNode;
+  mutations.forEach(mutation => {
+    console.log(mutation);
+    if (mutation.type == "childList") {
+        for (const node of mutation.addedNodes) {
+            if (!node.parentNode) continue;
+            const range = new Range();
+            range.selectNode(node);
+            range.deleteContents();
+            document.execCommand("insertHTML", false, node.outerHTML)
+        }
+    }
+    // if (mutation.type === 'childList') {
+    //   const listValues = mutation.addedNodes;
+    //   if (!firstNode && mutation.addedNodes.length != 0) {
+    //     firstNode = mutation.addedNodes[0];
+    //   }
+    //   if (mutation.addedNodes.length != 0) {
+    //     lastNode = mutation.addedNodes[mutation.addedNodes.length - 1];
+    //   }
+    //   console.log(...listValues)
+    //   
+    // }
+    // if (mutation.type==="characterData") {
+    //   console.log("cd", mutation.oldValue + mutation.target);
+    // }
+    // const range = new Range();
+    // range.setStart(firstNode, 0);
+    // range.setEnd(lastNode, lastNode.nodeType == Node.ELEMENT_NODE ? lastNode.childNodes.length : lastNode.textContent.length)
+    // console.log(firstNode, lastNode);
+    // range.deleteContents();
+    }
+  )
+  observer.disconnect();;
+}
+
+const observer = new MutationObserver(callback);
+
+observer.observe(targetNode, config);
+
+        </script>
+    </body>
+</html>
