@@ -538,41 +538,15 @@ class Editor {
     /*
     Insert and sanitize HTML data.
     */
-    insertHTML(range, data, select = "end") {
-        // Prepare to reconstruct and paste the HTML data.
-        if (range == null) {
-            return null;
-        }
-        range.deleteContents();
-
+    insertHTML(startNode, data, select = "end") {
         // Reconstruct the data.
         var reconstructed = this.sanitize(data);
         if (reconstructed.length == 0) {
             return;
         }
 
-        // Split the start container at the start offset.
-        const emptyTextNode = document.createTextNode("");
-        if (range.startContainer.nodeType == Node.TEXT_NODE) {
-            // Split the text node and place an empty node in between.
-            const endTextNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
-            range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
-            range.startContainer.after(emptyTextNode, endTextNode);
-        } else {
-            // Place the empty text node inside.
-            if (range.startOffset == 0) {
-                if (!this.childlessTags.includes(range.startContainer.tagName)) {
-                    range.startContainer.prepend(emptyTextNode);
-                } else {
-                    range.startContainer.before(emptyTextNode);
-                }
-            } else {
-                range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
-            }
-        }
-
         // Add each node.
-        var currentLastNode = emptyTextNode;
+        var currentLastNode = startNode;
         var firstNode = null;
         for (const node of reconstructed) {
             // Add in the node.
@@ -711,10 +685,36 @@ class Editor {
             // Paste HTML data.
             if (e.clipboardData.getData("text/html")) {
                 e.preventDefault();
-                const range = this.insertHTML(this.getRange(), e.clipboardData.getData("text/html"));
-                if (range) {
+
+                const range = this.getRange();
+                if (range == null) {
+                    return;
+                }
+
+                // Split the start container at the start offset.
+                const emptyTextNode = document.createTextNode("");
+                if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                    // Split the text node and place an empty node in between.
+                    const endTextNode = document.createTextNode(range.startContainer.textContent.slice(range.startOffset, range.startContainer.textContent.length));
+                    range.startContainer.textContent = range.startContainer.textContent.slice(0, range.startOffset);
+                    range.startContainer.after(emptyTextNode, endTextNode);
+                } else {
+                    // Place the empty text node inside.
+                    if (range.startOffset == 0) {
+                        if (!this.childlessTags.includes(range.startContainer.tagName)) {
+                            range.startContainer.prepend(emptyTextNode);
+                        } else {
+                            range.startContainer.before(emptyTextNode);
+                        }
+                    } else {
+                        range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
+                    }
+                }
+
+                const outputRange = this.insertHTML(emptyTextNode, e.clipboardData.getData("text/html"));
+                if (outputRange) {
                     document.getSelection().removeAllRanges();
-                    document.getSelection().addRange(range);
+                    document.getSelection().addRange(outputRange);
                 }
             }
         }.bind(this));
@@ -724,6 +724,10 @@ class Editor {
     Bind event listeners for drag events.
     */
     bindDragEvents() {
+        this.editor.addEventListener("drag", function(e) {
+            // Notify the editor that we are starting a drag, 
+        }.bind(this));
+
         this.editor.addEventListener("drop", function(e) {
             this.saveHistory();
 
@@ -751,14 +755,70 @@ class Editor {
                     return;
                 }
 
+                const rangeToRemove = this.getRange();
+                const emptyTextNode = document.createTextNode("");
+                if (rangeToRemove != null) {
+                    // Split the start container at the start offset.
+                    if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                        // Note that the range to remove will never overlap the range to add into.
+                        if (rangeToRemove.startContainer == range.startContainer) {
+                            if (rangeToRemove.startOffset >= sliceOffset) {
+                                
+                            } else if (rangeToRemove.startOffset < sliceOffset) {
+
+                            }
+                        }
+                        if (rangeToRemove.startContainer == range.startContainer.parentNode) {
+
+                        }
+
+                        // Split the text node and place an empty node in between.
+                        const sliceOffset = range.startOffset;
+                        const endTextNode = document.createTextNode(range.startContainer.textContent.slice(sliceOffset, range.startContainer.textContent.length));
+                        range.startContainer.textContent = range.startContainer.textContent.slice(0, sliceOffset);
+                        range.startContainer.after(emptyTextNode, endTextNode);
+                    } else {
+                        // Place the empty text node inside.
+                        if (range.startOffset == 0) {
+                            if (!this.childlessTags.includes(range.startContainer.tagName)) {
+                                range.startContainer.prepend(emptyTextNode);
+                            } else {
+                                range.startContainer.before(emptyTextNode);
+                            }
+                        } else {
+                            range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
+                        }
+                    }
+                    rangeToRemove.deleteContents();
+                } else {
+                    // Split the start container at the start offset.
+                    if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                        // Split the text node and place an empty node in between.
+                        const sliceOffset = range.startOffset;
+                        const endTextNode = document.createTextNode(range.startContainer.textContent.slice(sliceOffset, range.startContainer.textContent.length));
+                        range.startContainer.textContent = range.startContainer.textContent.slice(0, sliceOffset);
+                        range.startContainer.after(emptyTextNode, endTextNode);
+                    } else {
+                        // Place the empty text node inside.
+                        if (range.startOffset == 0) {
+                            if (!this.childlessTags.includes(range.startContainer.tagName)) {
+                                range.startContainer.prepend(emptyTextNode);
+                            } else {
+                                range.startContainer.before(emptyTextNode);
+                            }
+                        } else {
+                            range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
+                        }
+                    }
+                }
+
                 // Insert the content.
                 const data = e.dataTransfer.getData("text/html");
-                const outputRange = this.insertHTML(range, data, "all");
-                // this.getRange().deleteContents();
-                // if (outputRange) {
-                //     document.getSelection().removeAllRanges();
-                //     document.getSelection().addRange(outputRange);
-                // }
+                const outputRange = this.insertHTML(emptyTextNode, data, "all");
+                if (outputRange) {
+                    document.getSelection().removeAllRanges();
+                    document.getSelection().addRange(outputRange);
+                }
 
             }
         }.bind(this));
