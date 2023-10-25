@@ -593,6 +593,7 @@ class Editor {
                     currentLastNode = topmostInlineNode;
                 }
                 currentLastNode.after(node);
+                if (this.isEmpty(currentLastNode)) currentLastNode.remove();
                 currentLastNode = node;
             } else if (node.nodeType == Node.ELEMENT_NODE && node.tagName == "LI") {
                 // If the current last node is in a list, split the list.
@@ -644,12 +645,23 @@ class Editor {
 
                         // Join the nodes.
                         const children = Array.from(node.childNodes).filter(n => !this.isEmpty(n));
-                        currentLastNode = children.length != 0 ? children[children.length - 1] : currentLastNode;
-                        lowestJoinable.append(...children);
-                        if (split != null && !this.isEmpty(split)) {
-                            lowestJoinable.append(...split.childNodes);
+                        if (this.isEmpty(lowestJoinable)) {
+                            currentLastNode = children.length != 0 ? children[children.length - 1] : currentLastNode;
+                            lowestJoinable.innerHTML = "";
+                            lowestJoinable.append(...children);
+                            if (split != null && !this.isEmpty(split)) {
+                                lowestJoinable.append(...split.childNodes);
+                            }
+                            firstNode = currentLastNode;
+                        } else {
+                            currentLastNode = children.length != 0 ? children[children.length - 1] : currentLastNode;
+                            lowestJoinable.append(...children);
+                            if (split != null && !this.isEmpty(split)) {
+                                lowestJoinable.append(...split.childNodes);
+                            }
+                            firstNode = currentLastNode;
                         }
-                        firstNode = currentLastNode;
+                        
                         continue;
                     }
                 }
@@ -666,6 +678,7 @@ class Editor {
                     currentLastNode = topmostNode;
                 }
                 currentLastNode.after(node);
+                if (this.isEmpty(currentLastNode)) currentLastNode.remove();
                 currentLastNode = node;
             }
 
