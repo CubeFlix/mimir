@@ -243,7 +243,7 @@ class Editor {
                     } else {
                         var endLength = range.endContainer.childNodes.length;
                     }
-                    if ((range.startOffset == 0 && range.endOffset >= endLength) 
+                    if ((range.startOffset == 0 && range.endOffset >= endLength && (range.startOffset != range.endOffset && range.startContainer != range.endContainer)) 
                             || (e.key == "Backspace" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)
                             || (e.key == "Delete" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset == 0)) {
                         e.preventDefault();
@@ -619,9 +619,10 @@ class Editor {
 
                         // Join the nodes.
                         const children = Array.from(node.childNodes).filter(n => !this.isEmpty(n));
-                        if (this.isEmpty(lowestJoinable)) {
+                        if (this.isEmpty(currentLastNode.lastChild)) {
+                            console.log(currentLastNode.lastChild.cloneNode(true))
+                            currentLastNode.lastChild.remove();
                             currentLastNode = children.length != 0 ? children[children.length - 1] : currentLastNode;
-                            lowestJoinable.innerHTML = "";
                             lowestJoinable.append(...children);
                             if (split != null && !this.isEmpty(split)) {
                                 lowestJoinable.append(...split.childNodes);
