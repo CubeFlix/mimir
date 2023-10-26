@@ -62,7 +62,7 @@ a rich text editor for javascript
 - [x] fix drag and drop
 - [x] joining nodes not working with paste anymore
 - [x] remove old child pasted into if it is empty
-- [ ] fix joining block nodes
+- [ ] fix joining block nodes (should styling be added OUTSIDE or INSIDE???)
 - [ ] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
 - [x] when pasting, if possible, always join the first node (and the split node, if possible)
 - [x] h1-h6

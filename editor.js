@@ -1277,11 +1277,9 @@ class Editor {
             // If the node does not have styling, don't add it.
             if (node.getAttribute("style") || this.stylingTags.includes(node.tagName)) {
                 node.append(newElem);
-                console.log("newelem:", newElem.cloneNode(true));
                 return newElem;
             } else {
                 node.replaceWith(newElem);
-                console.log("newElem:", newElem.cloneNode(true))
                 return newElem;
             }
         } else {
@@ -1484,11 +1482,14 @@ class Editor {
         var currentNode = child;
         var currentSplitNode = null;
         while (parent.contains(currentNode) && parent != currentNode) {
+            // Traverse up the tree.
+            const newCurrentNode = currentNode.parentNode;
+
             // Get all the nodes after the current node.
             const siblings = Array.from(currentNode.parentNode.childNodes);
             if (includeSelf && currentSplitNode == null) {
                 // If this is the first iteration, and we want to include the child, slice it with the child.
-                var nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode), siblings.length);
+                var nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode) + 0, siblings.length);
             } else {
                 var nodesAfterCurrentNode = siblings.slice(siblings.indexOf(currentNode) + 1, siblings.length);
             }
@@ -1503,8 +1504,7 @@ class Editor {
                 currentSplitNode.append(oldSplitNode, ...nodesAfterCurrentNode);
             }
 
-            // Traverse up the tree.
-            currentNode = currentNode.parentNode;
+            currentNode = newCurrentNode;
         }
         
         return currentSplitNode;
@@ -2151,7 +2151,6 @@ class Editor {
                         blockNode = null;
                     } else {
                         if (blockNode == null) {
-                            console.log("BN IS NULL?")
                             blockNode = currentNode;
                         } else if (currentNode.tagName == "DIV" || currentNode.tagName == "P") {
                             // Escape extraneous nodes.
@@ -2161,7 +2160,7 @@ class Editor {
                 } else {
                     if (blockNode == null) {
                         blockNode = currentNode;
-                    } else if (currentNode.tagName == "DIV" || currentNode.tagName == "P") {
+                    } else if ((currentNode.tagName == "DIV" || currentNode.tagName == "P") && Array.from(currentNode.childNodes).includes(blockNode)) {
                         // Escape extraneous nodes.
                         blockNode = currentNode;
                     }
@@ -2169,7 +2168,6 @@ class Editor {
             }
             currentNode = currentNode.parentNode;
         }
-        console.log("blocnOd", blockNode.cloneNode(true))
         return blockNode;
     }
 
@@ -2184,7 +2182,6 @@ class Editor {
             // Get the block nodes on the left and right, with respect to the parent block.
             var leftBlock = this.findClosestBlockOnLeft(blockNode, textNode);
             var rightBlock = this.findClosestBlockOnRight(blockNode, textNode);
-            console.log(leftBlock.cloneNode(true), rightBlock.cloneNode(true))
 
             // Split the parent block at the left block.
             if (leftBlock) {
@@ -2292,9 +2289,7 @@ class Editor {
 
                 const block = this.getAndIsolateBlockNode(node, escape);
                 const styledBlock = this.applyStyleToNode(block, style);
-                console.log(block.cloneNode(true), styledBlock.cloneNode(true))
                 if (lastJoined && lastJoined.nextSibling == styledBlock) {
-                    console.log(lastJoined, styledBlock);
                     // Join the current node and the last joined node.
                     const newDiv = document.createElement("div");
                     newDiv.append(...styledBlock.childNodes);
