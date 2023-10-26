@@ -8,7 +8,7 @@ class Editor {
     Editor constants. 
     */
     ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-    invisible = "&#8290"; // Insert this into spans so that the cursor will latch to it.
+    invisible = "&#xFEFF;"; // Insert this into spans so that the cursor will latch to it.
 
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
@@ -229,9 +229,11 @@ class Editor {
                 if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
                     // Traverse up the tree until we find the highest empty node and remove the cursor.
                     var currentNode = this.currentCursor;
-                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
+                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.stylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
                         currentNode = currentNode.parentNode;
                     }
+                    // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
+                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode)) currentNode.before(document.createElement("BR"));
                     currentNode.remove();
                     this.currentCursor = null;
                     this.updateMenubarOptions();
@@ -243,7 +245,7 @@ class Editor {
                     } else {
                         var endLength = range.endContainer.childNodes.length;
                     }
-                    if ((range.startOffset == 0 && range.endOffset >= endLength && (range.startOffset != range.endOffset && range.startContainer != range.endContainer)) 
+                    if ((range.startOffset == 0 && range.endOffset >= endLength && !(range.startOffset == range.endOffset && range.startContainer == range.endContainer)) 
                             || (e.key == "Backspace" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)
                             || (e.key == "Delete" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset == 0)) {
                         e.preventDefault();
@@ -265,9 +267,6 @@ class Editor {
                         }
                         const styling = this.detectStyling(firstNodeRange);
 
-                        // Delete the node.
-                        range.commonAncestorContainer.textContent = "";
-
                         // Create a cursor.
                         const cursor = this.createCursor();
                         
@@ -282,22 +281,32 @@ class Editor {
                             lastNode = newElem;
                         }
 
+                        // Delete the node.
+                        range.commonAncestorContainer.textContent = "";
+
                         // Insert the node at the current range and place the caret inside the cursor.
                         if (range.startContainer.nodeType == Node.TEXT_NODE) {
                             // Split the text node.
-                            range.startContainer.after(lastNode);
+                            var placeBefore = range.startContainer;
+                            if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.stylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
+                                // Escape out of any styling nodes.
+                                placeBefore = this.findLastParent(placeBefore, e => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN"));
+                            }
+                            placeBefore.before(lastNode);
                         } else {
                             // Place the node inside.
-                            if (range.startOffset == 0) {
-                                if (!this.childlessTags.includes(range.startContainer.tagName)) {
-                                    range.startContainer.prepend(lastNode);
-                                } else {
-                                    range.startContainer.before(lastNode);
-                                }
+                            if (range.startContainer == this.editor) {
+                                range.startContainer.prepend(lastNode);
                             } else {
-                                range.startContainer.childNodes[range.startOffset - 1].after(lastNode);
+                                var placeBefore = range.startContainer;
+                                if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.stylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
+                                    // Escape out of any styling nodes.
+                                    placeBefore = this.findLastParent(placeBefore, e => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN"));
+                                }
+                                placeBefore.before(lastNode);
                             }
                         }
+
                         const newRange = new Range();
                         newRange.selectNodeContents(cursor);
                         newRange.collapse();
@@ -305,6 +314,7 @@ class Editor {
                         document.getSelection().addRange(newRange);
                     }
                 }
+                this.updateMenubarOptions();
             }
 
             if ((this.ascii.includes(e.key) || /\p{Emoji}/u.test(e.key)) && !e.ctrlKey && !e.metaKey) {
@@ -1214,11 +1224,13 @@ class Editor {
         
         // Iterate through the text nodes.
         var firstNode = true;
+        var countedNodes = 0;
         for (const node of nodes) {
             // If the node is empty, don't count it.
-            if (node.nodeType == Node.TEXT_NODE && node.textContent.replace(this.invisibleParsed, "") == "" && nodes.length > 1) {
+            if (node.nodeType == Node.TEXT_NODE && node.textContent == "") {
                 continue;
             }
+            countedNodes += 1;
 
             // Traverse up the tree and track each style node passed on the way up.
             var currentNode = node.parentNode;
@@ -1250,7 +1262,7 @@ class Editor {
         }
 
         // Add the default font styling.
-        if (nodes.length == 0 && !styling.some(s => s.type == "font")) {
+        if (countedNodes == 0 && !styling.some(s => s.type == "font")) {
             styling.push({type: "font", family: this.defaultFont});
         }
 
@@ -2105,7 +2117,7 @@ class Editor {
         var endOffset = range.endOffset;
         
         // Move the start boundary to a valid block.
-        while ((startContainer.length != 0 && this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
+        while (startContainer.length != 0 && ((startContainer.parentNode == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
             if (startOffset == 0) {
                 startOffset = Array.from(startContainer.parentNode).indexOf(startContainer);
                 startContainer = startContainer.parentNode;
@@ -2115,14 +2127,19 @@ class Editor {
         }
 
         // Move the end boundary to a valid block.
-        while ((endContainer.length != 0 && this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
-            if (endOffset == 0) {
+        while (endContainer.length != 0 && ((endContainer.parentNode == this.editor && endOffset == endContainer.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
+            if (endOffset == endContainer.length) {
                 endOffset = Array.from(endContainer.parentNode).indexOf(endContainer) + 1;
                 endContainer = endContainer.parentNode;
             } else {
                 endOffset += 1;
             }
         }
+
+        const newRange = new Range();
+        newRange.setStart(startContainer, startOffset);
+        newRange.setEnd(endContainer, endOffset);
+        return newRange;
     }
 
     /*
@@ -2140,41 +2157,9 @@ class Editor {
     /*
     Apply a block style to a range.
     */
-    applyBlockStyle(style, range, join = false) {
-        var nodes, startOffset, endOffset;
-        
-        // Get the text nodes within the range.
-        const output = this.getTextNodesInRange(range);
-        if (!output) {
-            return;
-        }
-        [{nodes, startOffset, endOffset} = output];
-
-        this.saveHistory();
-        this.shouldTakeSnapshotOnNextChange = true;
-
-        if (nodes.length == 0) {
-            if (!this.inEditor(range.commonAncestorContainer)) {
-                return;
-            }
-
-            // Create a new BR node.
-            const node = document.createElement("br");
-            this.editor.append(node);
-            nodes.push(node);
-            startOffset = 0;
-            endOffset = 0;
-        }
-
-        // Place each node in between in a new tag.
-        
-
-        // Select the new nodes.
-        const newRange = new Range();
-        newRange.setStart(nodes[0], startOffset);
-        newRange.setEnd(nodes[nodes.length - 1], endOffset);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(newRange);
+    applyBlockStyle(style, range) {
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(this.blockExtendRange(range))
     }
 
     /*
