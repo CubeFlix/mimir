@@ -726,7 +726,13 @@ class Editor {
     */
     bindDragEvents() {
         this.editor.addEventListener("drag", function(e) {
-            // Notify the editor that we are starting a drag, 
+            // Set the range to remove during the drag.
+            this.dragRangeToRemove = this.getRange();
+        }.bind(this));
+
+        this.editor.addEventListener("dragend", function(e) {
+            // Set the range to remove during the drag.
+            this.dragRangeToRemove = null;
         }.bind(this));
 
         this.editor.addEventListener("drop", function(e) {
@@ -743,8 +749,8 @@ class Editor {
                     var range = document.createRange(); 
                     if (position) {
                         range = document.createRange()
-                        range.setStart(position.offsetNode, position.offset)
-                        range.setEnd(position.offsetNode, position.offset)
+                        range.setStart(position.offsetNode, position.offset);
+                        range.setEnd(position.offsetNode, position.offset);
                     } else {
                         return;
                     }
@@ -756,41 +762,110 @@ class Editor {
                     return;
                 }
 
-                const rangeToRemove = this.getRange();
+                const rangeToRemove = this.dragRangeToRemove;
                 const emptyTextNode = document.createTextNode("");
-                if (rangeToRemove != null) {
+                if (rangeToRemove) {
+                    var startContainer = rangeToRemove.startContainer;
+                    var startOffset = rangeToRemove.startOffset;
+                    var endContainer = rangeToRemove.endContainer;
+                    var endOffset = rangeToRemove.endOffset;
+
                     // Split the start container at the start offset.
                     if (range.startContainer.nodeType == Node.TEXT_NODE) {
-                        // Note that the range to remove will never overlap the range to add into.
-                        if (rangeToRemove.startContainer == range.startContainer) {
-                            if (rangeToRemove.startOffset >= sliceOffset) {
-                                
-                            } else if (rangeToRemove.startOffset < sliceOffset) {
-
-                            }
-                        }
-                        if (rangeToRemove.startContainer == range.startContainer.parentNode) {
-
-                        }
-
+                        // Insert the start node to begin inserting after. Modify the range to remove so that it stays consistent.
                         // Split the text node and place an empty node in between.
                         const sliceOffset = range.startOffset;
                         const endTextNode = document.createTextNode(range.startContainer.textContent.slice(sliceOffset, range.startContainer.textContent.length));
                         range.startContainer.textContent = range.startContainer.textContent.slice(0, sliceOffset);
                         range.startContainer.after(emptyTextNode, endTextNode);
+
+                        // Update the range to remove offsets.
+                        // Note that the range to remove will never overlap the range to add into.
+                        if (rangeToRemove.startContainer == range.startContainer) {
+                            if (rangeToRemove.startOffset >= sliceOffset) {
+                                // The start offset is after the slice.
+                                startContainer = endTextNode;
+                                startOffset = startOffset - sliceOffset;
+                            } else if (rangeToRemove.startOffset < sliceOffset) {
+                                // The start offset is before the slice.
+                            }
+                        } else if (rangeToRemove.startContainer == range.startContainer.parentNode) {
+                            // We're adding a new node, so we need to account for that.
+                            if (rangeToRemove.startOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                                startOffset += 2;
+                            }
+                        }
+                        if (rangeToRemove.endContainer == range.startContainer) {
+                            if (rangeToRemove.endOffset >= endOffset) {
+                                // The end offset is after the slice.
+                                endContainer = endTextNode;
+                                endOffset = endOffset - sliceOffset;
+                            } else if (rangeToRemove.endOffset < sliceOffset) {
+                                // The end offset is before the slice.
+                            }
+                        } else if (rangeToRemove.endContainer == range.startContainer.parentNode) {
+                            // We're adding a new node, so we need to account for that.
+                            if (rangeToRemove.endOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                                endOffset += 2;
+                            }
+                        }
                     } else {
                         // Place the empty text node inside.
                         if (range.startOffset == 0) {
                             if (!this.childlessTags.includes(range.startContainer.tagName)) {
                                 range.startContainer.prepend(emptyTextNode);
+                                if (rangeToRemove.startContainer == range.startContainer) {
+                                    if (rangeToRemove.startOffset >= range.startOffset) {
+                                        // The start offset is after the slice.
+                                        startOffset += 1;
+                                    }
+                                }
+                                if (rangeToRemove.endContainer == range.startContainer) {
+                                    if (rangeToRemove.endOffset >= range.startOffset) {
+                                        // The end offset is after the slice.
+                                        endOffset += 1;
+                                    }
+                                }
                             } else {
                                 range.startContainer.before(emptyTextNode);
+                                if (rangeToRemove.startContainer == range.startContainer.parentNode) {
+                                    if (rangeToRemove.startOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                                        // The start offset is after the slice.
+                                        startOffset += 1;
+                                    }
+                                }
+                                if (rangeToRemove.endContainer == range.startContainer.parentNode) {
+                                    if (rangeToRemove.endOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                                        // The end offset is after the slice.
+                                        endOffset += 1;
+                                    }
+                                }
                             }
                         } else {
                             range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
+                            if (rangeToRemove.startContainer == range.startContainer) {
+                                if (rangeToRemove.startOffset >= range.startOffset) {
+                                    // The start offset is after the slice.
+                                    startOffset += 1;
+                                }
+                            }
+                            if (rangeToRemove.endContainer == range.startContainer) {
+                                if (rangeToRemove.endOffset >= range.startOffset) {
+                                    // The end offset is after the slice.
+                                    endOffset += 1;
+                                }
+                            }
                         }
                     }
-                    rangeToRemove.deleteContents();
+
+                    const newRangeToRemove = new Range();
+                    newRangeToRemove.setStart(startContainer, startOffset);
+                    newRangeToRemove.setEnd(endContainer, endOffset);
+                    if (newRangeToRemove.intersectsNode(emptyTextNode)) {
+                        console.error("Drag source contains drop location.");
+                        return;
+                    }
+                    newRangeToRemove.deleteContents();
                 } else {
                     // Split the start container at the start offset.
                     if (range.startContainer.nodeType == Node.TEXT_NODE) {
@@ -820,7 +895,6 @@ class Editor {
                     document.getSelection().removeAllRanges();
                     document.getSelection().addRange(outputRange);
                 }
-
             }
         }.bind(this));
     }
