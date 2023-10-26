@@ -620,7 +620,6 @@ class Editor {
                         // Join the nodes.
                         const children = Array.from(node.childNodes).filter(n => !this.isEmpty(n));
                         if (this.isEmpty(currentLastNode.lastChild)) {
-                            console.log(currentLastNode.lastChild.cloneNode(true))
                             currentLastNode.lastChild.remove();
                             currentLastNode = children.length != 0 ? children[children.length - 1] : currentLastNode;
                             lowestJoinable.append(...children);
