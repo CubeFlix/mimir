@@ -747,7 +747,7 @@ class Editor {
                     const position = document.caretPositionFromPoint(e.clientX, e.clientY)
                     var range = document.createRange(); 
                     if (position) {
-                        range = document.createRange()
+                        range = document.createRange();
                         range.setStart(position.offsetNode, position.offset);
                         range.setEnd(position.offsetNode, position.offset);
                     } else {
@@ -780,31 +780,33 @@ class Editor {
 
                         // Update the range to remove offsets.
                         // Note that the range to remove will never overlap the range to add into.
-                        if (rangeToRemove.startContainer == range.startContainer) {
-                            if (rangeToRemove.startOffset >= sliceOffset) {
+                        if (startContainer == range.startContainer) {
+                            if (startOffset >= sliceOffset) {
+                                console.log("running")
                                 // The start offset is after the slice.
                                 startContainer = endTextNode;
+                                console.log(startContainer);
                                 startOffset = startOffset - sliceOffset;
-                            } else if (rangeToRemove.startOffset < sliceOffset) {
+                            } else if (startOffset < sliceOffset) {
                                 // The start offset is before the slice.
                             }
-                        } else if (rangeToRemove.startContainer == range.startContainer.parentNode) {
+                        } else if (startContainer == range.startContainer.parentNode) {
                             // We're adding a new node, so we need to account for that.
-                            if (rangeToRemove.startOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                            if (startOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
                                 startOffset += 2;
                             }
                         }
-                        if (rangeToRemove.endContainer == range.startContainer) {
-                            if (rangeToRemove.endOffset >= endOffset) {
+                        if (endContainer == range.startContainer) {
+                            if (endOffset >= endOffset) {
                                 // The end offset is after the slice.
                                 endContainer = endTextNode;
                                 endOffset = endOffset - sliceOffset;
-                            } else if (rangeToRemove.endOffset < sliceOffset) {
+                            } else if (endOffset < sliceOffset) {
                                 // The end offset is before the slice.
                             }
-                        } else if (rangeToRemove.endContainer == range.startContainer.parentNode) {
+                        } else if (endContainer == range.startContainer.parentNode) {
                             // We're adding a new node, so we need to account for that.
-                            if (rangeToRemove.endOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                            if (endOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
                                 endOffset += 2;
                             }
                         }
@@ -813,28 +815,28 @@ class Editor {
                         if (range.startOffset == 0) {
                             if (!this.childlessTags.includes(range.startContainer.tagName)) {
                                 range.startContainer.prepend(emptyTextNode);
-                                if (rangeToRemove.startContainer == range.startContainer) {
-                                    if (rangeToRemove.startOffset >= range.startOffset) {
+                                if (startContainer == range.startContainer) {
+                                    if (startOffset >= range.startOffset) {
                                         // The start offset is after the slice.
                                         startOffset += 1;
                                     }
                                 }
-                                if (rangeToRemove.endContainer == range.startContainer) {
-                                    if (rangeToRemove.endOffset >= range.startOffset) {
+                                if (endContainer == range.startContainer) {
+                                    if (endOffset >= range.startOffset) {
                                         // The end offset is after the slice.
                                         endOffset += 1;
                                     }
                                 }
                             } else {
                                 range.startContainer.before(emptyTextNode);
-                                if (rangeToRemove.startContainer == range.startContainer.parentNode) {
-                                    if (rangeToRemove.startOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                                if (startContainer == range.startContainer.parentNode) {
+                                    if (startOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
                                         // The start offset is after the slice.
                                         startOffset += 1;
                                     }
                                 }
-                                if (rangeToRemove.endContainer == range.startContainer.parentNode) {
-                                    if (rangeToRemove.endOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
+                                if (endContainer == range.startContainer.parentNode) {
+                                    if (endOffset >= Array.from(emptyTextNode.parentNode.childNodes).indexOf(emptyTextNode)) {
                                         // The end offset is after the slice.
                                         endOffset += 1;
                                     }
@@ -842,14 +844,14 @@ class Editor {
                             }
                         } else {
                             range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
-                            if (rangeToRemove.startContainer == range.startContainer) {
-                                if (rangeToRemove.startOffset >= range.startOffset) {
+                            if (startContainer == range.startContainer) {
+                                if (startOffset >= range.startOffset) {
                                     // The start offset is after the slice.
                                     startOffset += 1;
                                 }
                             }
-                            if (rangeToRemove.endContainer == range.startContainer) {
-                                if (rangeToRemove.endOffset >= range.startOffset) {
+                            if (endContainer == range.startContainer) {
+                                if (endOffset >= range.startOffset) {
                                     // The end offset is after the slice.
                                     endOffset += 1;
                                 }
@@ -2081,152 +2083,45 @@ class Editor {
     }
 
     /*
-    Find the closest block node on the left side of a child.
+    Checks if a node is a valid block node.
     */
-    findClosestBlockOnLeft(parent, child) {
-        // Traverse left and find the closest block node (if it exists) within the parent node.
-        // This returns null if it doesn't find a block node within the parent. 
-        var currentNode = child;
-
-        while (parent.contains(currentNode) && currentNode != parent) {
-            // First, check if the current node is a block node (not including BR nodes).
-            if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName) && !this.isEmpty(currentNode)) {
-                // Found a block node.
-                return currentNode;
-            }
-
-            // Traverse leftwards.
-            while (!currentNode.previousSibling) {
-                currentNode = currentNode.parentNode;
-                if (!parent.contains(currentNode)) {
-                    return null;
-                }
-            }
-            currentNode = currentNode.previousSibling;
+    isValidBlockNode(node) {
+        if (node.nodeType != Node.ELEMENT_NODE) {
+            return false;
         }
-
-        return null;
+        if (!this.blockTags.includes(node.tagName)) {
+            return false;
+        }
+        return true;
     }
 
     /*
-    Find the closest block node on the right side of a child.
+    Block extend a range.
     */
-    findClosestBlockOnRight(parent, child) {
-        // Traverse right and find the closest block node (if it exists) within the parent node.
-        // This returns null if it doesn't find a block node within the parent. 
-        var currentNode = child;
-
-        while (parent.contains(currentNode) && currentNode != parent) {
-            // First, check if the current node is a block node (not including BR nodes).
-            if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName) && !this.isEmpty(currentNode)) {
-                // Found a block node.
-                return currentNode;
+    blockExtendRange(range) {
+        var startContainer = range.startContainer;
+        var startOffset = range.startOffset;
+        var endContainer = range.endContainer;
+        var endOffset = range.endOffset;
+        
+        // Move the start boundary to a valid block.
+        while ((startContainer.length != 0 && this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
+            if (startOffset == 0) {
+                startOffset = Array.from(startContainer.parentNode).indexOf(startContainer);
+                startContainer = startContainer.parentNode;
+            } else {
+                startOffset -= 1;
             }
-
-            // Traverse rightwards.
-            while (!currentNode.nextSibling) {
-                currentNode = currentNode.parentNode;
-                if (!parent.contains(currentNode)) {
-                    return null;
-                }
-            }
-            currentNode = currentNode.nextSibling;
         }
 
-        return null;
-    }
-
-    /*
-    Find the topmost block node. If escape is not null, it should be a predicate function that determines whether or not to escape from a node.
-    */
-    findTopmostBlock(child, escape = null) {
-        // Traverse up the node tree until the lowest valid (i.e. not contained within an escape tag) block node is reached.
-        var currentNode = child;
-        var blockNode = null;
-        while (this.inEditor(currentNode) && currentNode != this.editor) {
-            if (this.blockTags.filter(s => s != "BR").includes(currentNode.tagName)) {
-                // Found a block node.
-                if (escape) {
-                    if (escape(currentNode)) {
-                        blockNode = null;
-                    } else {
-                        if (blockNode == null) {
-                            blockNode = currentNode;
-                        } else if (currentNode.tagName == "DIV" || currentNode.tagName == "P") {
-                            // Escape extraneous nodes.
-                            blockNode = currentNode;
-                        }
-                    }
-                } else {
-                    if (blockNode == null) {
-                        blockNode = currentNode;
-                    } else if ((currentNode.tagName == "DIV" || currentNode.tagName == "P") && Array.from(currentNode.childNodes).includes(blockNode)) {
-                        // Escape extraneous nodes.
-                        blockNode = currentNode;
-                    }
-                }
-            }
-            currentNode = currentNode.parentNode;
-        }
-        return blockNode;
-    }
-
-    /*
-    Get and isolate the block associated with a text node.
-    */
-    getAndIsolateBlockNode(textNode, escape = null) {
-        const blockNode = this.findTopmostBlock(textNode, escape);
-
-        // Split the node.
-        if (blockNode) {
-            // Get the block nodes on the left and right, with respect to the parent block.
-            var leftBlock = this.findClosestBlockOnLeft(blockNode, textNode);
-            var rightBlock = this.findClosestBlockOnRight(blockNode, textNode);
-
-            // Split the parent block at the left block.
-            if (leftBlock) {
-                var splitAfterLeft = this.splitNodeAtChild(blockNode, leftBlock);
-                blockNode.after(splitAfterLeft);
+        // Move the end boundary to a valid block.
+        while ((endContainer.length != 0 && this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
+            if (endOffset == 0) {
+                endOffset = Array.from(endContainer.parentNode).indexOf(endContainer) + 1;
+                endContainer = endContainer.parentNode;
             } else {
-                var splitAfterLeft = blockNode;
+                endOffset += 1;
             }
-
-            // Split the newly split node at the right block.
-            if (rightBlock) {
-                var splitAfterRight = this.splitNodeAtChild(splitAfterLeft, rightBlock, true);
-                splitAfterLeft.after(splitAfterRight);
-            } else {
-                var splitAfterRight = splitAfterLeft;
-            }
-            return splitAfterLeft;
-        } else {
-            // Get the block nodes on the left and right, with respect to the editor.
-            var leftBlock = this.findClosestBlockOnLeft(this.editor, textNode);
-            var rightBlock = this.findClosestBlockOnRight(this.editor, textNode);
-
-            // Split the parent block at the left block.
-            if (leftBlock) {
-                var splitAfterLeft = this.splitNodeAtChild(this.editor, leftBlock);
-            } else {
-                var splitAfterLeft = this.editor;
-            }
-
-            // Split the newly split node at the right block.
-            if (rightBlock) {
-                var splitAfterRight = this.splitNodeAtChild(splitAfterLeft, rightBlock, true);
-            } else {
-                var splitAfterRight = null;
-            }
-
-            // Place the left block in its own DIV and add it.
-            const newDiv = document.createElement("div");
-            newDiv.append(...splitAfterLeft.childNodes);
-            this.editor.append(newDiv);
-
-            // If there is content after the split block, add it.            
-            if (splitAfterRight) this.editor.append(...splitAfterRight.childNodes);
-
-            return newDiv;
         }
     }
 
@@ -2272,34 +2167,7 @@ class Editor {
         }
 
         // Place each node in between in a new tag.
-        if (!join) {
-            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? (e => ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null; // Escape out of headers.
-            for (const node of nodes) {
-                const block = this.getAndIsolateBlockNode(node, escape);
-                const styledBlock = this.applyStyleToNode(block, style);
-            }
-        } else {
-            var lastJoined = null;
-            const escape = (style.type == "quote" || style.type == "list" || style.type == "align") ? (e => ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null; // Escape out of headers.
-            for (const node of nodes) {
-                if (lastJoined && lastJoined.contains(node)) {
-                    // Don't re-style already styled text nodes.
-                    continue;
-                }
-
-                const block = this.getAndIsolateBlockNode(node, escape);
-                const styledBlock = this.applyStyleToNode(block, style);
-                if (lastJoined && lastJoined.nextSibling == styledBlock) {
-                    // Join the current node and the last joined node.
-                    const newDiv = document.createElement("div");
-                    newDiv.append(...styledBlock.childNodes);
-                    lastJoined.append(newDiv);
-                    styledBlock.remove();
-                } else {
-                    lastJoined = styledBlock;
-                }
-            }
-        }
+        
 
         // Select the new nodes.
         const newRange = new Range();
