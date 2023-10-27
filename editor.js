@@ -245,7 +245,7 @@ class Editor {
                     } else {
                         var endLength = range.endContainer.childNodes.length;
                     }
-                    if ((range.startOffset == 0 && range.endOffset >= endLength && !(range.startOffset == range.endOffset && range.startContainer == range.endContainer)) 
+                    if ((range.startOffset == 0 && range.endOffset >= endLength && !(range.startOffset == range.endOffset && range.startContainer == range.endContainer) && e.key != "ArrowLeft") 
                             || (e.key == "Backspace" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset >= 1)
                             || (e.key == "Delete" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset == 0)) {
                         e.preventDefault();
@@ -307,7 +307,7 @@ class Editor {
                             }
                         }
 
-                        placeBefore.remove();
+                        if (placeBefore && this.isEmpty(placeBefore) && placeBefore != this.editor) placeBefore.remove();
 
                         const newRange = new Range();
                         newRange.selectNodeContents(cursor);
