@@ -307,6 +307,8 @@ class Editor {
                             }
                         }
 
+                        placeBefore.remove();
+
                         const newRange = new Range();
                         newRange.selectNodeContents(cursor);
                         newRange.collapse();
@@ -2210,7 +2212,7 @@ class Editor {
     */
     getBlockNodesInRange(range) {
         const nodes = [];
-        // var currentNode = range.startContainer[]
+        var currentNode = range.startContainer.range.startContainer
     }
 
     /*
