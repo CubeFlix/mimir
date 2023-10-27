@@ -2154,6 +2154,11 @@ class Editor {
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
+
+        // If the start offset is at the end of an element node, move it back one.
+        if (startContainer.nodeType == Node.ELEMENT_NODE && startOffset == startContainer.childNodes.length) {
+            startOffset -= 1;
+        }
         
         // Move the start boundary to a valid block.
         while (!this.isValidBlockStartPoint(startContainer, startOffset)) {
@@ -2170,6 +2175,11 @@ class Editor {
         while (startOffset == 0 && startContainer != this.editor) {
             startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
             startContainer = startContainer.parentNode;
+        }
+
+        // If the end offset is at the start of an element node, move it forward one.
+        if (endContainer.nodeType == Node.ELEMENT_NODE && endOffset == 0) {
+            endOffset += 1;
         }
 
         // Move the end boundary to a valid block.
