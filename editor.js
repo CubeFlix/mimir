@@ -1139,7 +1139,7 @@ class Editor {
                 break;
             case "FONT":
                 if (node.getAttribute("face")) {
-                    var family = node.getAttribute("face").;
+                    var family = node.getAttribute("face");
                     family = family.split("&quot;");
                     family = family.split("\"").join("");
                     family = family.split("'").join("");
@@ -1181,7 +1181,7 @@ class Editor {
         }
         if (node.style.fontFamily) {
             var family = node.style.fontFamily;
-            family = family.split("&quot;");
+            family = family.split("&quot;").join("");
             family = family.split("\"").join("");
             family = family.split("'").join("");
             if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: family});
