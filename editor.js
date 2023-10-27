@@ -1139,9 +1139,10 @@ class Editor {
                 break;
             case "FONT":
                 if (node.getAttribute("face")) {
-                    var family = node.getAttribute("face");
-                    family = family.replace("\"", "").replace("\"", "");
-                    family = family.replace("'", "").replace("'", "");
+                    var family = node.getAttribute("face").;
+                    family = family.split("&quot;");
+                    family = family.split("\"").join("");
+                    family = family.split("'").join("");
                     styling.push({type: "font", family: family});
                 }
                 // TODO: color, text size, etc
@@ -1180,6 +1181,7 @@ class Editor {
         }
         if (node.style.fontFamily) {
             var family = node.style.fontFamily;
+            family = family.split("&quot;");
             family = family.split("\"").join("");
             family = family.split("'").join("");
             if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: family});
@@ -2107,18 +2109,40 @@ class Editor {
     }
 
     /*
-    Given a range boundary point, get the associated node.
+    Check if a boundary point is a valid block start point.
     */
-    getRangeBoundaryNode(container, offset) {
-        if (container.nodeType != Node.ELEMENT_NODE) {
-            return container;
-        }
-        if (offset == 0) {
-            if (container.childNodes.length == 0) {
-                return container;
+    isValidBlockStartPoint(startContainer, startOffset) {
+        if ((startContainer == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset - 1])) {
+            if ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) != 0) {
+                return true;
             } else {
-                return container[offset];
+                if (startContainer.tagName == "BR") {
+                    return true;
+                } else {
+                    return false;
+                }
             }
+        } else {
+            return false;
+        }
+    }
+
+    /*
+    Check if a boundary point is a valid block end point.
+    */
+    isValidBlockEndPoint(endContainer, endOffset) {
+        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset])) {
+            if ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0) {
+                return true;
+            } else {
+                if (endContainer.tagName == "BR") {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
         }
     }
 
@@ -2132,15 +2156,14 @@ class Editor {
         var endOffset = range.endOffset;
         
         // Move the start boundary to a valid block.
-        while ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) != 0 && !((startContainer == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset - 1]))) {
+        while (!this.isValidBlockStartPoint(startContainer, startOffset)) {
             if (startOffset == 0) {
                 startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
                 startContainer = startContainer.parentNode;
             } else {
                 startOffset -= 1;
             }
-            if ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) == 0 || ((startContainer == this.editor && startOffset == this.editor.childNodes.length) || this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
-                console.log("BROKE!", (startContainer == this.editor && startOffset == this.editor.childNodes.length))
+            if (this.isValidBlockEndPoint(startContainer, startOffset)) {
                 break;
             }
         }
@@ -2150,14 +2173,14 @@ class Editor {
         }
 
         // Move the end boundary to a valid block.
-        while ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0 && !((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
+        while (!this.isValidBlockEndPoint(endContainer, endOffset)) {
             if (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length)) {
                 endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
                 endContainer = endContainer.parentNode;
             } else {
                 endOffset += 1;
             }
-            if ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) == 0 || ((endContainer == this.editor && endOffset == 0) || this.isValidBlockNode(endContainer.childNodes[endOffset - 1]))) {
+            if (this.isValidBlockStartPoint(endContainer, endOffset)) {
                 break;
             }
         }
@@ -2173,7 +2196,7 @@ class Editor {
     }
 
     /*
-    Get all block nodes within a block extended range.<div>abc<div>def</div>abc</div>
+    Get all block nodes within a block extended range.
     */
     getBlockNodesInRange(range) {
         const nodes = [];
