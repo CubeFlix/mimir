@@ -792,10 +792,8 @@ class Editor {
                         // Note that the range to remove will never overlap the range to add into.
                         if (startContainer == range.startContainer) {
                             if (startOffset >= sliceOffset) {
-                                console.log("running")
                                 // The start offset is after the slice.
                                 startContainer = endTextNode;
-                                console.log(startContainer);
                                 startOffset = startOffset - sliceOffset;
                             } else if (startOffset < sliceOffset) {
                                 // The start offset is before the slice.
@@ -2098,6 +2096,7 @@ class Editor {
     Checks if a node is a valid block node.
     */
     isValidBlockNode(node) {
+        if (!node) return false;
         if (node.nodeType != Node.ELEMENT_NODE) {
             return false;
         }
@@ -2117,9 +2116,9 @@ class Editor {
         var endOffset = range.endOffset;
         
         // Move the start boundary to a valid block.
-        while (startContainer.length != 0 && ((startContainer.parentNode == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
+        while (startContainer.length != 0 && !((startContainer == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
             if (startOffset == 0) {
-                startOffset = Array.from(startContainer.parentNode).indexOf(startContainer);
+                startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
                 startContainer = startContainer.parentNode;
             } else {
                 startOffset -= 1;
@@ -2127,10 +2126,11 @@ class Editor {
         }
 
         // Move the end boundary to a valid block.
-        while (endContainer.length != 0 && ((endContainer.parentNode == this.editor && endOffset == endContainer.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
-            if (endOffset == endContainer.length) {
-                endOffset = Array.from(endContainer.parentNode).indexOf(endContainer) + 1;
+        while (endContainer.length != 0 && !((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
+            if (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length)) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
                 endContainer = endContainer.parentNode;
+                console.log(endOffset, endContainer);
             } else {
                 endOffset += 1;
             }
@@ -2141,6 +2141,7 @@ class Editor {
         newRange.setEnd(endContainer, endOffset);
         return newRange;
     }
+
 
     /*
     -- NOTES -- 
@@ -2158,8 +2159,8 @@ class Editor {
     Apply a block style to a range.
     */
     applyBlockStyle(style, range) {
-        document.getSelection().removeAllRanges();
-        document.getSelection().addRange(this.blockExtendRange(range))
+        const blockExtended = this.blockExtendRange(range);
+
     }
 
     /*
