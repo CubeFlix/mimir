@@ -2107,6 +2107,22 @@ class Editor {
     }
 
     /*
+    Given a range boundary point, get the associated node.
+    */
+    getRangeBoundaryNode(container, offset) {
+        if (container.nodeType != Node.ELEMENT_NODE) {
+            return container;
+        }
+        if (offset == 0) {
+            if (container.childNodes.length == 0) {
+                return container;
+            } else {
+                return container[offset];
+            }
+        }
+    }
+
+    /*
     Block extend a range.
     */
     blockExtendRange(range) {
@@ -2116,24 +2132,38 @@ class Editor {
         var endOffset = range.endOffset;
         
         // Move the start boundary to a valid block.
-        while (startContainer.length != 0 && !((startContainer == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
+        while ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) != 0 && !((startContainer == this.editor && startOffset == 0) || this.isValidBlockNode(startContainer.childNodes[startOffset - 1]))) {
             if (startOffset == 0) {
                 startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
                 startContainer = startContainer.parentNode;
             } else {
                 startOffset -= 1;
             }
+            if ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) == 0 || ((startContainer == this.editor && startOffset == this.editor.childNodes.length) || this.isValidBlockNode(startContainer.childNodes[startOffset]))) {
+                console.log("BROKE!", (startContainer == this.editor && startOffset == this.editor.childNodes.length))
+                break;
+            }
+        }
+        while (startOffset == 0 && startContainer != this.editor) {
+            startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
+            startContainer = startContainer.parentNode;
         }
 
         // Move the end boundary to a valid block.
-        while (endContainer.length != 0 && !((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
+        while ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0 && !((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]))) {
             if (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length)) {
                 endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
                 endContainer = endContainer.parentNode;
-                console.log(endOffset, endContainer);
             } else {
                 endOffset += 1;
             }
+            if ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) == 0 || ((endContainer == this.editor && endOffset == 0) || this.isValidBlockNode(endContainer.childNodes[endOffset - 1]))) {
+                break;
+            }
+        }
+        while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor) {
+            endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
+            endContainer = endContainer.parentNode;
         }
 
         const newRange = new Range();
@@ -2142,6 +2172,13 @@ class Editor {
         return newRange;
     }
 
+    /*
+    Get all block nodes within a block extended range.<div>abc<div>def</div>abc</div>
+    */
+    getBlockNodesInRange(range) {
+        const nodes = [];
+        // var currentNode = range.startContainer[]
+    }
 
     /*
     -- NOTES -- 
@@ -2160,7 +2197,8 @@ class Editor {
     */
     applyBlockStyle(style, range) {
         const blockExtended = this.blockExtendRange(range);
-
+document.getSelection().removeAllRanges();
+document.getSelection().addRange(blockExtended);
     }
 
     /*
