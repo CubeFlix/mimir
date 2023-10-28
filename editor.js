@@ -1287,7 +1287,7 @@ class Editor {
 
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
-        if (this.blockTags.includes(node.tagName) && this.blockStylingCommands.includes(style.type)) {
+        if (this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName) && this.blockStylingCommands.includes(style.type)) {
             newElem.append(...node.childNodes);
 
             // If the node does not have styling, don't add it.
@@ -2310,16 +2310,54 @@ class Editor {
     PASTING:
     - Track current styles on each node, and only allow one of each type of style to be added
     - Only apply inline styles
+    TODO:
+    - join nodes
+    - handle lists
+    - retain order of nodes
+    - place certain nodes inside, certain nodes outside
     */
 
     /*
     Apply a block style to a range.
     */
     applyBlockStyle(style, range) {
-        const startOffset = range.startOffset;
-        const startContainer = range.startContainer;
-        const endOffset = range.endOffset;
-        const endContainer = range.endContainer;
+        var startContainer = range.startContainer;
+        var startOffset = range.startOffset;
+        var endContainer = range.endContainer;
+        var endOffset = range.endOffset;
+
+        // Adjust the start point so that it is always relative to inline nodes.
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (startContainer.childNodes.length == 0) {
+                break;
+            }
+
+            console.log(startContainer.childNodes, startOffset);
+            if (startOffset == startContainer.childNodes.length) {
+                startContainer = startContainer.childNodes[startOffset - 1];
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            } else {
+                startContainer = startContainer.childNodes[startOffset];
+                startOffset = 0;
+            }
+        }
+
+        // Adjust the end point so that it is always relative to inline nodes.
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (endContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (endOffset == 0) {
+                endContainer = endContainer.childNodes[endOffset];
+                startOffset = 0;
+            } else {
+                endContainer = endContainer.childNodes[endOffset - 1];
+                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            }
+        }
 
         // Block extend the range.
         const blockExtended = this.blockExtendRange(range);
@@ -2335,11 +2373,9 @@ class Editor {
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
         newRange.setEnd(endContainer, endOffset);
-        console.log(newRange)
         document.getSelection().removeAllRanges();
         document.getSelection().addRange(newRange);
 
-        // TODO: retain range
         // TODO: join
         // TODO: lists
     }
