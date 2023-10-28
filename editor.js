@@ -2315,6 +2315,7 @@ class Editor {
     - handle lists
     - retain order of nodes
     - place certain nodes inside, certain nodes outside
+    - certain styles (blockquote, a href), etc. should activate if ANY of the children have that style applied (maybe)
     */
 
     /*
