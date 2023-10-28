@@ -2212,7 +2212,92 @@ class Editor {
     */
     getBlockNodesInRange(range) {
         const nodes = [];
-        var currentNode = range.startContainer.range.startContainer
+
+        // Get the start node.
+        if (range.startContainer.nodeType != Node.ELEMENT_NODE) {
+            var currentNode = range.startContainer;
+        } else {
+            if (range.startContainer.length == 0) {
+                var currentNode = range.startContainer;
+            } else {
+                if (range.startContainer == this.editor && range.startOffset == this.editor.childNodes.length) {
+                    // The range's start is at end of the editor.
+                    return;
+                } else if (range.startOffset == range.startContainer.childNodes.length) {
+                    // The range's start is at the end of the start container. Escape out of the start container.
+                    var startContainer = range.startContainer;
+                    var startOffset = range.startOffset;
+                    while (startOffset == startContainer.childNodes.length) {
+                        startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
+                        startContainer = startContainer.parentNode;
+                        if (startContainer == this.editor && range.startOffset == this.editor.childNodes.length) {
+                            return;
+                        }
+                    }
+                    var currentNode = startContainer.childNodes[startOffset];
+                } else {
+                    var currentNode = range.startContainer.childNodes[range.startOffset];
+                }
+            }
+        }
+
+        // Check if the whole node is within the range.
+        if (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length)) {
+            // The node isn't fully contained within the range. If there are children, move to the first child.
+            if (currentNode.childNodes.length != 0 && range.intersectsNode(currentNode)) {
+                // Continually move to the first child until the node is fully intersected within the range.
+                while (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length)) {
+                    currentNode = currentNode.firstChild;
+                    if (currentNode.childNodes.length == 0 && !range.intersectsNode(currentNode)) {
+                        return nodes;
+                    }
+                }
+            } else {
+                return nodes;
+            }
+        } else if (currentNode.nodeType == Node.TEXT_NODE && !range.intersectsNode(currentNode)) {
+            // The node isn't contained within the range.
+            return nodes;
+        }
+
+        nodes.push(currentNode);
+
+        // Traverse through the range until we reach the end. Track each node passed on the way.
+        while (this.inEditor(currentNode)) {
+            // Move to the next node.
+            if (currentNode.nextSibling) {
+                currentNode = currentNode.nextSibling;
+            } else {
+                while (!currentNode.nextSibling) {
+                    currentNode = currentNode.parentNode;
+                }
+                currentNode = currentNode.nextSibling;
+            }
+
+            // Check if the whole node is within the range.
+            if (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length)) {
+                // The node isn't fully contained within the range. If there are children, move to the first child.
+                if (currentNode.childNodes.length != 0 && range.intersectsNode(currentNode)) {
+                    // Continually move to the first child until the node is fully intersected within the range.
+                    while (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length)) {
+                        currentNode = currentNode.firstChild;
+                        if (currentNode.childNodes.length == 0 && !range.intersectsNode(currentNode)) {
+                            return nodes;
+                        }
+                    }
+                } else {
+                    return nodes;
+                }
+            } else if (currentNode.nodeType == Node.TEXT_NODE && !range.intersectsNode(currentNode)) {
+                // The node isn't contained within the range.
+                return nodes;
+            }
+
+            // Append the node.
+            nodes.push(currentNode);
+        }
+
+        return nodes;
     }
 
     /*
@@ -2231,9 +2316,32 @@ class Editor {
     Apply a block style to a range.
     */
     applyBlockStyle(style, range) {
+        const startOffset = range.startOffset;
+        const startContainer = range.startContainer;
+        const endOffset = range.endOffset;
+        const endContainer = range.endContainer;
+
+        // Block extend the range.
         const blockExtended = this.blockExtendRange(range);
-document.getSelection().removeAllRanges();
-document.getSelection().addRange(blockExtended);
+        
+        // Get the block nodes within the range.
+        const nodes = this.getBlockNodesInRange(blockExtended);
+
+        // Style the nodes.
+        for (const node of nodes) {
+            this.applyStyleToNode(node, style);
+        }
+
+        const newRange = new Range();
+        newRange.setStart(startContainer, startOffset);
+        newRange.setEnd(endContainer, endOffset);
+        console.log(newRange)
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
+
+        // TODO: retain range
+        // TODO: join
+        // TODO: lists
     }
 
     /*
