@@ -2316,6 +2316,7 @@ class Editor {
     - retain order of nodes
     - place certain nodes inside, certain nodes outside
     - certain styles (blockquote, a href), etc. should activate if ANY of the children have that style applied (maybe)
+    - removing styles
     */
 
     /*
@@ -2334,10 +2335,9 @@ class Editor {
                 break;
             }
 
-            console.log(startContainer.childNodes, startOffset);
             if (startOffset == startContainer.childNodes.length) {
                 startContainer = startContainer.childNodes[startOffset - 1];
-                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
             } else {
                 startContainer = startContainer.childNodes[startOffset];
                 startOffset = 0;
