@@ -2311,7 +2311,6 @@ class Editor {
     - apply inline styles to all text nodes, BRs, and images
     - track certain block styles (text align, header, etc.) and apply them in afterwards
     TODO:
-    - handle lists
     - place certain nodes inside, certain nodes outside
     - when applying styles, don't needlessly place nodes around the current selection.
     - certain styles (blockquote, a href), etc. should activate if ANY of the children have that style applied (maybe)
@@ -2357,11 +2356,18 @@ class Editor {
 
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
-        const marker = document.createTextNode("");
-        node.after(marker);
-        newElem.appendChild(node);
-        marker.replaceWith(newElem);
-        return newElem;
+        if (node.tagName == "LI") {
+            // Style the interior nodes.
+            newElem.append(...node.childNodes);
+            node.append(newElem);
+            return newElem;
+        } else {
+            const marker = document.createTextNode("");
+            node.after(marker);
+            newElem.appendChild(node);
+            marker.replaceWith(newElem);
+            return newElem;
+        }
     }
 
     /*
@@ -2452,8 +2458,6 @@ class Editor {
         newRange.setEnd(endContainer, endOffset);
         document.getSelection().removeAllRanges();
         document.getSelection().addRange(newRange);
-
-        // TODO: lists
     }
 
     /*
