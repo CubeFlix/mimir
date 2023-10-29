@@ -1287,24 +1287,11 @@ class Editor {
 
         // Create a new style element and place the node within it.
         const newElem = this.styleToElement(style);
-        if (this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName) && this.blockStylingCommands.includes(style.type)) {
-            newElem.append(...node.childNodes);
-
-            // If the node does not have styling, don't add it.
-            if (node.getAttribute("style") || this.stylingTags.includes(node.tagName)) {
-                node.append(newElem);
-                return newElem;
-            } else {
-                node.replaceWith(newElem);
-                return newElem;
-            }
-        } else {
-            const marker = document.createTextNode("");
-            node.after(marker);
-            newElem.appendChild(node);
-            marker.replaceWith(newElem);
-            return newElem;
-        }
+        const marker = document.createTextNode("");
+        node.after(marker);
+        newElem.appendChild(node);
+        marker.replaceWith(newElem);
+        return newElem;
     }
 
     /*
@@ -2151,7 +2138,7 @@ class Editor {
     /*
     Block extend a range.
     */
-    blockExtendRange(range) {
+    blockExtendRange(range, ascendAncestors = false) {
         var startContainer = range.startContainer;
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
@@ -2174,9 +2161,12 @@ class Editor {
                 break;
             }
         }
-        while (startOffset == 0 && startContainer != this.editor) {
-            startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
-            startContainer = startContainer.parentNode;
+        
+        if (ascendAncestors) {
+            while (startOffset == 0 && startContainer != this.editor) {
+                startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
+                startContainer = startContainer.parentNode;
+            }
         }
 
         // If the end offset is at the start of an element node, move it forward one.
@@ -2196,9 +2186,12 @@ class Editor {
                 break;
             }
         }
-        while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor) {
-            endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
-            endContainer = endContainer.parentNode;
+        
+        if (ascendAncestors) {
+            while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
+                endContainer = endContainer.parentNode;
+            }
         }
 
         const newRange = new Range();
@@ -2307,17 +2300,70 @@ class Editor {
     - UL and OL are mutually exclusive
     - UL, OL, and BLOCKQUOTE join
     - Order of nodes (outermost to innermost): BLOCKQUOTE/LISTS (any order) -> H1-H6 -> styling nodes -> text nodes
+    - when applying block styles, don't needlessly exit parent node
+    - when applying block styles that need to escape, always move up the DOM and find nodes the need to be escaped. if necessary, split them.
+    - when applying block styles that need to go inside, always move down the DOM and apply to children.
+    - when removing block styles, move up the parent as much as possible
+    - when removing block styles, remove all styles within and move up the DOM, splitting and removing ALL parent nodes
     PASTING:
     - Track current styles on each node, and only allow one of each type of style to be added
     - Only apply inline styles
+    - apply inline styles to all text nodes, BRs, and images
+    - track certain block styles (text align, header, etc.) and apply them in afterwards
     TODO:
     - join nodes
     - handle lists
-    - retain order of nodes
     - place certain nodes inside, certain nodes outside
+    - when applying styles, don't needlessly place nodes around the current selection.
     - certain styles (blockquote, a href), etc. should activate if ANY of the children have that style applied (maybe)
     - removing styles
     */
+
+    /*
+    Apply a block style to a node. The disallowedParents value should be a predicate.
+    */
+    applyBlockStyleToNode(node, style, disallowedParents = null) {
+        // Go up the DOM tree, and check if the style has already been applied.
+        var currentNode = node;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
+                // Found the node.
+                return node;
+            }
+            currentNode = currentNode.parentNode;
+        }
+
+        // Look for the topmost disallowed parent.
+        const topmostDisallowedParent = disallowedParents ? this.findLastParent(node, disallowedParents) : null;
+
+        if (topmostDisallowedParent && topmostDisallowedParent != node) {
+            // Split the topmost parent, including the node.
+            const splitIncludingNode = this.splitNodeAtChild(topmostDisallowedParent, node, true);
+
+            // Split the split node, not including the node.
+            const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node, false);
+
+            topmostDisallowedParent.after(splitIncludingNode, splitAfterNode);
+            if (topmostDisallowedParent != this.editor && this.isEmpty(topmostDisallowedParent)) {
+                // Remove the topmost parent node.
+                topmostDisallowedParent.remove();
+            }
+            if (splitAfterNode != this.editor && this.isEmpty(splitAfterNode)) {
+                // Remove the split after node.
+                splitAfterNode.remove();
+            }
+
+            node = splitIncludingNode;
+        }
+
+        // Create a new style element and place the node within it.
+        const newElem = this.styleToElement(style);
+        const marker = document.createTextNode("");
+        node.after(marker);
+        newElem.appendChild(node);
+        marker.replaceWith(newElem);
+        return newElem;
+    }
 
     /*
     Apply a block style to a range.
@@ -2366,9 +2412,31 @@ class Editor {
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
 
-        // Style the nodes.
+        // Fix disallowed children.
+        const fixedNodes = [];
+        const disallowedChildren = (style.type == "align" || style.type == "header") ? "blockquote, ul, ol, li" : null;
+        function fixDisallowedChildrenOfNode(node) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren))))) {
+                // Append the children instead.
+                for (const child of node.childNodes) {
+                    fixDisallowedChildrenOfNode(child);
+                }
+            } else {
+                // Append the node.
+                fixedNodes.push(node);
+            }
+        }
+        fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
         for (const node of nodes) {
-            this.applyStyleToNode(node, style);
+            fixDisallowedChildrenOfNode(node);
+        }
+
+        // Fix disallowed parents.
+        const disallowedParents = (style.type == "quote" || style.type == "list") ? (e) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null;
+
+        // Style the nodes.
+        for (const node of fixedNodes) {
+            this.applyBlockStyleToNode(node, style, disallowedParents);
         }
 
         const newRange = new Range();
