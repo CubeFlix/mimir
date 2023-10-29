@@ -2311,7 +2311,6 @@ class Editor {
     - apply inline styles to all text nodes, BRs, and images
     - track certain block styles (text align, header, etc.) and apply them in afterwards
     TODO:
-    - join nodes
     - handle lists
     - place certain nodes inside, certain nodes outside
     - when applying styles, don't needlessly place nodes around the current selection.
@@ -2369,6 +2368,8 @@ class Editor {
     Apply a block style to a range.
     */
     applyBlockStyle(style, range) {
+        this.saveHistory();
+
         var startContainer = range.startContainer;
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
@@ -2435,8 +2436,15 @@ class Editor {
         const disallowedParents = (style.type == "quote" || style.type == "list") ? (e) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null;
 
         // Style the nodes.
+        var lastStyled = null;
         for (const node of fixedNodes) {
-            this.applyBlockStyleToNode(node, style, disallowedParents);
+            const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents);
+            if (lastStyled && lastStyled.nextSibling == styledNode) {
+                lastStyled.append(...styledNode.childNodes);
+                styledNode.remove();
+            } else {
+                lastStyled = styledNode;
+            }
         }
 
         const newRange = new Range();
@@ -2445,7 +2453,6 @@ class Editor {
         document.getSelection().removeAllRanges();
         document.getSelection().addRange(newRange);
 
-        // TODO: join
         // TODO: lists
     }
 
