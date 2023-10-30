@@ -2375,6 +2375,12 @@ class Editor {
     */
     applyBlockStyle(style, range) {
         this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
+
+        if (this.editor.innerHTML == "") {
+            this.editor.append(document.createElement("br"));
+            range = this.getRange();
+        }
 
         var startContainer = range.startContainer;
         var startOffset = range.startOffset;
@@ -2464,43 +2470,51 @@ class Editor {
     Remove a block style from a range.
     */
     removeBlockStyle(style, range) {
-        var nodes, startOffset, endOffset;
-        
-        // Get the text nodes within the range.
-        const output = this.getTextNodesInRange(range);
-        if (!output) {
-            return;
-        }
-        [{nodes, startOffset, endOffset} = output];
-
-        if (nodes.length == 0) {
-            if (!this.inEditor(range.commonAncestorContainer)) {
-                return;
-            }
-
-            // Create a new BR node.
-            const node = document.createElement("br");
-            this.editor.append(node);
-            nodes.push(node);
-            startOffset = 0;
-            endOffset = 0;
-        }
-
-        // Place each node in between in a new tag.
-        for (const node of nodes) {
-            const block = this.getAndIsolateBlockNode(node);
-            const styledBlock = this.removeStyleOnNode(block, style);
-        }
-
         this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
 
-        // Select the new nodes.
-        const newRange = new Range();
-        newRange.setStart(nodes[0], startOffset);
-        newRange.setEnd(nodes[nodes.length - 1], endOffset);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(newRange);
+        var startContainer = range.startContainer;
+        var startOffset = range.startOffset;
+        var endContainer = range.endContainer;
+        var endOffset = range.endOffset;
+
+        // Adjust the start point so that it is always relative to inline nodes.
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (startContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (startOffset == startContainer.childNodes.length) {
+                startContainer = startContainer.childNodes[startOffset - 1];
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
+            } else {
+                startContainer = startContainer.childNodes[startOffset];
+                startOffset = 0;
+            }
+        }
+
+        // Adjust the end point so that it is always relative to inline nodes.
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (endContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (endOffset == 0) {
+                endContainer = endContainer.childNodes[endOffset];
+                startOffset = 0;
+            } else {
+                endContainer = endContainer.childNodes[endOffset - 1];
+                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            }
+        }
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range, true);
+        
+        // Get the block nodes within the range.
+        const nodes = this.getBlockNodesInRange(blockExtended);
     }
 
     /*
