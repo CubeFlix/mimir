@@ -2467,11 +2467,44 @@ class Editor {
     }
 
     /*
+    Remove a block style from a node. 
+    */
+    removeBlockStyleOnNode(node, style) {
+        // Search the children of the node for any node that match the style.
+        const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => this.elementHasStyle(e, style) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
+        var node;
+        while (node = iterator.nextNode()) {
+            // Remove the node.
+            node.after(...node.childNodes);
+            node.remove();
+        }
+
+        // Search the parents of the node for any node that matches the style.
+        var currentNode = node.parentNode;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (this.elementHasStyle(currentNode, style)) {
+                // Split the parent node at the node.
+                const splitIncludingNode = this.splitNodeAtChild(currentNode, node, true);
+                const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node);
+
+                // Remove the style.
+                this.removeBlockStyleOnNode()
+            }
+        }
+
+        return;
+    }
+
+    /*
     Remove a block style from a range.
     */
     removeBlockStyle(style, range) {
         this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
+
+        if (this.editor.innerHTML == "") {
+            return;
+        }
 
         var startContainer = range.startContainer;
         var startOffset = range.startOffset;
@@ -2515,6 +2548,11 @@ class Editor {
         
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
+
+        // Style the nodes.
+        for (const node of nodes) {
+            this.removeBlockStyleOnNode(node, style);
+        }
     }
 
     /*
