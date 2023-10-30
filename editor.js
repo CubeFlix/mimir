@@ -1530,7 +1530,8 @@ class Editor {
                         const temp = document.createElement("div");
                         temp.append(...elem.childNodes);
                         temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
-                        elem = temp;
+                        elem.remove();
+                        elem = temp;                        
                         elemRemoved = true;
                     }
                     break;
@@ -1539,6 +1540,7 @@ class Editor {
                         const temp = document.createElement("div");
                         temp.append(...elem.childNodes);
                         temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                        elem.remove();
                         elem = temp;
                         elemRemoved = true;
                     }
@@ -2480,16 +2482,12 @@ class Editor {
 
         // Remove the styles on child nodes.
         for (const child of nodesToRemove) {
-            // Remove the node.
-            if (Array.from(child.childNodes).every(e => this.blockTags.includes(e.tagName))) {
-                child.after(...child.childNodes);
-            } else {
-                const newDiv = document.createElement("div");
-                newDiv.append(...child.childNodes);
-                child.after(newDiv);
-            }
-            
-            child.remove();
+            // Remove the style.
+            const marker = document.createTextNode("");
+            child.after(marker);
+            const styledNode = this.removeStyleFromElement(child, style);
+            marker.after(styledNode);
+            marker.remove();
         }
 
         // Search the parents of the node for any node that matches the style.
@@ -2497,12 +2495,32 @@ class Editor {
         var currentNode = node.parentNode;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.elementHasStyle(currentNode, style)) {
-                
+                parentNodesToRemove.push(currentNode);
             }
             currentNode = currentNode.parentNode;
         }
 
-        for (const P)
+        for (const parentNode of parentNodesToRemove) {
+            // Split the parent node at the node.
+            const splitIncludingNode = this.splitNodeAtChild(parentNode, node, true);
+            const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node);
+
+            // Remove the style.
+            const marker = document.createTextNode("");
+            splitIncludingNode.after(marker);
+            const styledNode = this.removeStyleFromElement(splitIncludingNode, style);
+            marker.after(styledNode);
+            marker.remove();
+            styledNode.after(splitAfterNode);
+            if (parentNode != this.editor && this.isEmpty(parentNode)) {
+                // Remove the original node.
+                parentNode.remove();
+            }
+            if (splitAfterNode != this.editor && this.isEmpty(splitAfterNode)) {
+                // Remove the split after node.
+                splitAfterNode.remove();
+            }
+        }
 
         return;
     }
@@ -2565,6 +2583,12 @@ class Editor {
         for (const node of nodes) {
             this.removeBlockStyleOnNode(node, style);
         }
+
+        const newRange = new Range();
+        newRange.setStart(startContainer, startOffset);
+        newRange.setEnd(endContainer, endOffset);
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
     }
 
     /*
