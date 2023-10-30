@@ -2472,25 +2472,37 @@ class Editor {
     removeBlockStyleOnNode(node, style) {
         // Search the children of the node for any node that match the style.
         const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => this.elementHasStyle(e, style) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
-        var node;
-        while (node = iterator.nextNode()) {
+        var child;
+        const nodesToRemove = [];
+        while (child = iterator.nextNode()) {
+            if (child != this.editor) nodesToRemove.push(child);
+        }
+
+        // Remove the styles on child nodes.
+        for (const child of nodesToRemove) {
             // Remove the node.
-            node.after(...node.childNodes);
-            node.remove();
+            if (Array.from(child.childNodes).every(e => this.blockTags.includes(e.tagName))) {
+                child.after(...child.childNodes);
+            } else {
+                const newDiv = document.createElement("div");
+                newDiv.append(...child.childNodes);
+                child.after(newDiv);
+            }
+            
+            child.remove();
         }
 
         // Search the parents of the node for any node that matches the style.
+        const parentNodesToRemove = [];
         var currentNode = node.parentNode;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.elementHasStyle(currentNode, style)) {
-                // Split the parent node at the node.
-                const splitIncludingNode = this.splitNodeAtChild(currentNode, node, true);
-                const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node);
-
-                // Remove the style.
-                this.removeBlockStyleOnNode()
+                
             }
+            currentNode = currentNode.parentNode;
         }
+
+        for (const P)
 
         return;
     }
