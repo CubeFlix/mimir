@@ -1531,7 +1531,7 @@ class Editor {
                         temp.append(...elem.childNodes);
                         temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
                         elem.remove();
-                        elem = temp;                        
+                        elem = temp;
                         elemRemoved = true;
                     }
                     break;
