@@ -2461,7 +2461,9 @@ class Editor {
         }
 
         // Fix disallowed parents.
-        const disallowedParents = (style.type == "quote" || style.type == "list") ? (e) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign)) : null;
+        const disallowedParents = (style.type == "quote" || style.type == "list") 
+                                        ? (e) => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign))
+                                        : (e) => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN");
 
         // Style the nodes.
         var lastStyled = null;

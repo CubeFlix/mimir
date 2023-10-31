@@ -68,7 +68,7 @@ a rich text editor for javascript
 - [x] applying style should escape out of SOME extraneous nodes
 - [x] splitting out of parent nodes when removing block style doesn't work
 - [ ] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
-- [ ] problem with block nodes inside inline nodes
+- [x] problem with block nodes inside inline nodes
 - [ ] remove extraneous block nodes
 - [ ] treewalker vs nodeiterator?
 - [x] bug with left click removing stuff
