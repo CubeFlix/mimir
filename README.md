@@ -65,7 +65,7 @@ a rich text editor for javascript
 - [x] fix backspace on cursor
 - [x] urgent: styling block empty editor
 - [x] urgent: infinite loop with removing styling on block
-- [ ] applying style should escape out of SOME extraneous nodes
+- [x] applying style should escape out of SOME extraneous nodes
 - [x] splitting out of parent nodes when removing block style doesn't work
 - [ ] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
 - [x] bug with left click removing stuff
