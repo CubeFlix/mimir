@@ -63,8 +63,10 @@ a rich text editor for javascript
 - [x] joining nodes not working with paste anymore
 - [x] remove old child pasted into if it is empty
 - [x] fix backspace on cursor
-- [ ] urgent: styling block empty editor
-- [ ] fix joining block nodes (should styling be added OUTSIDE or INSIDE???) (don't break lists, rejoin them if possible) (possibly consider breaking at top and bottom)
+- [x] urgent: styling block empty editor
+- [x] urgent: infinite loop with removing styling on block
+- [ ] applying style should escape out of SOME extraneous nodes
+- [x] splitting out of parent nodes when removing block style doesn't work
 - [ ] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
 - [x] bug with left click removing stuff
 - [x] when pasting, if possible, always join the first node (and the split node, if possible)

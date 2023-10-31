@@ -2147,7 +2147,7 @@ class Editor {
         var endOffset = range.endOffset;
 
         // If the start offset is at the end of an element node, move it back one.
-        if (startContainer.nodeType == Node.ELEMENT_NODE && startOffset == startContainer.childNodes.length) {
+        if (startContainer.nodeType == Node.ELEMENT_NODE && startOffset == startContainer.childNodes.length && startOffset != 0) {
             startOffset -= 1;
         }
         
@@ -2172,7 +2172,7 @@ class Editor {
         }
 
         // If the end offset is at the start of an element node, move it forward one.
-        if (endContainer.nodeType == Node.ELEMENT_NODE && endOffset == 0) {
+        if (endContainer.nodeType == Node.ELEMENT_NODE && endOffset == 0 && endContainer.childNodes.length != 0) {
             endOffset += 1;
         }
 
@@ -2265,6 +2265,9 @@ class Editor {
             } else {
                 while (!currentNode.nextSibling) {
                     currentNode = currentNode.parentNode;
+                }
+                if (currentNode == this.editor || !this.inEditor(currentNode)) {
+                    return nodes;
                 }
                 currentNode = currentNode.nextSibling;
             }
@@ -2507,7 +2510,7 @@ class Editor {
 
             // Remove the style.
             const marker = document.createTextNode("");
-            splitIncludingNode.after(marker);
+            parentNode.after(marker);
             const styledNode = this.removeStyleFromElement(splitIncludingNode, style);
             marker.after(styledNode);
             marker.remove();
