@@ -229,7 +229,7 @@ class Editor {
                 if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
                     // Traverse up the tree until we find the highest empty node and remove the cursor.
                     var currentNode = this.currentCursor;
-                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.stylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
+                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingCommands.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
                         currentNode = currentNode.parentNode;
                     }
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
@@ -288,9 +288,9 @@ class Editor {
                         if (range.startContainer.nodeType == Node.TEXT_NODE) {
                             // Split the text node.
                             var placeBefore = range.startContainer;
-                            if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.stylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
+                            if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.inlineStylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
                                 // Escape out of any styling nodes.
-                                placeBefore = this.findLastParent(placeBefore, e => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN"));
+                                placeBefore = this.findLastParent(placeBefore, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
                             }
                             placeBefore.before(lastNode);
                         } else {
@@ -299,9 +299,9 @@ class Editor {
                                 range.startContainer.prepend(lastNode);
                             } else {
                                 var placeBefore = range.startContainer;
-                                if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.stylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.stylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
+                                if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.inlineStylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
                                     // Escape out of any styling nodes.
-                                    placeBefore = this.findLastParent(placeBefore, e => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN"));
+                                    placeBefore = this.findLastParent(placeBefore, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
                                 }
                                 placeBefore.before(lastNode);
                             }
@@ -2462,8 +2462,8 @@ class Editor {
 
         // Fix disallowed parents.
         const disallowedParents = (style.type == "quote" || style.type == "list") 
-                                        ? (e) => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign))
-                                        : (e) => (this.stylingTags.includes(e.tagName) || e.tagName == "SPAN");
+                                        ? (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign))
+                                        : (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN");
 
         // Style the nodes.
         var lastStyled = null;
