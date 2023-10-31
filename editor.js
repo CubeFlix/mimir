@@ -1524,25 +1524,51 @@ class Editor {
                     if (elem.style.textAlign && elem.style.textAlign.toLowerCase().includes(style.direction)) {
                         elem.style.textAlign = "";
                     }
+                    if (!(Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style"))) {
+                        const children = document.createDocumentFragment();
+                        children.append(...elem.childNodes);
+                        elem.after(children);
+                        elem.remove();
+                        elemRemoved = true;
+                        elem = children;
+                    }
                     break;
                 case "quote":
                     if (elem.tagName == "BLOCKQUOTE") {
-                        const temp = document.createElement("div");
-                        temp.append(...elem.childNodes);
-                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
-                        elem.remove();
-                        elem = temp;
-                        elemRemoved = true;
+                        if (Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                            const temp = document.createElement("div");
+                            temp.append(...elem.childNodes);
+                            temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                            elem.remove();
+                            elem = temp;
+                            elemRemoved = true;
+                        } else {
+                            const children = document.createDocumentFragment();
+                            children.append(...elem.childNodes);
+                            elem.after(children);
+                            elem.remove();
+                            elemRemoved = true;
+                            elem = children;
+                        }
                     }
                     break;
                 case "header":
                     if (elem.tagName == style.level) {
-                        const temp = document.createElement("div");
-                        temp.append(...elem.childNodes);
-                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
-                        elem.remove();
-                        elem = temp;
-                        elemRemoved = true;
+                        if (Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                            const temp = document.createElement("div");
+                            temp.append(...elem.childNodes);
+                            temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                            elem.remove();
+                            elem = temp;
+                            elemRemoved = true;
+                        } else {
+                            const children = document.createDocumentFragment();
+                            children.append(...elem.childNodes);
+                            elem.after(children);
+                            elem.remove();
+                            elemRemoved = true;
+                            elem = children;
+                        }
                     }
                     break;
             }
