@@ -397,7 +397,7 @@ class Editor {
 
         // Reconstruct each of the children.
         for (var child of Array.from(node.childNodes)) {
-            if (child.nodeType == Node.TEXT_NODE) {
+            if (child.nodeType == Node.TEXT_NODE || this.contentTags.includes(child.tagName)) {
                 // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
                 var styling = [];
                 var currentNode = child;
