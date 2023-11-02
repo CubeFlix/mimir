@@ -18,7 +18,7 @@ class Editor {
     childlessTags = ["BR", "IMG"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
-    blockStylingCommands = ["quote", "header", "align"];
+    blockStylingCommands = ["quote", "header", "align", "list"];
     inlineBlockStylingCommands = ["header", "align"];
 
     /* 
@@ -28,7 +28,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote", "header", "align"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote", "header", "align", "list"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -1149,6 +1149,11 @@ class Editor {
             case "align":
                 var elem = document.createElement("div");
                 elem.style.textAlign = style.direction;
+                return elem;
+            case "list":
+                var elem = document.createElement(style.ordered ? "ol" : "ul");
+                const firstLi = document.createElement("li");
+                elem.append(firstLi);
                 return elem;
         }
     }
@@ -2436,13 +2441,21 @@ class Editor {
         const newElem = this.styleToElement(style);
         if (node.tagName == "LI") {
             // Style the interior nodes.
-            newElem.append(...node.childNodes);
+            if (newElem.childNodes.length == 0) {
+                newElem.append(...node.childNodes);
+            } else {
+                newElem.childNodes[0].append(...node.childNodes);
+            }
             node.append(newElem);
             return newElem;
         } else {
             const marker = document.createTextNode("");
             node.after(marker);
-            newElem.appendChild(node);
+            if (newElem.childNodes.length == 0) {
+                newElem.appendChild(node);
+            } else {
+                newElem.childNodes[0].appendChild(node);
+            }
             marker.replaceWith(newElem);
             return newElem;
         }
