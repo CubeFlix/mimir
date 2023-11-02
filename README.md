@@ -67,7 +67,7 @@ a rich text editor for javascript
 - [x] urgent: infinite loop with removing styling on block
 - [x] applying style should escape out of SOME extraneous nodes
 - [x] splitting out of parent nodes when removing block style doesn't work
-- [ ] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
+- [x] paste block nodes (allow certain nodes through, re-apply certain block styles (h1, text align))
 - [x] problem with block nodes inside inline nodes
 - [x] remove extraneous block nodes
 - [x] bug with left click removing stuff

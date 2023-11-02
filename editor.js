@@ -19,6 +19,7 @@ class Editor {
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
     blockStylingCommands = ["quote", "header", "align"];
+    inlineBlockStylingCommands = ["header", "align"];
 
     /* 
     Create the editor. 
@@ -392,7 +393,7 @@ class Editor {
     /*
     Reconstruct a node's children.
     */
-    reconstructNodeContents(node, parent, removeExtraneousWhitespace = true) {
+    reconstructNodeContents(node, parent, cachedInlineBlockStyles, removeExtraneousWhitespace = true) {
         const reconstructed = [];
 
         // Reconstruct each of the children.
@@ -400,6 +401,7 @@ class Editor {
             if (child.nodeType == Node.TEXT_NODE || this.contentTags.includes(child.tagName)) {
                 // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
                 var styling = [];
+                var inlineBlockStyling = [];
                 var currentNode = child;
 
                 // When calculating styling, we need to respect overrides. If an override is hit (i.e. no bold), later elements cannot apply the style.
@@ -415,6 +417,7 @@ class Editor {
                     elementStyling = elementStyling.filter(s => !overrides.some(e => s.type == e.target.type));
                     const elementOverrides = elementStyling.filter(s => s.type == "override");
                     elementStyling = elementStyling.filter(s => s.type != "override");
+                    inlineBlockStyling.push(...elementStyling.filter(s => this.inlineBlockStylingCommands.includes(s.type)));
                     elementStyling = elementStyling.filter(s => this.inlineStylingCommands.includes(s.type));
                     styling.push(...elementStyling);
 
@@ -425,20 +428,38 @@ class Editor {
                 }
 
                 if (removeExtraneousWhitespace) {
-                    child.textContent = child.textContent.split("\n").join("").split("\r").join("");
+                    if (child.nodeType == Node.TEXT_NODE) child.textContent = child.textContent.split("\n").join("").split("\r").join("");
 
                     // Reconstruct the styling.
                     child = this.addStylingToNode(child, styling);
 
                     // Append the newly reconstructed node.
                     reconstructed.push(child);
+
+                    // Handle all inline block styles.
+                    if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: child, inlineBlockStyling: inlineBlockStyling});
                 } else {
                     // Replace all line breaks with break nodes.
-                    const lines = child.textContent.split(/\r?\n|\r|\n/g);
+                    if (child.nodeType == Node.TEXT_NODE) {
+                        const lines = child.textContent.split(/\r?\n|\r|\n/g);
 
-                    reconstructed.push(this.addStylingToNode(document.createTextNode(lines[0]), styling));
-                    for (const line of lines.slice(1)) {
-                        reconstructed.push(document.createElement("br"), this.addStylingToNode(document.createTextNode(line), styling));
+                        var newTextNode = this.addStylingToNode(document.createTextNode(lines[0]), styling);
+                        reconstructed.push(newTextNode);
+                        // Handle all inline block styles.
+                        if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: newTextNode, inlineBlockStyling: inlineBlockStyling});
+
+                        for (const line of lines.slice(1)) {
+                            const newBrNode = document.createElement("br");
+                            newTextNode = this.addStylingToNode(document.createTextNode(line), styling);
+                            reconstructed.push(newBrNode, newTextNode);
+                            // Handle all inline block styles.
+                            if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: newBrNode, inlineBlockStyling: inlineBlockStyling});
+                            if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: newTextNode, inlineBlockStyling: inlineBlockStyling});
+                        }
+                    } else {
+                        child = this.addStylingToNode(child, styling);
+                        reconstructed.push(child);
+                        if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: child, inlineBlockStyling: inlineBlockStyling});
                     }
                 }
             } else if (child.nodeType == Node.ELEMENT_NODE) {
@@ -460,7 +481,7 @@ class Editor {
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
-                    const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespaceOnChildren);
+                    const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
 
                     // Append the newly reconstructed nodes.
                     reconstructed.push(...reconstructedChildren);
@@ -482,7 +503,7 @@ class Editor {
                 }
 
                 // Reconstruct the node's children.
-                const reconstructedChildren = this.reconstructNodeContents(child, parent, removeExtraneousWhitespaceOnChildren);
+                const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
                 newNode.append(...reconstructedChildren);
 
                 // Append the newly reconstructed node.
@@ -502,7 +523,8 @@ class Editor {
         original.innerHTML = contents;
 
         // Reconstruct the node.
-        const reconstructed = this.reconstructNodeContents(original, original);
+        const cachedInlineBlockStyles = [];
+        const reconstructed = this.reconstructNodeContents(original, original, cachedInlineBlockStyles);
 
         // Remove trailing and leading whitespace nodes.
         const withoutWhitespace = [];
@@ -515,7 +537,7 @@ class Editor {
             withoutWhitespace.push(node);
         }
 
-        return withoutWhitespace;
+        return {reconstructed: withoutWhitespace, cachedInlineBlockStyles: cachedInlineBlockStyles};
     }
 
     /*
@@ -552,7 +574,7 @@ class Editor {
     */
     insertHTML(startNode, data, select = "end") {
         // Reconstruct the data.
-        var reconstructed = this.sanitize(data);
+        var {reconstructed, cachedInlineBlockStyles} = this.sanitize(data);
         if (reconstructed.length == 0) {
             return;
         }
@@ -670,6 +692,20 @@ class Editor {
 
             if (!firstNode) {
                 firstNode = currentLastNode;
+            }
+        }
+
+        // Apply each cached inline block style.
+        for (const inlineBlockPair of cachedInlineBlockStyles) {
+            if (!this.inEditor(inlineBlockPair.node)) {
+                continue;
+            }
+
+            // Select the node.
+            const newRange = new Range();
+            newRange.selectNode(inlineBlockPair.node);
+            for (const style of inlineBlockPair.inlineBlockStyling) {
+                this.applyBlockStyle(style, newRange);
             }
         }
 
@@ -2469,7 +2505,7 @@ class Editor {
 
         // Fix disallowed children.
         const fixedNodes = [];
-        const disallowedChildren = (style.type == "align" || style.type == "header") ? "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]" : null;
+        const disallowedChildren = (this.inlineBlockStylingCommands.includes(style.type)) ? "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]" : null;
         function fixDisallowedChildrenOfNode(node) {
             if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren))))) {
                 // Append the children instead.
