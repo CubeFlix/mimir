@@ -2469,7 +2469,7 @@ class Editor {
 
         // Fix disallowed children.
         const fixedNodes = [];
-        const disallowedChildren = (style.type == "align" || style.type == "header") ? "blockquote, ul, ol, li" : null;
+        const disallowedChildren = (style.type == "align" || style.type == "header") ? "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]" : null;
         function fixDisallowedChildrenOfNode(node) {
             if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren))))) {
                 // Append the children instead.

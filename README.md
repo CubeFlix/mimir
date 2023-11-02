@@ -73,7 +73,7 @@ a rich text editor for javascript
 - [x] bug with left click removing stuff
 - [x] when pasting, if possible, always join the first node (and the split node, if possible)
 - [x] h1-h6
-- [ ] when pasting, apply inline styles to all content tags, not just text nodes
+- [x] when pasting, apply inline styles to all content tags, not just text nodes
 - [ ] handle lists
 - [ ] more styling options
 - [ ] retain selection when leaving editor
