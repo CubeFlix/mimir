@@ -77,8 +77,12 @@ a rich text editor for javascript
 - [x] when pasting, apply inline styles to all content tags, not just text nodes
 - [x] remove current selection when pasting
 - [ ] handle lists (joining lists doesn't work)
-- [ ] split out of extraneous divs!!!!!
-- [ ] when pasting, place the paste content AFTER the start node, not before!!
+- [x] when pasting, place the paste content AFTER the start node, not before!!
+- [ ] when adjusting range to be relative to inline nodes, it should properly handle empty nodes and properly traverse
+  - it should always move in the direction of the endpoint (left for startContainer, right for endContainer)
+  - if it hits the end of the editor:
+    - if we are trying to adjust ranges for block styling, it should just use the editor as an endpoint
+    - otherwise for getTextNodesInRange it should make a new text node
 - [ ] list joining broken
 - [ ] more styling options
 - [ ] retain selection when leaving editor

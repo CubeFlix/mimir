@@ -817,7 +817,7 @@ class Editor {
                         if (!this.childlessTags.includes(range.startContainer.tagName)) {
                             range.startContainer.prepend(emptyTextNode);
                         } else {
-                            range.startContainer.before(emptyTextNode);
+                            range.startContainer.after(emptyTextNode);
                         }
                     } else {
                         range.startContainer.childNodes[range.startOffset - 1].after(emptyTextNode);
@@ -2640,11 +2640,11 @@ class Editor {
 
         // Fix disallowed parents.
         if (style.type == "quote" || style.type == "list") {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign) || ["DIV", "P"].includes(e.tagName));
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign));
         } else if (style.type == "header") {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || ["DIV", "P"].includes(e.tagName));
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName));
         } else {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["DIV", "P"].includes(e.tagName));
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN");
         }
 
         // Style the nodes.
