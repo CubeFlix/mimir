@@ -179,6 +179,18 @@ class Editor {
                     this.menubarOptions.align.addEventListener("change", this.align.bind(this));
                     this.menubar.append(this.menubarOptions.align);
                     break;
+                case "list":
+                    this.menubarOptions.list = document.createElement("select");
+                    this.menubarOptions.list.setAttribute("id", "editor-menubar-option-align");
+                    for (const listType of ["None", "Unordered", "Ordered"]) {
+                        const newListOption = document.createElement("option");
+                        newListOption.innerHTML = listType;
+                        newListOption.setAttribute("value", listType.toLowerCase());
+                        this.menubarOptions.list.append(newListOption);
+                    }
+                    this.menubarOptions.list.addEventListener("change", this.list.bind(this));
+                    this.menubar.append(this.menubarOptions.list);
+                    break;
             }
         }
     }
@@ -719,6 +731,7 @@ class Editor {
             newRange.selectNode(inlineBlockPair.node);
             for (const style of inlineBlockPair.inlineBlockStyling) {
                 this.applyBlockStyle(style, newRange);
+                console.log(style);
             }
         }
 
@@ -751,6 +764,8 @@ class Editor {
                 if (range == null) {
                     return;
                 }
+
+                range.deleteContents();
 
                 // Split the start container at the start offset.
                 const emptyTextNode = document.createTextNode("");
@@ -986,6 +1001,10 @@ class Editor {
                 continue;
             }
 
+            if (option == "list") {
+                this.menubarOptions.list.value = styling.find(s => s.type == "list") ? styling.find(s => s.type == "list").listType : "none";
+            }
+
             if (styling.some(s => s.type == option)) {
                 if (!this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.add("editor-pressed");
             } else {
@@ -1173,7 +1192,8 @@ class Editor {
                 elem.style.textAlign = style.direction;
                 return elem;
             case "list":
-                var elem = document.createElement(style.ordered ? "ol" : "ul");
+                var elem = document.createElement((style.listType == "ordered") ? "ol" : "ul");
+                console.log(style.listType);
                 const firstLi = document.createElement("li");
                 elem.append(firstLi);
                 return elem;
@@ -1222,6 +1242,12 @@ class Editor {
             case "H5":
             case "H6":
                 styling.push({type: "header", level: node.tagName});
+                break;
+            case "UL":
+                styling.push({type: "list", listType: "unordered"});
+                break;
+            case "OL":
+                styling.push({type: "list", listType: "ordered"});
                 break;
         }
 
@@ -1627,6 +1653,25 @@ class Editor {
                         } else {
                             const children = document.createDocumentFragment();
                             children.append(...elem.childNodes);
+                            elem.after(children);
+                            elem.remove();
+                            elemRemoved = true;
+                            elem = children;
+                        }
+                    }
+                    break;
+                case "list":
+                    if (elem.tagName == (style.listType == "ordered" ? "OL" : "UL")) {
+                        if (Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                            const temp = document.createElement("div");
+                            temp.append(...elem.childNodes[0]?.childNodes);
+                            temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                            elem.remove();
+                            elem = temp;
+                            elemRemoved = true;
+                        } else {
+                            const children = document.createDocumentFragment();
+                            children.append(...elem.childNodes[0]?.childNodes);
                             elem.after(children);
                             elem.remove();
                             elemRemoved = true;
@@ -2607,6 +2652,8 @@ class Editor {
             marker.remove();
         }
 
+        console.log(child);
+
         // Search the parents of the node for any node that matches the style.
         const parentNodesToRemove = [];
         var currentNode = node.parentNode;
@@ -2761,10 +2808,26 @@ class Editor {
                             this.removeBlockStyle(currentAlignStyle, range);
                         }
                     } else {
-                        // Remove the other header styling first.
+                        // Remove the other align styling first.
                         const currentAlignStyle = currentStyling.find(s => s.type == "align");
                         if (currentAlignStyle) {
                             this.removeBlockStyle(currentAlignStyle, range);
+                        }
+                        const newRange = this.getRange();
+                        this.applyBlockStyle(style, newRange);
+                    }
+                    break;
+                case "list":
+                    if (style.listType == "none") {
+                        const currentListStyle = currentStyling.find(s => s.type == "list");
+                        if (currentListStyle) {
+                            this.removeBlockStyle(currentListStyle, range);
+                        }
+                    } else {
+                        // Remove the other list styling first.
+                        const currentListStyle = currentStyling.find(s => s.type == "list");
+                        if (currentListStyle) {
+                            this.removeBlockStyle(currentListStyle, range);
                         }
                         const newRange = this.getRange();
                         this.applyBlockStyle(style, newRange);
@@ -2831,6 +2894,13 @@ class Editor {
     */
     align() {
         this.performStyleCommand({type: "align", direction: this.menubarOptions.align.value});
+    }
+
+    /*
+    List.
+    */
+    list() {
+        this.performStyleCommand({type: "list", listType: this.menubarOptions.list.value});
     }
 
     /*
