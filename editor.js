@@ -2160,7 +2160,7 @@ class Editor {
         if (node.nodeType != Node.ELEMENT_NODE) {
             return false;
         }
-        if (!this.blockTags.includes(node.tagName)) {
+        if (!this.blockTags.includes(node.tagName) || node.tagName == "BR") {
             return false;
         }
         return true;
