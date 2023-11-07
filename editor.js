@@ -413,7 +413,6 @@ class Editor {
             if (child.nodeType == Node.TEXT_NODE || this.contentTags.includes(child.tagName)) {
                 // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
                 var styling = [];
-                var inlineBlockStyling = [];
                 var currentNode = child;
 
                 // When calculating styling, we need to respect overrides. If an override is hit (i.e. no bold), later elements cannot apply the style.
@@ -429,7 +428,6 @@ class Editor {
                     elementStyling = elementStyling.filter(s => !overrides.some(e => s.type == e.target.type));
                     const elementOverrides = elementStyling.filter(s => s.type == "override");
                     elementStyling = elementStyling.filter(s => s.type != "override");
-                    inlineBlockStyling.push(...elementStyling.filter(s => this.inlineBlockStylingCommands.includes(s.type)));
                     elementStyling = elementStyling.filter(s => this.inlineStylingCommands.includes(s.type));
                     styling.push(...elementStyling);
 
@@ -447,9 +445,6 @@ class Editor {
 
                     // Append the newly reconstructed node.
                     reconstructed.push(child);
-
-                    // Handle all inline block styles.
-                    if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: child, inlineBlockStyling: inlineBlockStyling});
                 } else {
                     // Replace all line breaks with break nodes.
                     if (child.nodeType == Node.TEXT_NODE) {
@@ -457,21 +452,15 @@ class Editor {
 
                         var newTextNode = this.addStylingToNode(document.createTextNode(lines[0]), styling);
                         reconstructed.push(newTextNode);
-                        // Handle all inline block styles.
-                        if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: newTextNode, inlineBlockStyling: inlineBlockStyling});
 
                         for (const line of lines.slice(1)) {
                             const newBrNode = document.createElement("br");
                             newTextNode = this.addStylingToNode(document.createTextNode(line), styling);
                             reconstructed.push(newBrNode, newTextNode);
-                            // Handle all inline block styles.
-                            if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: newBrNode, inlineBlockStyling: inlineBlockStyling});
-                            if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: newTextNode, inlineBlockStyling: inlineBlockStyling});
                         }
                     } else {
                         child = this.addStylingToNode(child, styling);
                         reconstructed.push(child);
-                        if (inlineBlockStyling.length != 0) cachedInlineBlockStyles.push({node: child, inlineBlockStyling: inlineBlockStyling});
                     }
                 }
             } else if (child.nodeType == Node.ELEMENT_NODE) {
@@ -500,6 +489,9 @@ class Editor {
                     // Append the newly reconstructed nodes.
                     newNode.append(...reconstructedChildren);
                     reconstructed.push(newNode);
+
+                    // Add this node to the list of cached inline block styles.
+                    cachedInlineBlockStyles.push({node: newNode, inlineBlockStyling: this.getStylingOfElement(child).filter(s => this.inlineBlockStylingCommands.includes(s.type))});
                     continue;
                 }
 
@@ -515,6 +507,12 @@ class Editor {
 
                 // Clone the node without any attributes.
                 const newNode = document.createElement(child.tagName);
+
+                // Add this node to the list of cached inline block styles.
+                const inlineBlockStyling = this.getStylingOfElement(child).filter(s => this.inlineBlockStylingCommands.includes(s.type));
+                if (inlineBlockStyling.length != 0) {
+                    cachedInlineBlockStyles.push({node: newNode, inlineBlockStyling: inlineBlockStyling});
+                }
 
                 // Add any important attributes.
                 if (child.getAttribute("href")) {
@@ -562,7 +560,50 @@ class Editor {
             withoutWhitespace.push(node);
         }
 
-        return {reconstructed: withoutWhitespace, cachedInlineBlockStyles: cachedInlineBlockStyles};
+        // Place the nodes inside a document fragment so that styles can be easily applied.
+        const fragment = document.createDocumentFragment();
+        fragment.append(...withoutWhitespace);
+
+        // Apply each cached inline block style.
+        for (const inlineBlockPair of cachedInlineBlockStyles) {
+            if (!fragment.contains(inlineBlockPair.node)) {
+                continue;
+            }
+
+            // Fix disallowed children of the node.
+            const fixedNodes = [];
+            const disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]";
+            function fixDisallowedChildrenOfNode(node) {
+                console.log(node.matches(disallowedChildren), node)
+                if (node.nodeType == Node.ELEMENT_NODE && (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren)))) {
+                    // Append the children instead.
+                    for (const child of node.childNodes) {
+                        fixDisallowedChildrenOfNode(child);
+                    }
+                } else {
+                    // Append the node.
+                    fixedNodes.push(node);
+                }
+            }
+            fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
+            fixDisallowedChildrenOfNode(inlineBlockPair.node);
+
+            for (const node of fixedNodes) {
+                for (const style of inlineBlockPair.inlineBlockStyling) {
+                    const newElem = this.styleToElement(style);
+                    const marker = document.createTextNode("");
+                    node.after(marker);
+                    if (newElem.childNodes.length == 0) {
+                        newElem.appendChild(node);
+                    } else {
+                        newElem.childNodes[0].appendChild(node);
+                    }
+                    marker.replaceWith(newElem);
+                }
+            }
+        }
+
+        return Array.from(fragment.childNodes);
     }
 
     /*
@@ -599,7 +640,7 @@ class Editor {
     */
     insertHTML(startNode, data, select = "end") {
         // Reconstruct the data.
-        var {reconstructed, cachedInlineBlockStyles} = this.sanitize(data);
+        var reconstructed = this.sanitize(data);
         if (reconstructed.length == 0) {
             return;
         }
@@ -717,21 +758,6 @@ class Editor {
 
             if (!firstNode) {
                 firstNode = currentLastNode;
-            }
-        }
-
-        // Apply each cached inline block style.
-        for (const inlineBlockPair of cachedInlineBlockStyles) {
-            if (!this.inEditor(inlineBlockPair.node)) {
-                continue;
-            }
-
-            // Select the node.
-            const newRange = new Range();
-            newRange.selectNode(inlineBlockPair.node);
-            for (const style of inlineBlockPair.inlineBlockStyling) {
-                this.applyBlockStyle(style, newRange);
-                console.log(style);
             }
         }
 
