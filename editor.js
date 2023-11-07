@@ -565,6 +565,8 @@ class Editor {
         fragment.append(...withoutWhitespace);
 
         // Apply each cached inline block style.
+        var lastStyled = null;
+        var lastStyle = null;
         for (const inlineBlockPair of cachedInlineBlockStyles) {
             if (!fragment.contains(inlineBlockPair.node)) {
                 continue;
@@ -574,7 +576,6 @@ class Editor {
             const fixedNodes = [];
             const disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]";
             function fixDisallowedChildrenOfNode(node) {
-                console.log(node.matches(disallowedChildren), node)
                 if (node.nodeType == Node.ELEMENT_NODE && (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren)))) {
                     // Append the children instead.
                     for (const child of node.childNodes) {
@@ -588,7 +589,7 @@ class Editor {
             fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
             fixDisallowedChildrenOfNode(inlineBlockPair.node);
 
-            for (const node of fixedNodes) {
+            for (var node of fixedNodes) {
                 for (const style of inlineBlockPair.inlineBlockStyling) {
                     const newElem = this.styleToElement(style);
                     const marker = document.createTextNode("");
@@ -599,6 +600,16 @@ class Editor {
                         newElem.childNodes[0].appendChild(node);
                     }
                     marker.replaceWith(newElem);
+                    node = newElem;
+                }
+
+                // Join the nodes.
+                if (lastStyled && lastStyle && lastStyled.nextSibling == node && lastStyle === inlineBlockPair.inlineBlockStyling) {
+                    lastStyled.append(...node.childNodes);
+                    node.remove();
+                } else {
+                    lastStyled = node;
+                    lastStyle = inlineBlockPair.inlineBlockStyling;
                 }
             }
         }
@@ -1219,7 +1230,6 @@ class Editor {
                 return elem;
             case "list":
                 var elem = document.createElement((style.listType == "ordered") ? "ol" : "ul");
-                console.log(style.listType);
                 const firstLi = document.createElement("li");
                 elem.append(firstLi);
                 return elem;
@@ -2677,8 +2687,6 @@ class Editor {
             marker.after(styledNode);
             marker.remove();
         }
-
-        console.log(child);
 
         // Search the parents of the node for any node that matches the style.
         const parentNodesToRemove = [];
