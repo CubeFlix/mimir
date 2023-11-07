@@ -478,6 +478,19 @@ class Editor {
                     }
                 }
 
+                // If this tag is a header tag, replace it with a new DIV node.
+                if (["H1", "H2", "H3", "H4", "H5", "H6"].includes(child.tagName)) {
+                    const newNode = document.createElement("div");
+
+                    // Reconstruct the node's children.
+                    const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
+
+                    // Append the newly reconstructed nodes.
+                    newNode.append(...reconstructedChildren);
+                    reconstructed.push(newNode);
+                    continue;
+                }
+
                 // If this tag is a styling/illegal tag, ignore it but parse its children.
                 if (!this.basicAllowedTags.includes(child.tagName)) {
                     // Reconstruct the node's children.
