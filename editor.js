@@ -1092,10 +1092,19 @@ class Editor {
         var startOffset = range.startOffset;
         var endOffset = range.endOffset;
     
-        // If the first node is not a text node, move the start node to the start offset.
-        if (range.startContainer.nodeType != Node.TEXT_NODE) {
-            currentNode = currentNode.childNodes[range.startOffset] ? currentNode.childNodes[range.startOffset] : currentNode;
-            startOffset = 0;
+        while (currentNode.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(currentNode.tagName)) {
+            // If there are no children of this node, exit.
+            if (currentNode.childNodes.length == 0) {
+                break;
+            }
+
+            if (startOffset == currentNode.childNodes.length) {
+                currentNode = currentNode.childNodes[startOffset - 1];
+                startOffset = currentNode.nodeType == Node.ELEMENT_NODE ? currentNode.childNodes.length : currentNode.textContent.length;
+            } else {
+                currentNode = currentNode.childNodes[startOffset];
+                startOffset = 0;
+            }
         }
     
         var haveTraversedLastNode = false;
