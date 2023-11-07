@@ -76,9 +76,9 @@ a rich text editor for javascript
 - [x] h1-h6
 - [x] when pasting, apply inline styles to all content tags, not just text nodes
 - [x] remove current selection when pasting
-- [ ] lastStyled.append is not a function (when re-applying inline block styles on paste)
-- [ ] addRange is not in document (when re-applying inline block styles on paste)
-- [ ] handle lists
+- [ ] handle lists (joining lists doesn't work)
+- [ ] split out of extraneous divs!!!!!
+- [ ] when pasting, place the paste content AFTER the start node, not before!!
 - [ ] list joining broken
 - [ ] more styling options
 - [ ] retain selection when leaving editor

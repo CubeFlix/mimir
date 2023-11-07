@@ -181,7 +181,7 @@ class Editor {
                     break;
                 case "list":
                     this.menubarOptions.list = document.createElement("select");
-                    this.menubarOptions.list.setAttribute("id", "editor-menubar-option-align");
+                    this.menubarOptions.list.setAttribute("id", "editor-menubar-option-list");
                     for (const listType of ["None", "Unordered", "Ordered"]) {
                         const newListOption = document.createElement("option");
                         newListOption.innerHTML = listType;
@@ -1262,8 +1262,8 @@ class Editor {
                 if (node.getAttribute("face")) {
                     var family = node.getAttribute("face");
                     family = family.split("&quot;");
-                    family = family.split("\"").join("");
-                    family = family.split("'").join("");
+                    family = family.map(s => s.split("\"").join(""));
+                    family = family.map(s => s.split("'").join(""));
                     styling.push({type: "font", family: family});
                 }
                 // TODO: color, text size, etc
@@ -2640,11 +2640,11 @@ class Editor {
 
         // Fix disallowed parents.
         if (style.type == "quote" || style.type == "list") {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign));
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign) || ["DIV", "P"].includes(e.tagName));
         } else if (style.type == "header") {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName));
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || ["DIV", "P"].includes(e.tagName));
         } else {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN");
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["DIV", "P"].includes(e.tagName));
         }
 
         // Style the nodes.
@@ -2652,8 +2652,14 @@ class Editor {
         for (const node of fixedNodes) {
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents);
             if (lastStyled && lastStyled.nextSibling == styledNode) {
-                lastStyled.append(...styledNode.childNodes);
-                styledNode.remove();
+                if (style.type == "list" && !this.blockTags.includes(node.tagName)) {
+                    // For non-block lists, we want to join the interior nodes inside the LI.
+                    lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
+                    styledNode.remove();
+                } else {
+                    lastStyled.append(...styledNode.childNodes);
+                    styledNode.remove();
+                }
             } else {
                 lastStyled = styledNode;
             }
@@ -2670,6 +2676,7 @@ class Editor {
     Remove a block style from a node. 
     */
     removeBlockStyleOnNode(node, style) {
+        console.log(node);
         // Search the children of the node for any node that match the style.
         const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => this.elementHasStyle(e, style) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
         var child;
@@ -2687,6 +2694,7 @@ class Editor {
             marker.after(styledNode);
             marker.remove();
         }
+        return;
 
         // Search the parents of the node for any node that matches the style.
         const parentNodesToRemove = [];
