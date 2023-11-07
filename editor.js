@@ -2549,9 +2549,13 @@ class Editor {
         }
 
         // Fix disallowed parents.
-        const disallowedParents = (style.type == "quote" || style.type == "list") 
-                                        ? (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign))
-                                        : (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN");
+        if (style.type == "quote" || style.type == "list") {
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign));
+        } else if (style.type == "header") {
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName));
+        } else {
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN");
+        }
 
         // Style the nodes.
         var lastStyled = null;
