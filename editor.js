@@ -2523,7 +2523,7 @@ class Editor {
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
                 // Found the node.
-                return node;
+                return currentNode;
             }
             currentNode = currentNode.parentNode;
         }
@@ -2753,7 +2753,7 @@ class Editor {
     /*
     Remove a block style from a range.
     */
-    removeBlockStyle(style, range) {
+    removeBlockStyle(style, range, numToRemove = -1) {
         this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
 
