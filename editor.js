@@ -1660,7 +1660,7 @@ class Editor {
                     break;
                 case "quote":
                     if (elem.tagName == "BLOCKQUOTE") {
-                        if (Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                        if (!Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
                             const temp = document.createElement("div");
                             temp.append(...elem.childNodes);
                             temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
@@ -1679,7 +1679,7 @@ class Editor {
                     break;
                 case "header":
                     if (elem.tagName == style.level) {
-                        if (Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                        if (!Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
                             const temp = document.createElement("div");
                             temp.append(...elem.childNodes);
                             temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
@@ -1700,7 +1700,7 @@ class Editor {
                     if (elem.tagName == (style.listType == "ordered" ? "OL" : "UL")) {
                         const fragment = document.createDocumentFragment();
                         for (const li of Array.from(elem.childNodes)) {
-                            if (Array.from(li.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                            if (!Array.from(li.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
                                 const temp = document.createElement("div");
                                 temp.append(...li.childNodes);
                                 temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
@@ -2700,7 +2700,7 @@ class Editor {
             marker.remove();
 
             numRemoved++;
-            if (numRemoved == numToRemove) {
+            if (numRemoved == numToRemove && numToRemove != -1) {
                 return;
             }
         }

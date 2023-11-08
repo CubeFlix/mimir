@@ -37,8 +37,6 @@ a rich text editor for javascript
 - [x] create new cursor when backspacing out of style node
 - [x] issue with whitespace, pasting/dragging
 - [x] paste is broken again (pasting span into blockquote)
-- [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
-- [ ] bugs (when adjusting start container to be relative to inline nodes in getNextTextNodeInRange and applyStyleToBlockNode, it is not considering empty nodes);
 - [x] bug with styling `br`
 - [x] bugs (extraneous divs when removing block styles)
 - [x] bug with pasting styled within span
@@ -78,16 +76,11 @@ a rich text editor for javascript
 - [x] remove current selection when pasting
 - [x] handle lists (joining lists doesn't work)
 - [x] when pasting, place the paste content AFTER the start node, not before!!
-- [ ] maybe think about fixing nested divs when pasting (not joining sufficiently)
-- [ ] when adjusting range to be relative to inline nodes, it should properly handle empty nodes and properly traverse
-  - it should always move in the direction of the endpoint (left for startContainer, right for endContainer)
-  - if it hits the end of the editor:
-    - if we are trying to adjust ranges for block styling, it should just use the editor as an endpoint
-    - otherwise for getTextNodesInRange it should make a new text node
+- [x] removing nested styles doesn't work (blockquote in blockquote)
+- [ ] removing block style should join divs
 - [x] list joining broken
 - [x] removing styles on nested nodes not working
-- [ ] getTextNodesInRange should stop BEFORE the last one
-- [ ] does removing multiple at a time work?
+- [x] does removing multiple at a time work?
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options
@@ -101,3 +94,14 @@ a rich text editor for javascript
 - [ ] change previous history's cursor location if hashes match
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI (undo redo buttons, etc.)
+
+## future todo
+
+- [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
+- [ ] bugs (when adjusting start container to be relative to inline nodes in getNextTextNodeInRange and applyStyleToBlockNode, it is not considering empty nodes);
+- [ ] maybe think about fixing nested divs when pasting (not joining sufficiently)
+- [ ] when adjusting range to be relative to inline nodes, it should properly handle empty nodes and properly traverse
+  - it should always move in the direction of the endpoint (left for startContainer, right for endContainer)
+  - if it hits the end of the editor:
+    - if we are trying to adjust ranges for block styling, it should just use the editor as an endpoint
+    - otherwise for getTextNodesInRange it should make a new text node
