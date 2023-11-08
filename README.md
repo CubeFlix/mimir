@@ -77,8 +77,8 @@ a rich text editor for javascript
 - [x] handle lists (joining lists doesn't work)
 - [x] when pasting, place the paste content AFTER the start node, not before!!
 - [x] removing nested styles doesn't work (blockquote in blockquote)
-- [ ] re-setting block style should SWAP list styles, not remove them
-- [ ] removing block style should remove the style for EACH NODE, not the entire selection
+- [ ] redo list styling options
+- [ ] certain styles should activate if any node inside has that style
 - [ ] paste, drag should have takeSnapshotOnNextChange
 - [ ] saveHistory happens multiple times on block removal
 - [x] list joining broken
