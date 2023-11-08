@@ -1698,21 +1698,22 @@ class Editor {
                     break;
                 case "list":
                     if (elem.tagName == (style.listType == "ordered" ? "OL" : "UL")) {
-                        if (Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
-                            const temp = document.createElement("div");
-                            temp.append(...elem.childNodes[0]?.childNodes);
-                            temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
-                            elem.remove();
-                            elem = temp;
-                            elemRemoved = true;
-                        } else {
-                            const children = document.createDocumentFragment();
-                            children.append(...elem.childNodes[0]?.childNodes);
-                            elem.after(children);
-                            elem.remove();
-                            elemRemoved = true;
-                            elem = children;
+                        const fragment = document.createDocumentFragment();
+                        for (const li of Array.from(elem.childNodes)) {
+                            if (Array.from(li.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
+                                const temp = document.createElement("div");
+                                temp.append(...li.childNodes);
+                                temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                                li.remove();
+                                fragment.append(temp);
+                            } else {
+                                fragment.append(...li.childNodes);
+                                li.remove();
+                            }
                         }
+                        elem.remove();
+                        elem = fragment;
+                        elemRemoved = true;
                     }
                     break;
             }
@@ -2613,6 +2614,9 @@ class Editor {
             }
         }
 
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+
         // Block extend the range.
         const blockExtended = this.blockExtendRange(range);
         
@@ -2673,10 +2677,9 @@ class Editor {
     }
 
     /*
-    Remove a block style from a node. 
+    Remove a block style from a node. If numToRemove is -1 it removes as many as possible.
     */
-    removeBlockStyleOnNode(node, style) {
-        console.log(node);
+    removeBlockStyleOnNode(node, style, numToRemove = -1) {
         // Search the children of the node for any node that match the style.
         const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => this.elementHasStyle(e, style) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
         var child;
@@ -2684,6 +2687,8 @@ class Editor {
         while (child = iterator.nextNode()) {
             if (child != this.editor) nodesToRemove.push(child);
         }
+
+        var numRemoved = 0;
 
         // Remove the styles on child nodes.
         for (const child of nodesToRemove) {
@@ -2693,11 +2698,15 @@ class Editor {
             const styledNode = this.removeStyleFromElement(child, style);
             marker.after(styledNode);
             marker.remove();
+
+            numRemoved++;
+            if (numRemoved == numToRemove) {
+                return;
+            }
         }
-        return;
 
         // Search the parents of the node for any node that matches the style.
-        const parentNodesToRemove = [];
+        var parentNodesToRemove = [];
         var currentNode = node.parentNode;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.elementHasStyle(currentNode, style)) {
@@ -2706,7 +2715,8 @@ class Editor {
             currentNode = currentNode.parentNode;
         }
 
-        for (const parentNode of parentNodesToRemove) {
+        if (numToRemove != -1) parentNodesToRemove = parentNodesToRemove.slice(0, numToRemove - numRemoved);
+        for (const parentNode of parentNodesToRemove.reverse()) {
             // Split the parent node at the node.
             const splitIncludingNode = this.splitNodeAtChild(parentNode, node, true);
             const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node);
@@ -2715,9 +2725,8 @@ class Editor {
             const marker = document.createTextNode("");
             parentNode.after(marker);
             const styledNode = this.removeStyleFromElement(splitIncludingNode, style);
-            marker.after(styledNode);
+            marker.after(styledNode, splitAfterNode);
             marker.remove();
-            styledNode.after(splitAfterNode);
             if (parentNode != this.editor && this.isEmpty(parentNode)) {
                 // Remove the original node.
                 parentNode.remove();
@@ -2779,6 +2788,9 @@ class Editor {
             }
         }
 
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+
         // Block extend the range.
         const blockExtended = this.blockExtendRange(range, true);
         
@@ -2787,7 +2799,7 @@ class Editor {
 
         // Style the nodes.
         for (const node of nodes) {
-            this.removeBlockStyleOnNode(node, style);
+            this.removeBlockStyleOnNode(node, style, style.type == "list" ? 1 : -1);
         }
 
         const newRange = new Range();
