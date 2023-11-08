@@ -180,16 +180,16 @@ class Editor {
                     this.menubar.append(this.menubarOptions.align);
                     break;
                 case "list":
-                    this.menubarOptions.list = document.createElement("select");
-                    this.menubarOptions.list.setAttribute("id", "editor-menubar-option-list");
-                    for (const listType of ["None", "Unordered", "Ordered"]) {
-                        const newListOption = document.createElement("option");
-                        newListOption.innerHTML = listType;
-                        newListOption.setAttribute("value", listType.toLowerCase());
-                        this.menubarOptions.list.append(newListOption);
-                    }
-                    this.menubarOptions.list.addEventListener("change", this.list.bind(this));
-                    this.menubar.append(this.menubarOptions.list);
+                    this.menubarOptions.listOrdered = document.createElement("button");
+                    this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
+                    this.menubarOptions.listOrdered.innerHTML = "OL";
+                    this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
+                    this.menubar.append(this.menubarOptions.listOrdered);
+                    this.menubarOptions.listUnordered = document.createElement("button");
+                    this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
+                    this.menubarOptions.listUnordered.innerHTML = "UL";
+                    this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
+                    this.menubar.append(this.menubarOptions.listUnordered);
                     break;
             }
         }
@@ -1039,7 +1039,17 @@ class Editor {
             }
 
             if (option == "list") {
-                this.menubarOptions.list.value = styling.find(s => s.type == "list") ? styling.find(s => s.type == "list").listType : "none";
+                if (styling.find(s => s.type == "list" && s.listType == "ordered")) {
+                    if (!this.menubarOptions.listOrdered.classList.contains("editor-pressed")) this.menubarOptions.listOrdered.classList.add("editor-pressed");
+                } else {
+                    this.menubarOptions.listOrdered.classList.remove("editor-pressed");
+                }
+                if (styling.find(s => s.type == "list" && s.listType == "unordered")) {
+                    if (!this.menubarOptions.listUnordered.classList.contains("editor-pressed")) this.menubarOptions.listUnordered.classList.add("editor-pressed");
+                } else {
+                    this.menubarOptions.listUnordered.classList.remove("editor-pressed");
+                }
+                continue;
             }
 
             if (styling.some(s => s.type == option)) {
@@ -2872,19 +2882,23 @@ class Editor {
                     }
                     break;
                 case "list":
-                    if (style.listType == "none") {
-                        const currentListStyle = currentStyling.find(s => s.type == "list");
+                    if (style.listType == "ordered") {
+                        const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "ordered");
                         if (currentListStyle) {
                             this.removeBlockStyle(currentListStyle, range);
+                        } else {
+                            this.removeBlockStyle({type: "list", listType: "unordered"}, range);
+                            this.applyBlockStyle(style, this.getRange());
                         }
-                    } else {
-                        // Remove the other list styling first.
-                        const currentListStyle = currentStyling.find(s => s.type == "list");
+                    } else if (style.listType == "unordered") {
+                        const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "unordered");
                         if (currentListStyle) {
                             this.removeBlockStyle(currentListStyle, range);
+                        } else {
+                            // If required, swap the styles.
+                            this.removeBlockStyle({type: "list", listType: "ordered"}, range);
+                            this.applyBlockStyle(style, this.getRange());
                         }
-                        const newRange = this.getRange();
-                        this.applyBlockStyle(style, newRange);
                     }
                     break;
             }
@@ -2951,10 +2965,17 @@ class Editor {
     }
 
     /*
-    List.
+    Ordered list.
     */
-    list() {
-        this.performStyleCommand({type: "list", listType: this.menubarOptions.list.value});
+    listOrdered() {
+        this.performStyleCommand({type: "list", listType: "ordered"});
+    }
+
+    /*
+    Unordered list.
+    */
+    listUnordered() {
+        this.performStyleCommand({type: "list", listType: "unordered"});
     }
 
     /*
