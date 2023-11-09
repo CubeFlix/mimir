@@ -90,7 +90,7 @@ a rich text editor for javascript
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options
-- [ ] lists
+- [x] lists
 - [ ] images
 - [ ] format indent up/down
 - [ ] `sup`
