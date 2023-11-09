@@ -79,10 +79,10 @@ a rich text editor for javascript
 - [x] removing nested styles doesn't work (blockquote in blockquote)
 - [x] redo list styling options
 - [x] issue with getBlockNodesInRange: it doesn't stop before the last one
-- [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole
+- [x] test more complex list topology
 - [ ] certain styles should activate if any node inside has that style
-- [ ] paste, drag should have takeSnapshotOnNextChange
-- [ ] saveHistory happens multiple times on block removal
+- [x] paste, drag should have takeSnapshotOnNextChange
+- [x] saveHistory happens multiple times on block removal
 - [x] list joining broken
 - [x] removing styles on nested nodes not working
 - [x] does removing multiple at a time work?
@@ -111,3 +111,5 @@ a rich text editor for javascript
     - if we are trying to adjust ranges for block styling, it should just use the editor as an endpoint
     - otherwise for getTextNodesInRange it should make a new text node
 - [ ] removing block style should join divs (not sure how this issue arose, but its worth looking into)
+- [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole (not sure how this issue arose, but its worth looking into)
+- [ ] perhaps remove extraneous divs during paste

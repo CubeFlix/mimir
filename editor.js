@@ -2579,7 +2579,6 @@ class Editor {
     Apply a block style to a range.
     */
     applyBlockStyle(style, range) {
-        this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
 
         if (this.editor.innerHTML == "") {
@@ -2762,7 +2761,6 @@ class Editor {
     Remove a block style from a range.
     */
     removeBlockStyle(style, range, numToRemove = -1) {
-        this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
 
         if (this.editor.innerHTML == "") {
@@ -2859,6 +2857,8 @@ class Editor {
             const join = ["quote"].includes(style.type);
             switch (style.type) {
                 case "quote":
+                    // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
+                    this.saveHistory();
                     if (currentStyling.some(s => s.type == style.type)) {
                         this.removeBlockStyle(style, range);
                     } else {
@@ -2866,6 +2866,8 @@ class Editor {
                     }
                     break;
                 case "header":
+                    // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
+                    this.saveHistory();
                     if (style.level == "Paragraph") {
                         const currentHeaderStyle = currentStyling.find(s => s.type == "header");
                         if (currentHeaderStyle) {
@@ -2882,6 +2884,8 @@ class Editor {
                     }
                     break;
                 case "align":
+                    // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
+                    this.saveHistory();
                     if (style.direction == "left") {
                         const currentAlignStyle = currentStyling.find(s => s.type == "align");
                         if (currentAlignStyle) {
@@ -2898,6 +2902,8 @@ class Editor {
                     }
                     break;
                 case "list":
+                    // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
+                    this.saveHistory();
                     if (style.listType == "ordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "ordered");
                         if (currentListStyle) {
