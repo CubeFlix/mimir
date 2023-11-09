@@ -2592,6 +2592,14 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        // If the end offset is at the start of a node, move it up.
+        if (endOffset == 0 && endContainer != this.editor) {
+            while (endOffset == 0 && endContainer != this.editor) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                endContainer = endContainer.parentNode;
+            }
+        }
+
         // Adjust the start point so that it is always relative to inline nodes.
         while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
             // If there are no children of this node, exit.
@@ -2766,6 +2774,14 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        // If the end offset is at the start of a node, move it up.
+        if (endOffset == 0 && endContainer != this.editor) {
+            while (endOffset == 0 && endContainer != this.editor) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                endContainer = endContainer.parentNode;
+            }
+        }
+
         // Adjust the start point so that it is always relative to inline nodes.
         while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
             // If there are no children of this node, exit.
@@ -2809,7 +2825,7 @@ class Editor {
 
         // Style the nodes.
         for (const node of nodes) {
-            this.removeBlockStyleOnNode(node, style, style.type == "list" ? 1 : -1);
+            this.removeBlockStyleOnNode(node, style, numToRemove);
         }
 
         const newRange = new Range();
@@ -2885,7 +2901,7 @@ class Editor {
                     if (style.listType == "ordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "ordered");
                         if (currentListStyle) {
-                            this.removeBlockStyle(currentListStyle, range);
+                            this.removeBlockStyle(currentListStyle, range, 1);
                         } else {
                             this.removeBlockStyle({type: "list", listType: "unordered"}, range);
                             this.applyBlockStyle(style, this.getRange());
@@ -2893,7 +2909,7 @@ class Editor {
                     } else if (style.listType == "unordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "unordered");
                         if (currentListStyle) {
-                            this.removeBlockStyle(currentListStyle, range);
+                            this.removeBlockStyle(currentListStyle, range, 1);
                         } else {
                             // If required, swap the styles.
                             this.removeBlockStyle({type: "list", listType: "ordered"}, range);

@@ -77,7 +77,9 @@ a rich text editor for javascript
 - [x] handle lists (joining lists doesn't work)
 - [x] when pasting, place the paste content AFTER the start node, not before!!
 - [x] removing nested styles doesn't work (blockquote in blockquote)
-- [ ] redo list styling options
+- [x] redo list styling options
+- [x] issue with getBlockNodesInRange: it doesn't stop before the last one
+- [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole
 - [ ] certain styles should activate if any node inside has that style
 - [ ] paste, drag should have takeSnapshotOnNextChange
 - [ ] saveHistory happens multiple times on block removal
