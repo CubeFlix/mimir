@@ -2713,6 +2713,7 @@ class Editor {
         }
 
         var numRemoved = 0;
+        const styledNodes = [];
 
         // Remove the styles on child nodes.
         for (const child of nodesToRemove) {
@@ -2722,10 +2723,11 @@ class Editor {
             const styledNode = this.removeStyleFromElement(child, style);
             marker.after(styledNode);
             marker.remove();
+            styledNodes.push(styledNode);
 
             numRemoved++;
             if (numRemoved == numToRemove && numToRemove != -1) {
-                return;
+                return styledNodes;
             }
         }
 
@@ -2751,6 +2753,7 @@ class Editor {
             const styledNode = this.removeStyleFromElement(splitIncludingNode, style);
             marker.after(styledNode, splitAfterNode);
             marker.remove();
+            styledNodes.push(styledNode);
             if (parentNode != this.editor && this.isEmpty(parentNode)) {
                 // Remove the original node.
                 parentNode.remove();
@@ -2761,7 +2764,7 @@ class Editor {
             }
         }
 
-        return;
+        return styledNodes;
     }
 
     /*
@@ -2829,8 +2832,37 @@ class Editor {
         const nodes = this.getBlockNodesInRange(blockExtended);
 
         // Style the nodes.
+        var lastStyled = null;
         for (const node of nodes) {
-            this.removeBlockStyleOnNode(node, style, numToRemove);
+            const styledNodes = this.removeBlockStyleOnNode(node, style, numToRemove);
+
+            // Check if we can join any of the styled nodes with the last styled.
+            if (lastStyled) {
+                var didJoin = false;
+                for (const lastStyledNode of lastStyled) {
+                    for (const styledNode of styledNodes) {
+                        // If the node is eligible for joining, join it.
+                        console.log(lastStyledNode, styledNode)
+                        if (lastStyledNode.nextSibling == styledNode) {
+                            lastStyledNode.append(...styledNode.childNodes);
+                            styledNode.remove();
+
+                            // Set lastStyled. We want to include the last styled node, along with any of the other styled nodes.
+                            lastStyled = [lastStyledNode, ...styledNodes.filter(n => n != styledNode)]; 
+                            didJoin = true;
+                            break;
+                        }
+                    }
+                    if (didJoin) {
+                        break;
+                    }
+                }
+                if (!didJoin) {
+                    lastStyled = styledNodes;
+                }
+            } else {
+                lastStyled = styledNodes;
+            }
         }
 
         const newRange = new Range();
