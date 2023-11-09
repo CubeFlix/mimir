@@ -20,6 +20,7 @@ class Editor {
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
     blockStylingCommands = ["quote", "header", "align", "list"];
     inlineBlockStylingCommands = ["header", "align"];
+    requireSingleNodeToActivateStylingCommands = ["list"]; // These styles need only one node in the range to activate.
 
     /* 
     Create the editor. 
@@ -1390,9 +1391,15 @@ class Editor {
             } else {
                 // If this is not, check that each of the current styles is included in this element's styling.
                 for (const style of styling.slice(0, styling.length)) {
-                    if (!nodeStyling.some(s => this.compareStyling(s, style))) {
+                    if (!nodeStyling.some(s => this.compareStyling(s, style)) && !this.requireSingleNodeToActivateStylingCommands.includes(style.type)) {
                         // If the styling is not the same, remove the styling from the list.
                         styling.splice(styling.findIndex(s => s.type == style.type), 1);
+                    }
+                }
+                for (const style of nodeStyling) {
+                    if (this.requireSingleNodeToActivateStylingCommands.includes(style.type)) {
+                        // If the style is not already applied, add it.
+                        if (!styling.some(s => this.compareStyling(s, style))) styling.push(style);
                     }
                 }
             }
