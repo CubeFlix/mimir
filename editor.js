@@ -511,7 +511,7 @@ class Editor {
 
                 // Add this node to the list of cached inline block styles.
                 const inlineBlockStyling = this.getStylingOfElement(child).filter(s => this.inlineBlockStylingCommands.includes(s.type));
-                if (inlineBlockStyling.length != 0) {
+                if (inlineBlockStyling.length != 0 && this.blockTags.includes(newNode)) {
                     cachedInlineBlockStyles.push({node: newNode, inlineBlockStyling: inlineBlockStyling});
                 }
 
