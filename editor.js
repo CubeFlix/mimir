@@ -2906,12 +2906,6 @@ class Editor {
     Replace lists on a node.
     */
     replaceListsOnNode(node, oldType, newType) {
-        // Escape to the closest list parent.
-        const closestListParent = this.findClosestParent(node, n => n.tagName == "OL" || n.tagName == "UL");
-        if (closestListParent) {
-            node = closestListParent;
-        }
-
         // Search the children of the node for any node that match the style.
         const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => e.tagName == oldType ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
         var child;
@@ -2925,6 +2919,8 @@ class Editor {
 
         // Replace the styles on child nodes.
         for (const child of nodesToRemove) {
+            // if (hasReplacedOriginalNode) break;
+
             // Remove the style.
             const marker = document.createTextNode("");
             child.after(marker);
@@ -2941,6 +2937,22 @@ class Editor {
             // Put the styled node back.
             marker.after(styledNode);
             marker.remove();
+        }
+
+        if (!hasReplacedOriginalNode) {
+            // Escape to the closest list parent.
+            const closestListParent = this.findClosestParent(node, n => n.tagName == "OL" || n.tagName == "UL");
+            if (closestListParent) {
+                node = closestListParent;
+
+                const marker = document.createTextNode("");
+                node.after(marker);
+                const styledNode = document.createElement(newType);
+                styledNode.append(...node.childNodes);
+                node.remove();
+                marker.after(styledNode);
+                marker.remove();
+            }
         }
     }
 
