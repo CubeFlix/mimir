@@ -1435,6 +1435,18 @@ class Editor {
         marker.replaceWith(newElem);
         return newElem;
     }
+    
+    /*
+    Check if a node is at the end of a parent.
+    */
+    isAtEndOfParentNode(node, parent) {
+        var currentNode = node;
+        while (parent.contains(currentNode) && parent != currentNode) {
+            if (currentNode.nextSibling) return false;
+            currentNode = currentNode.parentNode;
+        }
+        return true;
+    }
 
     /*
     Apply a style to a range.
@@ -1536,6 +1548,28 @@ class Editor {
             }
             if (endNode.textContent == "") {
                 endNode.remove();
+            }
+
+            // If the styled node is at the end of a link node, escape.
+            var currentNode = node.parentElement;
+            var parentANode = null;
+            var trackedNodes = [];
+            while (this.inEditor(currentNode) && this.editor != currentNode) {
+                if (currentNode.tagName == "A") {
+                    parentANode = currentNode;
+                    break;
+                }
+                trackedNodes.push(currentNode.cloneNode(false));
+                currentNode = currentNode.parentElement;
+            }
+            if (parentANode && this.isAtEndOfParentNode(styledNode, parentANode)) {
+                currentNode = styledNode;
+                for (const node of trackedNodes) {
+                    node.append(currentNode);
+                    currentNode = node;
+                }
+                parentANode.after(currentNode);
+                console.log("hello")
             }
 
             if (styledNode.textContent == "") {
