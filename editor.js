@@ -1569,7 +1569,6 @@ class Editor {
                     currentNode = node;
                 }
                 parentANode.after(currentNode);
-                console.log("hello")
             }
 
             if (styledNode.textContent == "") {
@@ -1698,53 +1697,33 @@ class Editor {
             switch (style.type) {
                 case "align":
                     if (elem.style.textAlign && elem.style.textAlign.toLowerCase().includes(style.direction)) {
-                        elem.style.textAlign = "";
-                    }
-                    if (!(Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style"))) {
-                        const children = document.createDocumentFragment();
-                        children.append(...elem.childNodes);
-                        elem.after(children);
+                        const temp = document.createElement("div");
+                        temp.append(...elem.childNodes);
+                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                        temp.style.textAlign = "";
                         elem.remove();
+                        elem = temp;
                         elemRemoved = true;
-                        elem = children;
                     }
                     break;
                 case "quote":
                     if (elem.tagName == "BLOCKQUOTE") {
-                        if (!Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
-                            const temp = document.createElement("div");
-                            temp.append(...elem.childNodes);
-                            temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
-                            elem.remove();
-                            elem = temp;
-                            elemRemoved = true;
-                        } else {
-                            const children = document.createDocumentFragment();
-                            children.append(...elem.childNodes);
-                            elem.after(children);
-                            elem.remove();
-                            elemRemoved = true;
-                            elem = children;
-                        }
+                        const temp = document.createElement("div");
+                        temp.append(...elem.childNodes);
+                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                        elem.remove();
+                        elem = temp;
+                        elemRemoved = true;
                     }
                     break;
                 case "header":
                     if (elem.tagName == style.level) {
-                        if (!Array.from(elem.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
-                            const temp = document.createElement("div");
-                            temp.append(...elem.childNodes);
-                            temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
-                            elem.remove();
-                            elem = temp;
-                            elemRemoved = true;
-                        } else {
-                            const children = document.createDocumentFragment();
-                            children.append(...elem.childNodes);
-                            elem.after(children);
-                            elem.remove();
-                            elemRemoved = true;
-                            elem = children;
-                        }
+                        const temp = document.createElement("div");
+                        temp.append(...elem.childNodes);
+                        temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
+                        elem.remove();
+                        elem = temp;
+                        elemRemoved = true;
                     }
                     break;
                 case "list":
@@ -2735,9 +2714,9 @@ class Editor {
     }
 
     /*
-    Remove a block style from a node. If numToRemove is -1 it removes as many as possible.
+    Remove a block style from a node.
     */
-    removeBlockStyleOnNode(node, style, numToRemove = -1) {
+    removeBlockStyleOnNode(node, style, removeAllParents = true) {
         // Search the children of the node for any node that match the style.
         const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => this.elementHasStyle(e, style) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
         var child;
@@ -2746,8 +2725,8 @@ class Editor {
             if (child != this.editor) nodesToRemove.push(child);
         }
 
-        var numRemoved = 0;
         var finalStyled = null;
+        const extraneousDivsToRemove = [];
 
         // Remove the styles on child nodes.
         for (const child of nodesToRemove) {
@@ -2755,27 +2734,25 @@ class Editor {
             const marker = document.createTextNode("");
             child.after(marker);
             const styledNode = this.removeStyleFromElement(child, style);
-            marker.after(styledNode);
-            marker.remove();
 
             // If the original node was removed by this operation, set finalStyled to this node.
             if (!this.inEditor(node) && !finalStyled) {
-                if (styledNode instanceof DocumentFragment) {
-                    finalStyled = styledNode.childNodes;
-                } else {
-                    finalStyled = styledNode;
-                }
+                finalStyled = styledNode;
             }
 
-            numRemoved++;
-            if (numRemoved == numToRemove && numToRemove != -1) {
-                return finalStyled ? finalStyled : node;
+            if (Array.from(styledNode.childNodes).every((e) => this.blockTags.includes(e.tagName))) {
+                extraneousDivsToRemove.push(styledNode);
             }
+
+            // Put the styled node back.
+            marker.after(styledNode);
+            marker.remove();
         }
 
         // Search the parents of the node for any node that matches the style.
         var parentNodesToRemove = [];
-        var currentNode = node.parentNode;
+        node = finalStyled ? finalStyled : node;
+        var currentNode = node;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (this.elementHasStyle(currentNode, style)) {
                 parentNodesToRemove.push(currentNode);
@@ -2783,9 +2760,9 @@ class Editor {
             currentNode = currentNode.parentNode;
         }
 
-        if (numToRemove != -1) parentNodesToRemove = parentNodesToRemove.slice(0, numToRemove - numRemoved);
-        const extraneousDivsToRemove = [];
         for (const parentNode of parentNodesToRemove) {
+            if (removeAllParents == false && finalStyled) break;
+
             // Split the parent node at the node.
             const splitIncludingNode = this.splitNodeAtChild(parentNode, node, true);
             const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node);
@@ -2814,29 +2791,31 @@ class Editor {
                 // Remove the split after node.
                 splitAfterNode.remove();
             }
+            if (splitAfterNode.firstChild && this.isEmpty(splitAfterNode.firstChild)) {
+                // Remove the split after node.
+                splitAfterNode.firstChild.remove();
+            }
 
             // Set node to be the newly styled node.
             node = styledNode;
         }
 
         // Remove the extraneous DIV nodes.
-        // TODO: what if finalstyled was extraneous
         for (const extraneousDiv of extraneousDivsToRemove) {
             if (finalStyled == extraneousDiv) {
-                finalStyled = Array.from(extraneousDiv.childNodes);
+                finalStyled = extraneousDiv.childNodes.length != 1 ? Array.from(extraneousDiv.childNodes) : extraneousDiv.firstChild;
             }
             extraneousDiv.after(...extraneousDiv.childNodes);
             extraneousDiv.remove();
         }
 
-        console.log(finalStyled);
         return finalStyled;
     }
 
     /*
     Remove a block style from a range.
     */
-    removeBlockStyle(style, range, numToRemove = -1) {
+    removeBlockStyle(style, range, removeAllParents = true) {
         this.shouldTakeSnapshotOnNextChange = true;
 
         if (this.editor.innerHTML == "") {
@@ -2905,7 +2884,7 @@ class Editor {
             const shouldJoin = lastNodeNextSibling && lastNode && lastNodeNextSibling == node && (!this.blockTags.includes(node.tagName));
             lastNodeNextSibling = node.nextSibling;
 
-            const styledNode = this.removeBlockStyleOnNode(node, style, numToRemove);
+            const styledNode = this.removeBlockStyleOnNode(node, style, removeAllParents);
 
             // Join.
             if (shouldJoin && !(styledNode instanceof Array)) {
@@ -2999,7 +2978,7 @@ class Editor {
                         if (currentListStyle) {
                             this.removeBlockStyle(currentListStyle, range);
                         } else {
-                            this.removeBlockStyle({type: "list", listType: "unordered"}, range, 1);
+                            this.removeBlockStyle({type: "list", listType: "unordered"}, range, false);
                             this.applyBlockStyle(style, this.getRange());
                         }
                     } else if (style.listType == "unordered") {
@@ -3008,7 +2987,7 @@ class Editor {
                             this.removeBlockStyle(currentListStyle, range);
                         } else {
                             // If required, swap the styles.
-                            this.removeBlockStyle({type: "list", listType: "ordered"}, range, 1);
+                            this.removeBlockStyle({type: "list", listType: "ordered"}, range, false);
                             this.applyBlockStyle(style, this.getRange());
                         }
                     }
