@@ -92,6 +92,7 @@ a rich text editor for javascript
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options
+- [ ] LI nodes that contain another list should not display marker
 - [x] lists
 - [ ] images
 - [ ] format indent up/down
@@ -113,5 +114,5 @@ a rich text editor for javascript
   - if it hits the end of the editor:
     - if we are trying to adjust ranges for block styling, it should just use the editor as an endpoint
     - otherwise for getTextNodesInRange it should make a new text node
-- [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole (not sure how this issue arose, but its worth looking into)
+- [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole (possibilities of fixing this: have tne end node always escape?)
 - [ ] perhaps remove extraneous divs during paste

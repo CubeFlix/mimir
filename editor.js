@@ -1749,21 +1749,21 @@ class Editor {
                     break;
                 case "list":
                     if (elem.tagName == (style.listType == "ordered" ? "OL" : "UL")) {
-                        const fragment = document.createDocumentFragment();
+                        const outerDiv = document.createElement("div");
                         for (const li of Array.from(elem.childNodes)) {
                             if (!Array.from(li.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !elem.getAttribute("style")) {
                                 const temp = document.createElement("div");
                                 temp.append(...li.childNodes);
                                 temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
                                 li.remove();
-                                fragment.append(temp);
+                                outerDiv.append(temp);
                             } else {
-                                fragment.append(...li.childNodes);
+                                outerDiv.append(...li.childNodes);
                                 li.remove();
                             }
                         }
                         elem.remove();
-                        elem = fragment;
+                        elem = outerDiv;
                         elemRemoved = true;
                     }
                     break;
@@ -2747,7 +2747,7 @@ class Editor {
         }
 
         var numRemoved = 0;
-        const styledNodes = [];
+        var finalStyled = null;
 
         // Remove the styles on child nodes.
         for (const child of nodesToRemove) {
@@ -2757,11 +2757,19 @@ class Editor {
             const styledNode = this.removeStyleFromElement(child, style);
             marker.after(styledNode);
             marker.remove();
-            styledNodes.push(styledNode);
+
+            // If the original node was removed by this operation, set finalStyled to this node.
+            if (!this.inEditor(node) && !finalStyled) {
+                if (styledNode instanceof DocumentFragment) {
+                    finalStyled = styledNode.childNodes;
+                } else {
+                    finalStyled = styledNode;
+                }
+            }
 
             numRemoved++;
             if (numRemoved == numToRemove && numToRemove != -1) {
-                return styledNodes;
+                return finalStyled ? finalStyled : node;
             }
         }
 
@@ -2776,7 +2784,8 @@ class Editor {
         }
 
         if (numToRemove != -1) parentNodesToRemove = parentNodesToRemove.slice(0, numToRemove - numRemoved);
-        for (const parentNode of parentNodesToRemove.reverse()) {
+        const extraneousDivsToRemove = [];
+        for (const parentNode of parentNodesToRemove) {
             // Split the parent node at the node.
             const splitIncludingNode = this.splitNodeAtChild(parentNode, node, true);
             const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node);
@@ -2784,10 +2793,19 @@ class Editor {
             // Remove the style.
             const marker = document.createTextNode("");
             parentNode.after(marker);
-            const styledNode = this.removeStyleFromElement(splitIncludingNode, style);
+            var styledNode = this.removeStyleFromElement(splitIncludingNode, style);
+
+            // If the original node was removed by this operation, set finalStyled to this node.
+            if (!this.inEditor(node) && !finalStyled) {
+                finalStyled = styledNode;
+            }
+
+            if (Array.from(styledNode.childNodes).every((e) => this.blockTags.includes(e.tagName))) {
+                extraneousDivsToRemove.push(styledNode);
+            }
             marker.after(styledNode, splitAfterNode);
             marker.remove();
-            styledNodes.push(styledNode);
+            
             if (parentNode != this.editor && this.isEmpty(parentNode)) {
                 // Remove the original node.
                 parentNode.remove();
@@ -2796,9 +2814,23 @@ class Editor {
                 // Remove the split after node.
                 splitAfterNode.remove();
             }
+
+            // Set node to be the newly styled node.
+            node = styledNode;
         }
 
-        return styledNodes;
+        // Remove the extraneous DIV nodes.
+        // TODO: what if finalstyled was extraneous
+        for (const extraneousDiv of extraneousDivsToRemove) {
+            if (finalStyled == extraneousDiv) {
+                finalStyled = Array.from(extraneousDiv.childNodes);
+            }
+            extraneousDiv.after(...extraneousDiv.childNodes);
+            extraneousDiv.remove();
+        }
+
+        console.log(finalStyled);
+        return finalStyled;
     }
 
     /*
@@ -2866,36 +2898,21 @@ class Editor {
         const nodes = this.getBlockNodesInRange(blockExtended);
 
         // Style the nodes.
-        var lastStyled = null;
+        var lastNodeNextSibling = null;
+        var lastNode = null;
         for (const node of nodes) {
-            const styledNodes = this.removeBlockStyleOnNode(node, style, numToRemove);
+            // First, check if we should join the nodes. Don't join if the current node is a block node. This is purely for inline nodes that have been separated.
+            const shouldJoin = lastNodeNextSibling && lastNode && lastNodeNextSibling == node && (!this.blockTags.includes(node.tagName));
+            lastNodeNextSibling = node.nextSibling;
 
-            // Check if we can join any of the styled nodes with the last styled.
-            if (lastStyled) {
-                var didJoin = false;
-                for (const lastStyledNode of lastStyled) {
-                    for (const styledNode of styledNodes) {
-                        // If the node is eligible for joining, join it.
-                        console.log(lastStyledNode, styledNode)
-                        if (lastStyledNode.nextSibling == styledNode) {
-                            lastStyledNode.append(...styledNode.childNodes);
-                            styledNode.remove();
+            const styledNode = this.removeBlockStyleOnNode(node, style, numToRemove);
 
-                            // Set lastStyled. We want to include the last styled node, along with any of the other styled nodes.
-                            lastStyled = [lastStyledNode, ...styledNodes.filter(n => n != styledNode)]; 
-                            didJoin = true;
-                            break;
-                        }
-                    }
-                    if (didJoin) {
-                        break;
-                    }
-                }
-                if (!didJoin) {
-                    lastStyled = styledNodes;
-                }
+            // Join.
+            if (shouldJoin && !(styledNode instanceof Array)) {
+                lastNode.append(...styledNode.childNodes);
+                styledNode.remove();
             } else {
-                lastStyled = styledNodes;
+                lastNode = (styledNode instanceof Array) ? null : styledNode;
             }
         }
 
@@ -2980,18 +2997,18 @@ class Editor {
                     if (style.listType == "ordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "ordered");
                         if (currentListStyle) {
-                            this.removeBlockStyle(currentListStyle, range, 1);
+                            this.removeBlockStyle(currentListStyle, range);
                         } else {
-                            this.removeBlockStyle({type: "list", listType: "unordered"}, range);
+                            this.removeBlockStyle({type: "list", listType: "unordered"}, range, 1);
                             this.applyBlockStyle(style, this.getRange());
                         }
                     } else if (style.listType == "unordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "unordered");
                         if (currentListStyle) {
-                            this.removeBlockStyle(currentListStyle, range, 1);
+                            this.removeBlockStyle(currentListStyle, range);
                         } else {
                             // If required, swap the styles.
-                            this.removeBlockStyle({type: "list", listType: "ordered"}, range);
+                            this.removeBlockStyle({type: "list", listType: "ordered"}, range, 1);
                             this.applyBlockStyle(style, this.getRange());
                         }
                     }
