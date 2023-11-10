@@ -2903,6 +2903,126 @@ class Editor {
     }
 
     /*
+    Replace lists on a node.
+    */
+    replaceListsOnNode(node, oldType, newType) {
+        // Escape to the closest list parent.
+        const closestListParent = this.findClosestParent(node, n => n.tagName == "OL" || n.tagName == "UL");
+        if (closestListParent) {
+            node = closestListParent;
+        }
+
+        // Search the children of the node for any node that match the style.
+        const iterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, (e) => e.tagName == oldType ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT);
+        var child;
+        const nodesToRemove = [];
+        while (child = iterator.nextNode()) {
+            if (child != this.editor) nodesToRemove.push(child);
+        }
+
+        var hasReplacedOriginalNode = false;
+        var finalStyled = null;
+
+        // Replace the styles on child nodes.
+        for (const child of nodesToRemove) {
+            // Remove the style.
+            const marker = document.createTextNode("");
+            child.after(marker);
+            const styledNode = document.createElement(newType);
+            styledNode.append(...child.childNodes);
+            child.remove();
+
+            // If the original node was removed by this operation, set finalStyled to this node.
+            if (!this.inEditor(node) && !finalStyled) {
+                finalStyled = styledNode;
+                hasReplacedOriginalNode = true;
+            }
+
+            // Put the styled node back.
+            marker.after(styledNode);
+            marker.remove();
+        }
+    }
+
+    /*
+    Replace list styling on a range.
+    */
+    replaceListStyle(oldStyle, style, range) {
+        this.shouldTakeSnapshotOnNextChange = true;
+
+        if (this.editor.innerHTML == "") {
+            return;
+        }
+
+        var startContainer = range.startContainer;
+        var startOffset = range.startOffset;
+        var endContainer = range.endContainer;
+        var endOffset = range.endOffset;
+
+        // If the end offset is at the start of a node, move it up.
+        if (endOffset == 0 && endContainer != this.editor) {
+            while (endOffset == 0 && endContainer != this.editor) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                endContainer = endContainer.parentNode;
+            }
+        }
+
+        // Adjust the start point so that it is always relative to inline nodes.
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (startContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (startOffset == startContainer.childNodes.length) {
+                startContainer = startContainer.childNodes[startOffset - 1];
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
+            } else {
+                startContainer = startContainer.childNodes[startOffset];
+                startOffset = 0;
+            }
+        }
+
+        // Adjust the end point so that it is always relative to inline nodes.
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (endContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (endOffset == 0) {
+                endContainer = endContainer.childNodes[endOffset];
+                startOffset = 0;
+            } else {
+                endContainer = endContainer.childNodes[endOffset - 1];
+                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            }
+        }
+
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range, true);
+        
+        // Get the block nodes within the range.
+        const nodes = this.getBlockNodesInRange(blockExtended);
+
+        // Style the nodes.
+        oldStyle = oldStyle == "ordered" ? "OL" : "UL";
+        style = style == "ordered" ? "OL" : "UL";
+        for (const node of nodes) {
+            this.replaceListsOnNode(node, oldStyle, style);
+        }
+
+        const newRange = new Range();
+        newRange.setStart(startContainer, startOffset);
+        newRange.setEnd(endContainer, endOffset);
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
+    }
+
+    /*
     Perform a style command.
     */
     performStyleCommand(style) {
@@ -2975,20 +3095,23 @@ class Editor {
                     this.saveHistory();
                     if (style.listType == "ordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "ordered");
+                        const oppositeListStyle = currentStyling.find(s => s.type == "list" && s.listType == "unordered");
                         if (currentListStyle) {
                             this.removeBlockStyle(currentListStyle, range);
+                        } else if (oppositeListStyle) {
+                            this.replaceListStyle("unordered", "ordered", range)
                         } else {
-                            this.removeBlockStyle({type: "list", listType: "unordered"}, range, false);
-                            this.applyBlockStyle(style, this.getRange());
+                            this.applyBlockStyle(style, range);
                         }
                     } else if (style.listType == "unordered") {
                         const currentListStyle = currentStyling.find(s => s.type == "list" && s.listType == "unordered");
+                        const oppositeListStyle = currentStyling.find(s => s.type == "list" && s.listType == "ordered");
                         if (currentListStyle) {
                             this.removeBlockStyle(currentListStyle, range);
+                        } else if (oppositeListStyle) {
+                            this.replaceListStyle("ordered", "unordered", range)
                         } else {
-                            // If required, swap the styles.
-                            this.removeBlockStyle({type: "list", listType: "ordered"}, range, false);
-                            this.applyBlockStyle(style, this.getRange());
+                            this.applyBlockStyle(style, range);
                         }
                     }
                     break;
