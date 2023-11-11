@@ -2684,10 +2684,11 @@ class Editor {
 
         // Style the nodes.
         var lastStyled = null;
+        var lastNode = null;
         for (const node of fixedNodes) {
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents);
             if (lastStyled && lastStyled.nextSibling == styledNode) {
-                if (style.type == "list" && !this.blockTags.includes(node.tagName)) {
+                if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
                     // For non-block lists, we want to join the interior nodes inside the LI.
                     lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
                     styledNode.remove();
@@ -2698,6 +2699,7 @@ class Editor {
             } else {
                 lastStyled = styledNode;
             }
+            lastNode = node;
         }
 
         const newRange = new Range();
@@ -2913,8 +2915,6 @@ class Editor {
 
         // Replace the styles on child nodes.
         for (const child of nodesToRemove) {
-            // if (hasReplacedOriginalNode) break;
-
             // Remove the style.
             const marker = document.createTextNode("");
             child.after(marker);
