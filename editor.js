@@ -511,7 +511,7 @@ class Editor {
 
                 // Add this node to the list of cached inline block styles.
                 const inlineBlockStyling = this.getStylingOfElement(child).filter(s => this.inlineBlockStylingCommands.includes(s.type));
-                if (inlineBlockStyling.length != 0 && this.blockTags.includes(newNode)) {
+                if (inlineBlockStyling.length != 0 && this.blockTags.includes(newNode.tagName)) {
                     cachedInlineBlockStyles.push({node: newNode, inlineBlockStyling: inlineBlockStyling});
                 }
 
@@ -568,6 +568,7 @@ class Editor {
         // Apply each cached inline block style.
         var lastStyled = null;
         var lastStyle = null;
+        console.log(cachedInlineBlockStyles)
         for (const inlineBlockPair of cachedInlineBlockStyles) {
             if (!fragment.contains(inlineBlockPair.node)) {
                 continue;
@@ -592,6 +593,7 @@ class Editor {
 
             for (var node of fixedNodes) {
                 for (const style of inlineBlockPair.inlineBlockStyling) {
+                    console.log(style)
                     const newElem = this.styleToElement(style);
                     const marker = document.createTextNode("");
                     node.after(marker);

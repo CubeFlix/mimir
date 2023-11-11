@@ -89,6 +89,7 @@ a rich text editor for javascript
 - [x] does removing multiple at a time work?
 - [x] bug with pasting nodes (seperating it for some reason)
 - [x] cursor not working within a href
+- [x] pasting text align isn't working!
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options
