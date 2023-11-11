@@ -2824,7 +2824,7 @@ class Editor {
         // If the end offset is at the start of a node, move it up.
         if (endOffset == 0 && endContainer != this.editor) {
             while (endOffset == 0 && endContainer != this.editor) {
-                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
                 endContainer = endContainer.parentNode;
             }
         }
