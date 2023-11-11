@@ -2310,11 +2310,7 @@ class Editor {
             if ((startContainer.nodeType == Node.TEXT_NODE ? startContainer.textContent.length : startContainer.childNodes.length) != 0) {
                 return true;
             } else {
-                if (startContainer.tagName == "BR") {
-                    return true;
-                } else {
-                    return false;
-                }
+                return false;
             }
         } else {
             return false;
@@ -2329,11 +2325,7 @@ class Editor {
             if ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0) {
                 return true;
             } else {
-                if (endContainer.tagName == "BR") {
-                    return true;
-                } else {
-                    return false;
-                }
+                return false;
             }
         } else {
             return false;
