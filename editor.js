@@ -155,6 +155,7 @@ class Editor {
                         newFontOption.setAttribute("value", font);
                         this.menubarOptions.font.append(newFontOption);
                     }
+                    this.menubarOptions.font.value = this.defaultFont;
                     this.menubarOptions.font.addEventListener("change", this.font.bind(this));
                     this.menubar.append(this.menubarOptions.font);
                     break;
@@ -164,6 +165,7 @@ class Editor {
                     this.menubarOptions.size.setAttribute("type", "number");
                     this.menubarOptions.size.setAttribute("min", "1");
                     this.menubarOptions.size.setAttribute("max", "200");
+                    this.menubarOptions.size.value = this.defaultSize;
                     this.menubarOptions.size.addEventListener("input", this.size.bind(this));
                     this.menubar.append(this.menubarOptions.size);
                     break;
