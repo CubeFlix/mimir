@@ -17,10 +17,11 @@ class Editor {
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
-    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font"];
+    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size"];
     blockStylingCommands = ["quote", "header", "align", "list"];
     inlineBlockStylingCommands = ["header", "align"];
-    requireSingleNodeToActivateStylingCommands = ["list"]; // These styles need only one node in the range to activate.
+    requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
+    multipleValueStylingCommands = ["font", "size"];
 
     /* 
     Create the editor. 
@@ -29,11 +30,12 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "quote", "header", "align", "list"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "quote", "header", "align", "list"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
+        this.defaultSize = 16 || settings.defaultSize;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -97,6 +99,13 @@ class Editor {
     }
 
     /*
+    Apply the default size.
+    */
+    applyDefaultSize() {
+        this.editor.style.fontSize = String(this.defaultSize) + "px";
+    }
+
+    /*
     Create the menubar.
     */
     createMenubar() {
@@ -148,6 +157,15 @@ class Editor {
                     }
                     this.menubarOptions.font.addEventListener("change", this.font.bind(this));
                     this.menubar.append(this.menubarOptions.font);
+                    break;
+                case "size":
+                    this.menubarOptions.size = document.createElement("input");
+                    this.menubarOptions.size.setAttribute("id", "editor-menubar-option-size");
+                    this.menubarOptions.size.setAttribute("type", "number");
+                    this.menubarOptions.size.setAttribute("min", "1");
+                    this.menubarOptions.size.setAttribute("max", "200");
+                    this.menubarOptions.size.addEventListener("input", this.size.bind(this));
+                    this.menubar.append(this.menubarOptions.size);
                     break;
                 case "quote":
                     this.menubarOptions.quote = document.createElement("button");
@@ -576,7 +594,6 @@ class Editor {
         // Apply each cached inline block style.
         var lastStyled = null;
         var lastStyle = null;
-        console.log(cachedInlineBlockStyles)
         for (const inlineBlockPair of cachedInlineBlockStyles) {
             if (!fragment.contains(inlineBlockPair.node)) {
                 continue;
@@ -601,7 +618,6 @@ class Editor {
 
             for (var node of fixedNodes) {
                 for (const style of inlineBlockPair.inlineBlockStyling) {
-                    console.log(style)
                     const newElem = this.styleToElement(style);
                     const marker = document.createTextNode("");
                     node.after(marker);
@@ -1049,6 +1065,11 @@ class Editor {
                 continue;
             }
 
+            if (option == "size") {
+                this.menubarOptions.size.value = styling.find(s => s.type == "size") ? styling.find(s => s.type == "size").size : this.defaultSize;
+                continue;
+            }
+
             if (option == "list") {
                 if (styling.find(s => s.type == "list" && s.listType == "ordered")) {
                     if (!this.menubarOptions.listOrdered.classList.contains("editor-pressed")) this.menubarOptions.listOrdered.classList.add("editor-pressed");
@@ -1248,6 +1269,10 @@ class Editor {
                 var elem = document.createElement("span");
                 elem.style.fontFamily = style.family;
                 return elem;
+            case "size":
+                var elem = document.createElement("span");
+                elem.style.fontSize = String(style.size) + "px";
+                return elem;
             case "quote":
                 return document.createElement("blockquote");
             case "header":
@@ -1278,6 +1303,7 @@ class Editor {
                 break;
             case "EM":
             case "I":
+            case "VAR":
                 styling.push({type: "italic"});
                 break;
             case "U":
@@ -1288,13 +1314,34 @@ class Editor {
                 break;
             case "FONT":
                 if (node.getAttribute("face")) {
+                    // Font family.
                     var family = node.getAttribute("face");
                     family = family.split("&quot;");
                     family = family.map(s => s.split("\"").join(""));
                     family = family.map(s => s.split("'").join(""));
                     styling.push({type: "font", family: family});
                 }
-                // TODO: color, text size, etc
+                if (node.getAttribute("size") && (+node.getAttribute("size") != Number.NaN)) {
+                    // Font size.
+                    var size = parseInt(node.getAttribute("size"));
+                    var mode = null;
+                    if (node.getAttribute("size").trim()[0] == "+") {
+                        mode = "plus";
+                    } else if (node.getAttribute("size").trim()[0] == "-") {
+                        mode = "minus";
+                    }
+                    if (mode == "plus" || mode == "minus") {
+                        size = 3 + size;
+                    }
+                    if (size < 1) {
+                        size = 1;
+                    } else if (size > 7) {
+                        size = 7;
+                    }
+                    var px = [10, 13, 16, 18, 24, 32, 48][size - 1];
+                    styling.push({type: "size", size: px});
+                }
+                // TODO: color, etc
                 break;
             case "BLOCKQUOTE":
                 styling.push({type: "quote"});
@@ -1340,6 +1387,14 @@ class Editor {
             family = family.split("\"").join("");
             family = family.split("'").join("");
             if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: family});
+        }
+        if (node.style.fontSize) {
+            var size = String(node.style.fontSize).trim().toLowerCase();
+            if (size.endsWith("px") && +size.slice(0, -2) != Number.NaN) {
+                var px = parseFloat(size.slice(0, -2));
+                if (!styling.some(s => s.type == "size")) styling.push({type: "size", size: px});
+            }
+            // TODO: handle other types of font size
         }
         if (node.style.textAlign) {
             var direction = node.style.textAlign.toLowerCase();
@@ -1398,6 +1453,11 @@ class Editor {
             // Add the default font styling.
             if (!nodeStyling.some(s => s.type == "font")) {
                 nodeStyling.push({type: "font", family: this.defaultFont});
+            }
+
+            // Add the default size styling.
+            if (!nodeStyling.some(s => s.type == "size")) {
+                nodeStyling.push({type: "size", size: this.defaultSize});
             }
             
             if (firstNode) {
@@ -1797,6 +1857,10 @@ class Editor {
                         elem.style.fontFamily = "";
                     }
                     break;
+                case "size":
+                    if (elem.style.fontSize) {
+                        elem.style.fontSize = "";
+                    }
             }
 
             // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
@@ -1836,8 +1900,12 @@ class Editor {
                 break;
             case "font":
                 if (elem.tagName == "FONT") {
-                    elem = elem.firstChild;
-                    elemRemoved = true;
+                    if (elem.hasAttribute("face")) elem.removeAttribute("face");
+                }
+                break;
+            case "size":
+                if (elem.tagName == "FONT") {
+                    if (elem.hasAttribute("size")) elem.removeAttribute("size");
                 }
                 break;
         }
@@ -2132,6 +2200,13 @@ class Editor {
                             currentReconstructedNode.style.fontFamily = style.family;
                         }
                         break;
+                    case "size":
+                        if (currentReconstructedNode.tagName == "FONT") {
+                            if (currentReconstructedNode.hasAttribute("size")) currentReconstructedNode.removeAttribute("size");
+                            currentReconstructedNode.style.fontSize = String(style.size) + "px";
+                        } else if (currentReconstructedNode.tagName == "SPAN") {
+                            currentReconstructedNode.style.fontSize = String(style.size) + "px";
+                        }
                 }
                 return currentReconstructedNode;
             }
@@ -2718,7 +2793,6 @@ class Editor {
         var lastStyled = null;
         var lastNode = null;
         for (const node of fixedNodes) {
-            console.log(range.commonAncestorContainer, node, node.contains(range.commonAncestorContainer))
             if (node.contains(range.commonAncestorContainer) && node != range.commonAncestorContainer && this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName)) {
                 var inside = true;
             } else {
@@ -3078,7 +3152,7 @@ class Editor {
         const currentStyling = this.detectStyling(range);
 
         // Set the style.
-        if (style.type == "font") {
+        if (this.multipleValueStylingCommands.includes(style.type)) {
             this.changeStyling(style, range);
         } else if (this.inlineStylingCommands.includes(style.type)) {
             if (currentStyling.some(s => s.type == style.type)) {
@@ -3234,6 +3308,13 @@ class Editor {
     */
     listUnordered() {
         this.performStyleCommand({type: "list", listType: "unordered"});
+    }
+
+    /*
+    Font size.
+    */
+    size() {
+        this.performStyleCommand({type: "size", size: this.menubarOptions.size.value});
     }
 
     /*
