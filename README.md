@@ -93,7 +93,7 @@ a rich text editor for javascript
 - [x] urgent bug: removing second bq on `<blockquote>asdasdasd</blockquote><blockquote><br></blockquote>` doesn't work
 - [x] improper style value when removing style on cursor
 - [ ] more styling options
-- [ ] retain selection when leaving editor
+- [x] retain selection when leaving editor
 - [ ] block styling options
 - [ ] LI nodes that contain another list should not display marker
 - [x] lists

@@ -1107,11 +1107,20 @@ class Editor {
         this.editor.addEventListener("focus", function (e) {
             onChangeSelect();
             document.addEventListener("selectionchange", onChangeSelect);
-        });
+        }.bind(this));
         this.editor.addEventListener("focusout", function (e) {
+            // Set the range cache.
+            const selection = document.getSelection();
+            if (selection.rangeCount != 0) {
+                const range = selection.getRangeAt(0);
+                if (selection.containsNode(this.editor, true) || this.editor.contains(range.commonAncestorContainer)) {
+                    this.rangeCache = range;
+                }
+            }
+
             onChangeSelect();
             document.removeEventListener("selectionchange", onChangeSelect);
-        });
+        }.bind(this));
     }
     
     /*
@@ -1149,7 +1158,7 @@ class Editor {
         
         // Something is selected.
         const range = selection.getRangeAt(0);
-        if (selection.containsNode(this.editor) || this.editor.contains(range.commonAncestorContainer)) {
+        if (selection.containsNode(this.editor, true) || this.editor.contains(range.commonAncestorContainer)) {
             return range;
         } else if (this.rangeCache) {
             return this.rangeCache;
