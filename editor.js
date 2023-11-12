@@ -2365,10 +2365,11 @@ class Editor {
                 startContainer = startContainer.parentNode;
             }
         } else {
-            while (startOffset == 0 && startContainer != this.editor && ["DIV", "P"].includes(startContainer.parentNode.tagName)) {
-                startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
-                startContainer = startContainer.parentNode;
-            }
+            // Only ascend out of extraneous ancestors.
+            // while (startOffset == 0 && startContainer != this.editor && ["DIV", "P"].includes(startContainer.parentNode.tagName)) {
+            //     startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
+            //     startContainer = startContainer.parentNode;
+            // }
         }
 
         // If the end offset is at the start of an element node, move it forward one.
@@ -2396,10 +2397,10 @@ class Editor {
             }
         } else {
             // Only ascend out of extraneous ancestors.
-            while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor && ["DIV", "P"].includes(endContainer.parentNode.tagName)) {
-                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
-                endContainer = endContainer.parentNode;
-            }
+            // while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor && ["DIV", "P"].includes(endContainer.parentNode.tagName)) {
+            //     endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
+            //     endContainer = endContainer.parentNode;
+            // }
         }
 
         const newRange = new Range();
@@ -2531,7 +2532,7 @@ class Editor {
     /*
     Apply a block style to a node. The disallowedParents value should be a predicate.
     */
-    applyBlockStyleToNode(node, style, disallowedParents = null) {
+    applyBlockStyleToNode(node, style, disallowedParents = null, inside = false) {
         // Go up the DOM tree, and check if the style has already been applied.
         var currentNode = node;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
@@ -2577,14 +2578,30 @@ class Editor {
             node.append(newElem);
             return newElem;
         } else {
-            const marker = document.createTextNode("");
-            node.after(marker);
-            if (newElem.childNodes.length == 0) {
-                newElem.appendChild(node);
+            if (!inside) {
+                const marker = document.createTextNode("");
+                node.after(marker);
+                if (newElem.childNodes.length == 0) {
+                    newElem.appendChild(node);
+                } else {
+                    newElem.childNodes[0].appendChild(node);
+                }
+                marker.replaceWith(newElem);
             } else {
-                newElem.childNodes[0].appendChild(node);
+                if (node.tagName == "OL" || node.tagName == "UL") {
+                    if (node.childNodes.length != 0) {
+                        newElem.appendChild(...node.childNodes[0].childNodes);
+                        node.childNodes[0].append(newElem);
+                    }
+                } else {
+                    if (newElem.childNodes.length == 0) {
+                        newElem.append(...node.childNodes);
+                    } else {
+                        newElem.childNodes[0].append(...node.childNodes);
+                    }
+                    node.append(newElem);
+                }
             }
-            marker.replaceWith(newElem);
             return newElem;
         }
     }
@@ -2686,7 +2703,13 @@ class Editor {
         var lastStyled = null;
         var lastNode = null;
         for (const node of fixedNodes) {
-            const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents);
+            console.log(range.commonAncestorContainer, node, node.contains(range.commonAncestorContainer))
+            if (node.contains(range.commonAncestorContainer) && node != range.commonAncestorContainer && this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName)) {
+                var inside = true;
+            } else {
+                var inside = false;
+            }
+           const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
             if (lastStyled && lastStyled.nextSibling == styledNode) {
                 if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
                     // For non-block lists, we want to join the interior nodes inside the LI.
