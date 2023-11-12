@@ -1129,9 +1129,7 @@ class Editor {
     bindSaveHistoryInterval() {
         setInterval(function() {
             // Take periodic history snapshots.
-            if (this.hash(this.editor.innerHTML) != this.history[this.history.length - 1].hash) {
-                this.saveHistory();
-            }
+            this.saveHistory();
         }.bind(this), this.snapshotInterval);
     }
 
@@ -3343,7 +3341,7 @@ class Editor {
     */
     saveHistory() {
         if (this.hash(this.editor.innerHTML) == this.history[this.history.length - 1]?.hash) {
-            return;
+            this.history.pop();
         }
 
         if (this.history.length >= this.historyLimit) {
