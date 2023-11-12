@@ -91,6 +91,7 @@ a rich text editor for javascript
 - [x] cursor not working within a href
 - [x] pasting text align isn't working!
 - [x] urgent bug: removing second bq on `<blockquote>asdasdasd</blockquote><blockquote><br></blockquote>` doesn't work
+- [ ] improper style value when removing style on cursor
 - [ ] more styling options
 - [ ] retain selection when leaving editor
 - [ ] block styling options

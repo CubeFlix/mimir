@@ -346,9 +346,17 @@ class Editor {
                     // Remove the cursor.
                     e.preventDefault();
                     const cursor = this.currentCursor;
-                    cursor.before(document.createTextNode(e.key));
+                    const newTextNode = document.createTextNode(e.key);
+                    cursor.before(newTextNode);
                     cursor.remove();
                     this.currentCursor = null;
+
+                    const newRange = new Range();
+                    newRange.selectNodeContents(newTextNode);
+                    newRange.collapse(false);
+                    document.getSelection().removeAllRanges();
+                    document.getSelection().addRange(newRange);
+
                     this.updateMenubarOptions();
                     return;
                 }
