@@ -17,11 +17,11 @@ class Editor {
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
-    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size"];
+    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor"];
     blockStylingCommands = ["quote", "header", "align", "list"];
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
-    multipleValueStylingCommands = ["font", "size"];
+    multipleValueStylingCommands = ["font", "size", "foreColor", "backColor"];
 
     /* 
     Create the editor. 
@@ -2433,6 +2433,14 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer)) {
+            // If the end offset is at the start of a node, move it up.
+            while (endOffset == 0 && endContainer != this.editor) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                endContainer = endContainer.parentNode;
+            }
+        }
+
         // If the start offset is at the end of an element node, move it back one.
         if (startContainer.nodeType == Node.ELEMENT_NODE && startOffset == startContainer.childNodes.length && startOffset != 0) {
             startOffset -= 1;
@@ -2714,14 +2722,6 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        // If the end offset is at the start of a node, move it up.
-        if (endOffset == 0 && endContainer != this.editor) {
-            while (endOffset == 0 && endContainer != this.editor) {
-                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
-                endContainer = endContainer.parentNode;
-            }
-        }
-
         // Adjust the start point so that it is always relative to inline nodes.
         while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
             // If there are no children of this node, exit.
@@ -2936,14 +2936,6 @@ class Editor {
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
-
-        // If the end offset is at the start of a node, move it up.
-        if (endOffset == 0 && endContainer != this.editor) {
-            while (endOffset == 0 && endContainer != this.editor) {
-                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
-                endContainer = endContainer.parentNode;
-            }
-        }
 
         // Adjust the start point so that it is always relative to inline nodes.
         while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
@@ -3526,6 +3518,9 @@ class Editor {
 
         // Apply default font.
         this.applyDefaultFont();
+
+        // Apply default size.
+        this.applyDefaultSize();
 
         // Bind event listeners for keyboard events.
         this.bindKeyboardEvents();

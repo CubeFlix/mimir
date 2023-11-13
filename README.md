@@ -92,6 +92,7 @@ a rich text editor for javascript
 - [x] pasting text align isn't working!
 - [x] urgent bug: removing second bq on `<blockquote>asdasdasd</blockquote><blockquote><br></blockquote>` doesn't work
 - [x] improper style value when removing style on cursor
+- [x] issue when block styling BR (`abc<div><br></div>`)
 - [ ] more styling options
 - [x] retain selection when leaving editor
 - [ ] block styling options
