@@ -2748,7 +2748,7 @@ class Editor {
 
             if (endOffset == 0) {
                 endContainer = endContainer.childNodes[endOffset];
-                startOffset = 0;
+                endOffset = 0;
             } else {
                 endContainer = endContainer.childNodes[endOffset - 1];
                 endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
@@ -2828,7 +2828,6 @@ class Editor {
 
         // See if the first node and last node can be joined.
         if (style.type == "list") {
-            console.log(lastStyled)
             if (firstStyled.previousSibling?.tagName == firstStyled.tagName) {
                 // Join.
                 const previousSibling = firstStyled.previousSibling;
@@ -2992,7 +2991,7 @@ class Editor {
 
             if (endOffset == 0) {
                 endContainer = endContainer.childNodes[endOffset];
-                startOffset = 0;
+                endOffset = 0;
             } else {
                 endContainer = endContainer.childNodes[endOffset - 1];
                 endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
