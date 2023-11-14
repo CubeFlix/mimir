@@ -111,6 +111,7 @@ class Editor {
     createMenubar() {
         this.menubar = document.createElement("div");
         this.menubar.setAttribute("id", "editor-menubar");
+        this.menubar.setAttribute("role", "toolbar");
         this.container.append(this.menubar);
 
         // Add the options.
