@@ -2793,6 +2793,7 @@ class Editor {
         }
 
         // Style the nodes.
+        var firstStyled = null;
         var lastStyled = null;
         var lastNode = null;
         for (const node of fixedNodes) {
@@ -2801,7 +2802,8 @@ class Editor {
             } else {
                 var inside = false;
             }
-           const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
+            const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
+            if (!firstStyled) firstStyled = styledNode;
             if (lastStyled && lastStyled.nextSibling == styledNode) {
                 if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
                     // For non-block lists, we want to join the interior nodes inside the LI.
@@ -2814,7 +2816,34 @@ class Editor {
             } else {
                 lastStyled = styledNode;
             }
-            lastNode = node;
+            if (inside && ["DIV", "P"].includes(node.tagName)) {
+                // Extraneous node.
+                node.after(...node.childNodes);
+                node.remove();
+                lastNode = node.childNodes[0];
+            } else {
+                lastNode = node;
+            }
+        }
+
+        // See if the first node and last node can be joined.
+        if (style.type == "list") {
+            console.log(lastStyled)
+            if (firstStyled.previousSibling?.tagName == firstStyled.tagName) {
+                // Join.
+                const previousSibling = firstStyled.previousSibling;
+                previousSibling.append(...firstStyled.childNodes);
+                firstStyled.remove();
+                if (lastStyled == firstStyled) lastStyled = previousSibling;
+                firstStyled = previousSibling;
+            }
+            if (lastStyled.nextSibling?.tagName == lastStyled.tagName) {
+                // Join.
+                const nextSibling = lastStyled.nextSibling;
+                nextSibling.prepend(...lastStyled.childNodes);
+                lastStyled.remove();
+                lastStyled = nextSibling;
+            }
         }
 
         const newRange = new Range();

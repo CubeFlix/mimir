@@ -93,6 +93,8 @@ a rich text editor for javascript
 - [x] urgent bug: removing second bq on `<blockquote>asdasdasd</blockquote><blockquote><br></blockquote>` doesn't work
 - [x] improper style value when removing style on cursor
 - [x] issue when block styling BR (`abc<div><br></div>`)
+- [x] join adjacent list nodes when applying style
+- [ ] getTextNodesInRange doesn't stop before the last one
 - [ ] more styling options
 - [x] retain selection when leaving editor
 - [ ] block styling options
