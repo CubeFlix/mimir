@@ -1214,6 +1214,15 @@ class Editor {
                 startOffset = 0;
             }
         }
+
+        if (range.endOffset == 0 && range.endContainer != this.editor && !(range.endOffset == range.startOffset && range.endContainer == range.startContainer)) {
+            // If the end offset is at the start of a node, move it up.
+            while (range.endOffset == 0 && range.endContainer != this.editor) {
+                const endOffset = Array.from(range.endContainer.parentNode.childNodes).indexOf(range.endContainer);
+                const endContainer = range.endContainer.parentNode;
+                range.setEnd(endContainer, endOffset);
+            }
+        }
     
         var haveTraversedLastNode = false;
         while (this.inEditor(currentNode)) {
