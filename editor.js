@@ -167,7 +167,7 @@ class Editor {
                     this.menubarOptions.size.setAttribute("min", "1");
                     this.menubarOptions.size.setAttribute("max", "200");
                     this.menubarOptions.size.value = this.defaultSize;
-                    this.menubarOptions.size.addEventListener("input", this.size.bind(this));
+                    this.menubarOptions.size.addEventListener("change", this.size.bind(this));
                     this.menubar.append(this.menubarOptions.size);
                     break;
                 case "quote":
@@ -1155,6 +1155,21 @@ class Editor {
             // Take periodic history snapshots.
             this.saveHistory();
         }.bind(this), this.snapshotInterval);
+    }
+
+    /*
+    Bind click events outside of the editor.
+    */
+    bindExternalClickEvents() {
+        document.addEventListener("mousedown", function() {
+            const selection = document.getSelection();
+            if (selection.rangeCount != 0) {
+                const range = selection.getRangeAt(0);
+                if (selection.containsNode(this.editor, true) || this.editor.contains(range.commonAncestorContainer)) {
+                    this.rangeCache = range;
+                }
+            }
+        }.bind(this));
     }
 
     /* 
@@ -3574,6 +3589,9 @@ class Editor {
 
         // Bind event listeners for drag event.
         this.bindDragEvents();
+
+        // Bind event listeners for clicks outside of the editor.
+        this.bindExternalClickEvents();
 
         // Bind save history interval.
         this.bindSaveHistoryInterval();
