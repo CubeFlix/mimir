@@ -16,15 +16,28 @@
 
 .editor-number-input {
     background-color: #f7f7f7;
+    border-radius: 5px;
 }
 
 .editor-number-input :first-child {
     border-radius: 5px 0 0 5px;
 }
 
-.editor-number-input-input[type="number"],
-.editor-number-input-input[type="number"]:focus {
+.editor-number-input :last-child {
+    border-radius: 0 5px 5px 0;
+}
+
+.editor-number-input-input[type="number"] {
     background-color: #f7f7f7;
+    border: none;
+    outline: none;
+    height: 100%;
+    padding: 0;
+}
+
+.editor-number-input-input[type="number"]:focus,
+.editor-number-input-input[type="number"]:hover {
+    background: #e0e0e0;
     border: none;
     outline: none;
 }
@@ -37,12 +50,13 @@
 
 .editor-number-input-input[type="number"] {
     -moz-appearance: textfield;
+    background-color: #f7f7f7;
 }
 
 .editor-number-input-button {
     min-width: 20px;
     min-height: 30px;
-    background-color: #f7f7f7;
+    background: none;
     border: none;
 }
 

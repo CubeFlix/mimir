@@ -34,7 +34,8 @@
     border-radius: 5px;
 }
 
-#editor-menubar > button:hover {
+#editor-menubar > button:hover,
+#editor-menubar > button:focus {
     background: #e0e0e0;
 }
 
@@ -53,7 +54,8 @@
     background-size: 5px 5px, 5px 5px;
 }
 
-#editor-menubar > select:hover {
+#editor-menubar > select:hover,
+#editor-menubar > select:focus {
     background-color: #e0e0e0;
 }
 
