@@ -2819,6 +2819,12 @@ class Editor {
         var lastStyled = null;
         var lastNode = null;
         for (const node of fixedNodes) {
+            if (this.isEmpty(node)) {
+                // Empty nodes.
+                node.remove();
+                continue;
+            }
+
             if (node.contains(range.commonAncestorContainer) && node != range.commonAncestorContainer && this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName)) {
                 var inside = true;
             } else {
