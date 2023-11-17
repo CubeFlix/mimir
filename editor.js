@@ -161,14 +161,12 @@ class Editor {
                     this.menubar.append(this.menubarOptions.font);
                     break;
                 case "size":
-                    this.menubarOptions.size = document.createElement("input");
-                    this.menubarOptions.size.setAttribute("id", "editor-menubar-option-size");
-                    this.menubarOptions.size.setAttribute("type", "number");
-                    this.menubarOptions.size.setAttribute("min", "1");
-                    this.menubarOptions.size.setAttribute("max", "200");
+                    const { numberInput, input, plus, minus } = EditorUI.numberInput(1, 200);
+                    this.menubarOptions.size = input;
+                    numberInput.setAttribute("id", "editor-menubar-option-size");
                     this.menubarOptions.size.value = this.defaultSize;
                     this.menubarOptions.size.addEventListener("change", this.size.bind(this));
-                    this.menubar.append(this.menubarOptions.size);
+                    this.menubar.append(numberInput);
                     break;
                 case "quote":
                     this.menubarOptions.quote = document.createElement("button");

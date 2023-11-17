@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Editor</title>
-        <script src="editor.js"></script>
+        <title>UI Test</title>
         <script src="ui.js"></script>
-        <link rel="stylesheet" href="editor.css">
         <link rel="stylesheet" href="ui.css">
         <style>
             .container {
@@ -15,13 +13,12 @@
         </style>
     </head>
     <body>
-        <div class="container">
-            <div id="editor"></div>
+        <div id="container">
         </div>
+        <div contenteditable></div>
         <script>
-            const container = document.getElementById("editor");
-            const editor = new Editor(container, {});
-            editor.init();
+            const container = document.getElementById("container");
+            container.append(dropdown("Button", "Content"));
         </script>
     </body>
 </html>
