@@ -1,4 +1,6 @@
 /* Custom UI. */
+
+/* Dropdown. */
 .editor-dropdown-body {
     position: fixed;
     background-color: white;
@@ -14,6 +16,7 @@
     display: block;
 }
 
+/* Number input. */
 .editor-number-input {
     background-color: #f7f7f7;
     border-radius: 5px;
@@ -62,4 +65,23 @@
 
 .editor-number-input-button:hover {
     background: #e0e0e0;
+}
+
+/* Color input. */
+.editor-color-input-body {
+    display: flex;
+    gap: 10px;
+}
+
+.editor-color-picker-primary-thumb {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+    z-index: 0;
+    border: 1px solid black;
+    top: 0;
+    left: 0;
+    user-select: none;
+    pointer-events: none;
 }

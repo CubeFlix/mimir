@@ -93,17 +93,31 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
     const body = document.createElement("div");
     body.classList.add("editor-color-input-body");
 
+    // Primary editor.
+    const primaryContainer = document.createElement("div");
+    primaryContainer.classList.add("editor-color-picker-primary-container");
     const primary = document.createElement("canvas");
     primary.setAttribute("width", primaryWidth);
     primary.setAttribute("height", height)
     primary.classList.add("editor-color-picker-primary-canvas");
-    body.append(primary);
+    primaryContainer.append(primary);
+    const primaryThumb = document.createElement("div");
+    primaryThumb.classList.add("editor-color-picker-primary-thumb");
+    primaryContainer.append(primaryThumb);
+    body.append(primaryContainer);
 
+    // Hue editor.
+    const hueContainer = document.createElement("div");
+    hueContainer.classList.add("editor-color-picker-hue-container");
     const hue = document.createElement("canvas");
     hue.setAttribute("width", hueWidth);
     hue.setAttribute("height", height)
     hue.classList.add("editor-color-picker-hue-canvas");
-    body.append(hue);
+    hueContainer.append(hue);
+    const hueSlider = document.createElement("div");
+    hueSlider.classList.add("editor-color-picker-hue-slider");
+    hueContainer.append(hueSlider);
+    body.append(hueContainer);
     
     // Create the button.
     const button = document.createElement("div");
@@ -116,10 +130,13 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
 
     // Variables.
     var h = 0;
-    var s = 0;
-    var l = 0;
-    var primaryCtx = primary.getContext("2d");
+    var r = 255;
+    var g = 0;
+    var b = 0;
+    var primaryCtx = primary.getContext("2d", { willReadFrequently: true });
     var hueCtx = hue.getContext("2d");
+    var dragPrimary = false;
+    var dragHue = false;
 
     // Render the primary canvas.
     function renderPrimaryCanvas() {
@@ -137,6 +154,9 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
         blackGradient.addColorStop(1, "rgba(0, 0, 0, 1)");
         primaryCtx.fillStyle = blackGradient;
         primaryCtx.fillRect(0, 0, primaryWidth, height);
+
+        primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        primaryThumb.style.transform = `translate(${primaryWidth}px, ${0}px`;
     }
 
     // Render the hue canvas.
@@ -155,14 +175,76 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
         hueCtx.fill();
     }
 
+    // Update color on primary canvas.
+    function primaryUpdateColor(e) {
+        [r, g, b] = primaryCtx.getImageData(e.offsetX, e.offsetY, 1, 1).data;
+        
+        primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        primaryThumb.style.transform = `translate(${e.offsetX}px, ${e.offsetY}px`;
+    }
+
+    // Mouse events for primary canvas.
+    function mouseDownPrimary(e) {
+        dragPrimary = true;
+        primaryUpdateColor(e);
+        document.addEventListener("mouseup", mouseUpPrimary);
+    }
+    function mouseMovePrimary(e) {
+        if (dragPrimary) primaryUpdateColor(e);
+    }
+    function mouseUpPrimary(e) {
+        dragPrimary = false;
+        document.removeEventListener("mouseup", mouseUpPrimary);
+    }
+
+    // Update color on hue canvas.
+    function hueUpdateColor(e) {
+        h = e.offsetY / height * 360;
+        renderPrimaryCanvas();
+    }
+
+    // Mouse events for hue canvas.
+    function mouseDownHue(e) {
+        dragHue = true;
+        hueUpdateColor(e);
+        document.addEventListener("mouseup", mouseUpHue);
+    }
+    function mouseMoveHue(e) {
+        if (dragHue) hueUpdateColor(e);
+    }
+    function mouseUpHue(e) {
+        dragHue = false;
+        document.removeEventListener("mouseup", mouseUpHue);
+    }
+
     // Input dropdown open.
     function onOpen() {
         renderPrimaryCanvas();
         renderHueCanvas();
+
+        // Bind event listeners.
+        primary.addEventListener("mousedown", mouseDownPrimary, false);
+        primary.addEventListener("mousemove", mouseMovePrimary, false);
+        primary.addEventListener("mouseup", mouseUpPrimary, false);
+        hue.addEventListener("mousedown", mouseDownHue, false);
+        hue.addEventListener("mousemove", mouseMoveHue, false);
+        hue.addEventListener("mouseup", mouseUpHue, false);
+    }
+
+    // Input dropdown close.
+    function onClose() {
+        // Remove event listeners.
+        primary.removeEventListener("mousedown", mouseDownPrimary);
+        primary.removeEventListener("mousemove", mouseMovePrimary);
+        primary.removeEventListener("mouseup", mouseUpPrimary);
+        hue.removeEventListener("mousedown", mouseDownHue);
+        hue.removeEventListener("mousemove", mouseMoveHue);
+        hue.removeEventListener("mouseup", mouseUpHue);
     }
 
     // Bind events.
     dropdown.addEventListener("editorDropdownOpen", onOpen);
+    dropdown.addEventListener("editorDropdownClose", onClose);
 
     return {colorInput: dropdown};
 }
