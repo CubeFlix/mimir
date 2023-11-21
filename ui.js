@@ -95,6 +95,8 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
 
     // Primary editor.
     const primaryContainer = document.createElement("div");
+    primaryContainer.style.width = primaryWidth + "px";
+    primaryContainer.style.height = height + "px";
     primaryContainer.classList.add("editor-color-picker-primary-container");
     const primary = document.createElement("canvas");
     primary.setAttribute("width", primaryWidth);
@@ -108,6 +110,8 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
 
     // Hue editor.
     const hueContainer = document.createElement("div");
+    hueContainer.style.width = hueWidth + "px";
+    hueContainer.style.height = height + "px";
     hueContainer.classList.add("editor-color-picker-hue-container");
     const hue = document.createElement("canvas");
     hue.setAttribute("width", hueWidth);
@@ -118,6 +122,13 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
     hueSlider.classList.add("editor-color-picker-hue-slider");
     hueContainer.append(hueSlider);
     body.append(hueContainer);
+
+    // RGB form.
+    const rgbForm = document.createElement("div");
+    const rgbFormColor = document.createElement("div");
+    rgbFormColor.classList.add("editor-color-picker-rgb-form-color");
+    rgbForm.append(rgbFormColor);
+    body.append(rgbForm);
     
     // Create the button.
     const button = document.createElement("div");
@@ -130,9 +141,11 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
 
     // Variables.
     var h = 0;
-    var r = 255;
+    var r = 0;
     var g = 0;
     var b = 0;
+    var primaryX = 0;
+    var primaryY = 0;
     var primaryCtx = primary.getContext("2d", { willReadFrequently: true });
     var hueCtx = hue.getContext("2d");
     var dragPrimary = false;
@@ -155,8 +168,10 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
         primaryCtx.fillStyle = blackGradient;
         primaryCtx.fillRect(0, 0, primaryWidth, height);
 
+        [r, g, b] = primaryCtx.getImageData(primaryX, primaryY, 1, 1).data;
         primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-        primaryThumb.style.transform = `translate(${primaryWidth}px, ${0}px`;
+        primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;
+        rgbFormColor.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
     }
 
     // Render the hue canvas.
@@ -177,10 +192,12 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
 
     // Update color on primary canvas.
     function primaryUpdateColor(e) {
-        [r, g, b] = primaryCtx.getImageData(e.offsetX, e.offsetY, 1, 1).data;
-        
+        primaryX = Math.min(e.offsetX, primaryWidth - 1);
+        primaryY = Math.min(e.offsetY, height - 1);
+        [r, g, b] = primaryCtx.getImageData(primaryX, primaryY, 1, 1).data;        
         primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-        primaryThumb.style.transform = `translate(${e.offsetX}px, ${e.offsetY}px`;
+        primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;
+        rgbFormColor.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
     }
 
     // Mouse events for primary canvas.
@@ -201,6 +218,7 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
     function hueUpdateColor(e) {
         h = e.offsetY / height * 360;
         renderPrimaryCanvas();
+        hueSlider.style.transform = `translate(0, ${e.offsetY}px`;
     }
 
     // Mouse events for hue canvas.

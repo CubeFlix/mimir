@@ -73,6 +73,10 @@
     gap: 10px;
 }
 
+.editor-color-picker-primary-container {
+    position: relative;
+}
+
 .editor-color-picker-primary-thumb {
     position: absolute;
     width: 10px;
@@ -84,4 +88,27 @@
     left: 0;
     user-select: none;
     pointer-events: none;
+}
+
+.editor-color-picker-hue-container {
+    position: relative;
+}
+
+.editor-color-picker-hue-slider {
+    position: absolute;
+    width: 100%;
+    height: 0px;
+    z-index: 0;
+    border: 1px solid black;
+    top: 0;
+    left: 0;
+    user-select: none;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.editor-color-picker-rgb-form-color {
+    width: 40px;
+    height: 20px;
+    border: 1px solid black;
 }
