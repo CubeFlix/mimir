@@ -110,9 +110,6 @@
 .editor-color-picker-rgb-form-input-container {
     width: 80px;
     display: flex;
-    /*
-    flex-flow: column wrap;
-    align-content: space-between;*/
 }
 
 .editor-color-picker-rgb-form {

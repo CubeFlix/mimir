@@ -18,7 +18,9 @@
         <div contenteditable></div>
         <script>
             const container = document.getElementById("container");
-            container.append(EditorUI.colorInput(() => {}, 200, 40, 200).colorInput);
+            const button = document.createElement("button");
+            button.innerHTML = "Open";
+            container.append(EditorUI.colorInput(() => {}, button, 200, 40, 200).colorInput);
         </script>
     </body>
 </html>

@@ -30,7 +30,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "quote", "header", "align", "list"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "quote", "header", "align", "list", "foreColor", "backColor"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -210,6 +210,14 @@ class Editor {
                     this.menubarOptions.listUnordered.innerHTML = "UL";
                     this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
                     this.menubar.append(this.menubarOptions.listUnordered);
+                    break;
+                case "foreColor":
+                    const foreColorButton = document.createElement("button");
+                    foreColorButton.innerHTML = "A";
+                    const { colorInput } = EditorUI.colorInput(this.foreColor.bind(this), foreColorButton, 200, 40, 200);
+                    this.menubarOptions.foreColor = colorInput;
+                    colorInput.setAttribute("id", "editor-menubar-option-fore-color");
+                    this.menubar.append(colorInput);
                     break;
             }
         }
@@ -1071,6 +1079,8 @@ class Editor {
                 continue;
             }
 
+            if (option == "foreColor" || option == "backColor") {continue;}
+
             if (option == "list") {
                 if (styling.find(s => s.type == "list" && s.listType == "ordered")) {
                     if (!this.menubarOptions.listOrdered.classList.contains("editor-pressed")) this.menubarOptions.listOrdered.classList.add("editor-pressed");
@@ -1311,6 +1321,10 @@ class Editor {
                 const firstLi = document.createElement("li");
                 elem.append(firstLi);
                 return elem;
+            case "foreColor":
+                var elem = document.createElement("span");
+                elem.style.color = style.color;
+                return elem;
         }
     }
 
@@ -1365,6 +1379,9 @@ class Editor {
                     }
                     var px = [10, 13, 16, 18, 24, 32, 48][size - 1];
                     styling.push({type: "size", size: px});
+                }
+                if (node.getAttribute("color")) {
+                    styling.push({type: "foreColor", color: node.getAttribute("color")});
                 }
                 // TODO: color, etc
                 break;

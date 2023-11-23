@@ -19,6 +19,17 @@ EditorUI.dropdown = (button, content) => {
     dropdownBody.append(content);
 
     // Add event listeners.
+    function onClick(event) {
+        if (!(dropdownBody.contains(event.target))) {
+            if (dropdownBody.classList.contains("editor-dropdown-show")) {
+                dropdownBody.classList.remove("editor-dropdown-show");
+            }
+            if (button.contains(event.target)) ignoreNextClick = true;
+            document.removeEventListener("mousedown", onClick);
+            dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
+            dropdownButton.addEventListener("click", dropdownClick);
+        }
+    }
     dropdownButton.addEventListener("mousedown", function(event) {
         event.preventDefault();
     })
@@ -30,23 +41,22 @@ EditorUI.dropdown = (button, content) => {
         }
         dropdownButton.removeEventListener("click", dropdownClick);
         dropdownBody.classList.add("editor-dropdown-show");
-        function onClick(event) {
-            if (!(dropdownBody.contains(event.target))) {
-                if (dropdownBody.classList.contains("editor-dropdown-show")) {
-                    dropdownBody.classList.remove("editor-dropdown-show");
-                }
-                if (button.contains(event.target)) ignoreNextClick = true;
-                document.removeEventListener("mousedown", onClick);
-                dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
-                dropdownButton.addEventListener("click", dropdownClick);
-            }
-        }
         document.addEventListener("mousedown", onClick);
         dropdown.dispatchEvent(new Event("editorDropdownOpen", {bubbles: true}));
     }
     dropdownButton.addEventListener("click", dropdownClick);
 
-    return {dropdown: dropdown, body: content, button: button};
+    // Close function.
+    function close() {
+        if (dropdownBody.classList.contains("editor-dropdown-show")) {
+            dropdownBody.classList.remove("editor-dropdown-show");
+        }
+        document.removeEventListener("mousedown", onClick);
+        dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
+        dropdownButton.addEventListener("click", dropdownClick);
+    }
+
+    return {dropdown: dropdown, body: content, button: button, close: close};
 }
 
 /*
@@ -117,7 +127,7 @@ EditorUI.rgbToHsv = (r , g , b) => {
 /*
 Create a color input.
 */
-EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
+EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     // Create the body of the color picker.
     const body = document.createElement("div");
     body.classList.add("editor-color-input-body");
@@ -206,15 +216,21 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
     const [rgbFormInputContainerB, rgbFormInputB] = createColorValueInput("B");
     rgbForm.append(rgbFormInputContainerR, rgbFormInputContainerG, rgbFormInputContainerB)
     body.append(rgbForm);
+
+    // Save and cancel buttons.
+    const saveButton = document.createElement("button");
+    saveButton.classList.add("editor-color-picker-save-button");
+    saveButton.innerHTML = "Save";
+    saveButton.addEventListener("click", () => {callback([r, g, b]); closeFunc();});
+    body.append(saveButton);
     
     // Create the button.
-    const button = document.createElement("div");
-    button.innerHTML = "Color";
     button.classList.add("editor-color-picker-button");
 
     // Create the dropdown.
     const dropdownObj = EditorUI.dropdown(button, body);
     const dropdown = dropdownObj.dropdown;
+    const closeFunc = dropdownObj.close;
 
     // Variables.
     var h = 0;
