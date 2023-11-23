@@ -171,6 +171,7 @@ class Editor {
                 case "foreColor":
                     const foreColorButton = document.createElement("button");
                     foreColorButton.innerHTML = "A";
+                    foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                     const { colorInput } = EditorUI.colorInput(this.foreColor.bind(this), foreColorButton, 200, 40, 200);
                     this.menubarOptions.foreColor = colorInput;
                     colorInput.setAttribute("id", "editor-menubar-option-fore-color");

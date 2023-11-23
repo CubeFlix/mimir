@@ -289,7 +289,7 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     // Update color on primary canvas.
     function primaryUpdateColor(e) {
         primaryX = Math.min(e.offsetX, primaryWidth - 1);
-        primaryY = Math.min(e.offsetY, height - 1);
+        primaryY = Math.max(Math.min(e.offsetY, height - 1), 0);
         [r, g, b] = primaryCtx.getImageData(primaryX, primaryY, 1, 1).data;        
         primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;

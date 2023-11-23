@@ -75,6 +75,7 @@
 
 .editor-color-picker-primary-container {
     position: relative;
+    user-select: none;
 }
 
 .editor-color-picker-primary-thumb {
