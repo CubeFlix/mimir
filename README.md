@@ -108,6 +108,7 @@ a rich text editor for javascript
 - [ ] `pre`
 - [ ] handle tab button
 - [ ] accessibility (for, name, aria, etc.) and esc button handling
+- [ ] remove all styling from text, remove all color from text
 - [ ] a href (add mouse overlay, etc.)
 - [x] change previous history's cursor location if hashes match
 - [ ] disallow pasting HTML option 

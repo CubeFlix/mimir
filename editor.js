@@ -172,9 +172,14 @@ class Editor {
                     const foreColorButton = document.createElement("button");
                     foreColorButton.innerHTML = "A";
                     foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
-                    const { colorInput } = EditorUI.colorInput(this.foreColor.bind(this), foreColorButton, 200, 40, 200);
+                    foreColorButton.classList.add("editor-menubar-option-fore-color-button");
+                    foreColorButton.addEventListener("click", function() {this.foreColor(foreColorButton.style.textDecorationColor);}.bind(this));
+                    const foreColorOpenButton = document.createElement("button");
+                    foreColorOpenButton.innerHTML = "&#9660";
+                    const { colorInput } = EditorUI.colorInput(this.foreColor.bind(this), foreColorOpenButton, 200, 40, 200);
                     this.menubarOptions.foreColor = colorInput;
                     colorInput.setAttribute("id", "editor-menubar-option-fore-color");
+                    colorInput.prepend(foreColorButton);
                     this.menubar.append(colorInput);
                     break;
                 case "quote":
@@ -3369,7 +3374,7 @@ class Editor {
     */
     foreColor(color) {
         this.performStyleCommand({type: "foreColor", color: color});
-        this.menubarOptions.foreColor.getElementsByClassName("editor-color-picker-button")[0].style.textDecorationColor = color;
+        this.menubarOptions.foreColor.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
     }
 
     /*

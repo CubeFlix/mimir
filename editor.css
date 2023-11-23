@@ -27,7 +27,7 @@
 }
 
 #editor-menubar > button,
-#editor-menubar .editor-color-picker-button {
+#editor-menubar #editor-menubar-option-fore-color button {
     min-width: 30px;
     min-height: 30px;
     background: none;
@@ -37,8 +37,8 @@
 
 #editor-menubar > button:hover,
 #editor-menubar > button:focus,
-#editor-menubar .editor-color-picker-button:hover,
-#editor-menubar .editor-color-picker-button:focus {
+#editor-menubar #editor-menubar-option-fore-color button:hover,
+#editor-menubar #editor-menubar-option-fore-color button:focus {
     background: #e0e0e0;
 }
 
@@ -74,4 +74,8 @@
 
 #editor-menubar > #editor-menubar-option-strikethrough { text-decoration: line-through; }
 
-#editor-menubar > #editor-menubar-option-fore-color .editor-color-picker-button { text-decoration: underline; }
+#editor-menubar > #editor-menubar-option-fore-color {
+    display: flex;
+}
+
+#editor-menubar > #editor-menubar-option-fore-color .editor-menubar-option-fore-color-button { text-decoration: underline; }
