@@ -1472,6 +1472,8 @@ class Editor {
     */
     elementHasStyle(elem, style) {
         const styling = this.getStylingOfElement(elem);
+        if (styling.some(s => s.type == "foreColor") && style.type == "foreColor" && style.color == null) {return true;}
+        if (styling.some(s => s.type == "backColor") && style.type == "backColor" && style.color == null) {return true;}
         return styling.some(s => this.compareStyling(s, style));
     }
 
@@ -1912,10 +1914,12 @@ class Editor {
                     if (elem.style.fontSize) {
                         elem.style.fontSize = "";
                     }
+                    break;
                 case "foreColor":
                     if (elem.style.color) {
                         elem.style.color = "";
                     }
+                    break;
             }
 
             // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
@@ -3247,7 +3251,12 @@ class Editor {
 
         // Set the style.
         if (this.multipleValueStylingCommands.includes(style.type)) {
-            this.changeStyling(style, range);
+            if ((style.type == "foreColor" || style.type == "backColor") && style.color == null) {
+                // Remove the styling.
+                this.removeStyle(style, range);
+            } else {
+                this.changeStyling(style, range);
+            }
         } else if (this.inlineStylingCommands.includes(style.type)) {
             if (currentStyling.some(s => s.type == style.type)) {
                 this.removeStyle(style, range);
@@ -3374,7 +3383,7 @@ class Editor {
     */
     foreColor(color) {
         this.performStyleCommand({type: "foreColor", color: color});
-        this.menubarOptions.foreColor.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
+        if (color != null) this.menubarOptions.foreColor.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
     }
 
     /*

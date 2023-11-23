@@ -217,12 +217,16 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     rgbForm.append(rgbFormInputContainerR, rgbFormInputContainerG, rgbFormInputContainerB)
     body.append(rgbForm);
 
-    // Save and cancel buttons.
+    // Save and remove buttons.
     const saveButton = document.createElement("button");
     saveButton.classList.add("editor-color-picker-save-button");
     saveButton.innerHTML = "Save";
     saveButton.addEventListener("click", () => {callback(`rgb(${r}, ${g}, ${b})`); closeFunc();});
-    body.append(saveButton);
+    const removeButton = document.createElement("button");
+    removeButton.classList.add("editor-color-picker-remove-button");
+    removeButton.innerHTML = "Remove";
+    removeButton.addEventListener("click", () => {callback(null); closeFunc();});
+    body.append(saveButton, removeButton);
     
     // Create the button.
     button.classList.add("editor-color-picker-button");
