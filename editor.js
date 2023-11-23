@@ -168,6 +168,14 @@ class Editor {
                     this.menubarOptions.size.addEventListener("change", this.size.bind(this));
                     this.menubar.append(numberInput);
                     break;
+                case "foreColor":
+                    const foreColorButton = document.createElement("button");
+                    foreColorButton.innerHTML = "A";
+                    const { colorInput } = EditorUI.colorInput(this.foreColor.bind(this), foreColorButton, 200, 40, 200);
+                    this.menubarOptions.foreColor = colorInput;
+                    colorInput.setAttribute("id", "editor-menubar-option-fore-color");
+                    this.menubar.append(colorInput);
+                    break;
                 case "quote":
                     this.menubarOptions.quote = document.createElement("button");
                     this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
@@ -210,14 +218,6 @@ class Editor {
                     this.menubarOptions.listUnordered.innerHTML = "UL";
                     this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
                     this.menubar.append(this.menubarOptions.listUnordered);
-                    break;
-                case "foreColor":
-                    const foreColorButton = document.createElement("button");
-                    foreColorButton.innerHTML = "A";
-                    const { colorInput } = EditorUI.colorInput(this.foreColor.bind(this), foreColorButton, 200, 40, 200);
-                    this.menubarOptions.foreColor = colorInput;
-                    colorInput.setAttribute("id", "editor-menubar-option-fore-color");
-                    this.menubar.append(colorInput);
                     break;
             }
         }
@@ -1438,6 +1438,9 @@ class Editor {
             }
             // TODO: handle other types of font size
         }
+        if (node.style.color) {
+            if (!styling.some(s => s.type == "foreColor")) styling.push({type: "foreColor", color: node.style.color});
+        }
         if (node.style.textAlign) {
             var direction = node.style.textAlign.toLowerCase();
             if (!styling.some(s => s.type == "align")) styling.push({type: "align", direction: direction});
@@ -1903,6 +1906,10 @@ class Editor {
                     if (elem.style.fontSize) {
                         elem.style.fontSize = "";
                     }
+                case "foreColor":
+                    if (elem.style.color) {
+                        elem.style.color = "";
+                    }
             }
 
             // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
@@ -1948,6 +1955,11 @@ class Editor {
             case "size":
                 if (elem.tagName == "FONT") {
                     if (elem.hasAttribute("size")) elem.removeAttribute("size");
+                }
+                break;
+            case "foreColor":
+                if (elem.tagName == "FONT") {
+                    if (elem.hasAttribute("color")) elem.removeAttribute("color");
                 }
                 break;
         }
@@ -2249,6 +2261,14 @@ class Editor {
                         } else if (currentReconstructedNode.tagName == "SPAN") {
                             currentReconstructedNode.style.fontSize = String(style.size) + "px";
                         }
+                        break;
+                    case "foreColor":
+                        if (currentReconstructedNode.tagName == "FONT") {
+                            currentReconstructedNode.setAttribute("color", style.color);
+                        } else if (currentReconstructedNode.tagName == "SPAN") {
+                            currentReconstructedNode.style.color = style.color;
+                        }
+                        break;
                 }
                 return currentReconstructedNode;
             }
@@ -3341,6 +3361,14 @@ class Editor {
     */
     font() {
         this.performStyleCommand({type: "font", family: this.menubarOptions.font.value});
+    }
+
+    /*
+    Foreground color.
+    */
+    foreColor(color) {
+        this.performStyleCommand({type: "foreColor", color: color});
+        this.menubarOptions.foreColor.getElementsByClassName("editor-color-picker-button")[0].style.textDecorationColor = color;
     }
 
     /*

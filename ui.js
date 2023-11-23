@@ -221,7 +221,7 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const saveButton = document.createElement("button");
     saveButton.classList.add("editor-color-picker-save-button");
     saveButton.innerHTML = "Save";
-    saveButton.addEventListener("click", () => {callback([r, g, b]); closeFunc();});
+    saveButton.addEventListener("click", () => {callback(`rgb(${r}, ${g}, ${b})`); closeFunc();});
     body.append(saveButton);
     
     // Create the button.
