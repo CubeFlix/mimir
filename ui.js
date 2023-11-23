@@ -86,6 +86,35 @@ EditorUI.numberInput = (min, max) => {
 }
 
 /*
+Convert RGB to HSV.
+*/
+EditorUI.rgbToHsv = (r , g , b) => { 
+    r = r / 255.0; 
+    g = g / 255.0; 
+    b = b / 255.0; 
+    var cmax = Math.max(r, Math.max(g, b));
+    var cmin = Math.min(r, Math.min(g, b));
+    var diff = cmax - cmin;
+    var h = -1, s = -1; 
+    if (cmax == cmin) 
+        h = 0; 
+    else if (cmax == r) 
+        h = (60 * ((g - b) / diff) + 360) % 360; 
+    else if (cmax == g) 
+        h = (60 * ((b - r) / diff) + 120) % 360; 
+    else if (cmax == b) 
+        h = (60 * ((r - g) / diff) + 240) % 360; 
+
+    if (cmax == 0) 
+        s = 0; 
+    else
+        s = (diff / cmax) * 100; 
+
+    var v = cmax * 100; 
+    return [h, s, v];
+} 
+
+/*
 Create a color input.
 */
 EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
@@ -125,9 +154,57 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
 
     // RGB form.
     const rgbForm = document.createElement("div");
+    rgbForm.classList.add("editor-color-picker-rgb-form");
     const rgbFormColor = document.createElement("div");
     rgbFormColor.classList.add("editor-color-picker-rgb-form-color");
     rgbForm.append(rgbFormColor);
+    function createColorValueInput(label) {
+        const inputContainer = document.createElement("div");
+        inputContainer.classList.add("editor-color-picker-rgb-form-input-container");
+        const colorLabel = document.createElement("label");
+        colorLabel.append(label);
+        colorLabel.classList.add("editor-color-picker-rgb-form-input-label");
+        const input = document.createElement("input");
+        input.setAttribute("type", "number");
+        input.setAttribute("min", 0);
+        input.setAttribute("max", 255);
+        input.addEventListener("change", () => {
+            r = rgbFormInputR.value;
+            g = rgbFormInputG.value;
+            b = rgbFormInputB.value;
+            var [newH, newS, newV] = EditorUI.rgbToHsv(r, g, b);
+            h = newH;
+            primaryX = newS / 100 * primaryWidth;
+            primaryY = height - newV / 100 * height;
+
+            primaryCtx.fillStyle = `hsl(${h}deg 100% 50%)`;
+            primaryCtx.fillRect(0, 0, primaryWidth, height);
+
+            var whiteGradient = primaryCtx.createLinearGradient(0, 0, primaryWidth, 0);
+            whiteGradient.addColorStop(0, "rgba(255, 255, 255, 1)");
+            whiteGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+            primaryCtx.fillStyle = whiteGradient;
+            primaryCtx.fillRect(0, 0, primaryWidth, height);
+
+            var blackGradient = primaryCtx.createLinearGradient(0, 0, 0, height);
+            blackGradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+            blackGradient.addColorStop(1, "rgba(0, 0, 0, 1)");
+            primaryCtx.fillStyle = blackGradient;
+            primaryCtx.fillRect(0, 0, primaryWidth, height);
+
+            primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;
+            rgbFormColor.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+            hueSlider.style.transform = `translate(0, ${h / 360 * height}px`;
+        });
+        inputContainer.append(colorLabel, input);
+        return [inputContainer, input];
+    }
+    const [rgbFormInputContainerR, rgbFormInputR] = createColorValueInput("R");
+    const [rgbFormInputContainerG, rgbFormInputG] = createColorValueInput("G");
+    const [rgbFormInputContainerB, rgbFormInputB] = createColorValueInput("B");
+    rgbForm.append(rgbFormInputContainerR, rgbFormInputContainerG, rgbFormInputContainerB)
     body.append(rgbForm);
     
     // Create the button.
@@ -172,6 +249,9 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
         primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;
         rgbFormColor.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        rgbFormInputR.value = r;
+        rgbFormInputG.value = g;
+        rgbFormInputB.value = b;
     }
 
     // Render the hue canvas.
@@ -198,6 +278,9 @@ EditorUI.colorInput = (callback, primaryWidth, hueWidth, height) => {
         primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;
         rgbFormColor.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        rgbFormInputR.value = r;
+        rgbFormInputG.value = g;
+        rgbFormInputB.value = b;
     }
 
     // Mouse events for primary canvas.
