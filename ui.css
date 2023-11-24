@@ -1,6 +1,10 @@
 /* Custom UI. */
 
 /* Dropdown. */
+.editor-dropdown {
+    position: relative;
+}
+
 .editor-dropdown-body {
     position: fixed;
     background-color: white;

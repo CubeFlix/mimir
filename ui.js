@@ -56,7 +56,7 @@ EditorUI.dropdown = (button, content) => {
         dropdownButton.addEventListener("click", dropdownClick);
     }
 
-    return {dropdown: dropdown, body: content, button: button, close: close};
+    return {dropdown: dropdown, body: content, button: dropdownButton, close: close};
 }
 
 /*
@@ -367,5 +367,5 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     dropdown.addEventListener("editorDropdownOpen", onOpen);
     dropdown.addEventListener("editorDropdownClose", onClose);
 
-    return {colorInput: dropdown};
+    return {colorInput: dropdown, dropdown: dropdownObj};
 }

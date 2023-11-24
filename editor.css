@@ -74,8 +74,22 @@
 
 #editor-menubar > #editor-menubar-option-strikethrough { text-decoration: line-through; }
 
-#editor-menubar > #editor-menubar-option-fore-color {
+#editor-menubar > #editor-menubar-option-fore-color .editor-menubar-option-fore-color-button-container {
     display: flex;
 }
 
-#editor-menubar > #editor-menubar-option-fore-color .editor-menubar-option-fore-color-button { text-decoration: underline; }
+#editor-menubar > #editor-menubar-option-fore-color > .editor-menubar-option-fore-color-button-container > .editor-menubar-option-fore-color-button {
+    text-decoration: underline;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#editor-menubar > #editor-menubar-option-fore-color > .editor-menubar-option-fore-color-button-container > .editor-dropdown-button > .editor-color-picker-button {
+    min-width: 10px;
+    width: 10px;
+    font-size: 10px;
+    text-align: center;
+    padding: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
