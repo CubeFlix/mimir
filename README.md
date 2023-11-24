@@ -105,8 +105,8 @@ a rich text editor for javascript
 - [x] lists
 - [ ] images
 - [ ] format indent up/down
-- [ ] `sup`
-- [ ] `pre`
+- [x] `sup`
+- [x] `pre`
 - [ ] handle tab button
 - [ ] accessibility (for, name, aria, etc.) and esc button handling
 - [ ] remove all styling from text, remove all color from text

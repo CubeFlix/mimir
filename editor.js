@@ -187,7 +187,7 @@ class Editor {
                     break;
                 case "backColor":
                     const backColorButton = document.createElement("button");
-                    backColorButton.innerHTML = "A";
+                    backColorButton.innerHTML = "&#9639;";
                     backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                     backColorButton.classList.add("editor-menubar-option-back-color-button");
                     backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
