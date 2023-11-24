@@ -97,7 +97,7 @@ a rich text editor for javascript
 - [x] getTextNodesInRange doesn't stop before the last one
 - [ ] more styling options
 - [ ] todo: if nothing selected, go to the end of the editor
-- [ ] detectStyling for font sizes (em, etc.)
+- [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [x] retain selection when leaving editor
 - [ ] block styling options
 - [ ] LI nodes that contain another list should not display marker

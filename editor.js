@@ -11,13 +11,13 @@ class Editor {
     invisible = "&#xFEFF;"; // Insert this into spans so that the cursor will latch to it.
 
     contentTags = ["IMG", "BR"];
-    stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
-    inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT"];
+    stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
+    inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB"];
     basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL", "BLOCKQUOTE"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
-    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor"];
+    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub"];
     blockStylingCommands = ["quote", "header", "align", "list"];
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
@@ -30,7 +30,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "quote", "header", "align", "list", "foreColor", "backColor"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "quote", "header", "align", "list", "foreColor", "backColor", "sup", "sub"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -201,6 +201,20 @@ class Editor {
                     backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
                     backColorInput.colorInput.prepend(backColorButtonContainer);
                     this.menubar.append(backColorInput.colorInput);
+                    break;
+                case "sup":
+                    this.menubarOptions.sup = document.createElement("button");
+                    this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
+                    this.menubarOptions.sup.innerHTML = "x<sup>2</sup>";
+                    this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
+                    this.menubar.append(this.menubarOptions.sup);
+                    break;
+                case "sub":
+                    this.menubarOptions.sub = document.createElement("button");
+                    this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
+                    this.menubarOptions.sub.innerHTML = "x<sub>2</sub>";
+                    this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
+                    this.menubar.append(this.menubarOptions.sub);
                     break;
                 case "quote":
                     this.menubarOptions.quote = document.createElement("button");
@@ -1355,6 +1369,10 @@ class Editor {
                 var elem = document.createElement("span");
                 elem.style.backgroundColor = style.color;
                 return elem;
+            case "sup":
+                return document.createElement("sup");
+            case "sub":
+                return document.createElement("sub");
         }
     }
 
@@ -1414,6 +1432,12 @@ class Editor {
                     styling.push({type: "foreColor", color: node.getAttribute("color")});
                 }
                 // TODO: color, etc
+                break;
+            case "SUP":
+                styling.push({type: "sup"});
+                break;
+            case "SUB":
+                styling.push({type: "sub"});
                 break;
             case "BLOCKQUOTE":
                 styling.push({type: "quote"});
@@ -2002,6 +2026,18 @@ class Editor {
             case "foreColor":
                 if (elem.tagName == "FONT") {
                     if (elem.hasAttribute("color")) elem.removeAttribute("color");
+                }
+                break;
+            case "sup":
+                if (elem.tagName == "SUP") {
+                    elem = elem.firstChild;
+                    elemRemoved = true;
+                }
+                break;
+            case "sub":
+                if (elem.tagName == "SUB") {
+                    elem = elem.firstChild;
+                    elemRemoved = true;
                 }
                 break;
         }
@@ -3296,7 +3332,14 @@ class Editor {
             if (currentStyling.some(s => s.type == style.type)) {
                 this.removeStyle(style, range);
             } else {
-                this.applyStyle(style, range);
+                // Subscript and superscript are mutually exclusive.
+                if (style.type == "sup" || style.type == "sub") {
+                    const oppositeScriptStyle = style.type == "sub" ? "sup" : "sub";
+                    this.removeStyle({type: oppositeScriptStyle}, range);
+                    this.applyStyle(style, this.getRange());
+                } else {
+                    this.applyStyle(style, range);
+                }
             }
         } else if (this.blockStylingCommands.includes(style.type)) {
             const join = ["quote"].includes(style.type);
@@ -3430,6 +3473,27 @@ class Editor {
     }
 
     /*
+    Superscript.
+    */
+    sup() {
+        this.performStyleCommand({type: "sup"});
+    }
+
+    /*
+    Subscript.
+    */
+    sub() {
+        this.performStyleCommand({type: "sub"});
+    }
+
+    /*
+    Font size.
+    */
+    size() {
+        this.performStyleCommand({type: "size", size: this.menubarOptions.size.value});
+    }
+
+    /*
     Blockquote.
     */
     quote() {
@@ -3462,13 +3526,6 @@ class Editor {
     */
     listUnordered() {
         this.performStyleCommand({type: "list", listType: "unordered"});
-    }
-
-    /*
-    Font size.
-    */
-    size() {
-        this.performStyleCommand({type: "size", size: this.menubarOptions.size.value});
     }
 
     /*
