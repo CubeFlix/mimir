@@ -238,7 +238,7 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
     // Variables.
     var h = 0;
-    var r = 0;
+    var r = 255;
     var g = 0;
     var b = 0;
     var primaryX = 0;
@@ -367,5 +367,9 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     dropdown.addEventListener("editorDropdownOpen", onOpen);
     dropdown.addEventListener("editorDropdownClose", onClose);
 
-    return {colorInput: dropdown, dropdown: dropdownObj};
+    function getValue() {
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    return {colorInput: dropdown, dropdown: dropdownObj, getValue: getValue};
 }

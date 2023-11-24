@@ -173,17 +173,34 @@ class Editor {
                     foreColorButton.innerHTML = "A";
                     foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                     foreColorButton.classList.add("editor-menubar-option-fore-color-button");
-                    foreColorButton.addEventListener("click", function() {this.foreColor(foreColorButton.style.textDecorationColor);}.bind(this));
+                    foreColorButton.addEventListener("click", function() {this.foreColor(foreColorInput.getValue());}.bind(this));
                     const foreColorOpenButton = document.createElement("button");
                     foreColorOpenButton.innerHTML = "&#9660";
-                    const { colorInput, dropdown: colorInputDropdown } = EditorUI.colorInput(this.foreColor.bind(this), foreColorOpenButton, 200, 40, 200);
-                    this.menubarOptions.foreColor = colorInput;
-                    colorInput.setAttribute("id", "editor-menubar-option-fore-color");
+                    var foreColorInput = EditorUI.colorInput(this.foreColor.bind(this), foreColorOpenButton, 200, 40, 200);
+                    this.menubarOptions.foreColor = foreColorInput;
+                    foreColorInput.colorInput.setAttribute("id", "editor-menubar-option-fore-color");
                     const foreColorButtonContainer = document.createElement("div");
                     foreColorButtonContainer.classList.add("editor-menubar-option-fore-color-button-container");
-                    foreColorButtonContainer.append(foreColorButton, colorInputDropdown.button);
-                    colorInput.prepend(foreColorButtonContainer);
-                    this.menubar.append(colorInput);
+                    foreColorButtonContainer.append(foreColorButton, foreColorInput.dropdown.button);
+                    foreColorInput.colorInput.prepend(foreColorButtonContainer);
+                    this.menubar.append(foreColorInput.colorInput);
+                    break;
+                case "backColor":
+                    const backColorButton = document.createElement("button");
+                    backColorButton.innerHTML = "A";
+                    backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                    backColorButton.classList.add("editor-menubar-option-back-color-button");
+                    backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
+                    const backColorOpenButton = document.createElement("button");
+                    backColorOpenButton.innerHTML = "&#9660";
+                    const backColorInput = EditorUI.colorInput(this.backColor.bind(this), backColorOpenButton, 200, 40, 200);
+                    this.menubarOptions.backColor = backColorInput;
+                    backColorInput.colorInput.setAttribute("id", "editor-menubar-option-back-color");
+                    const backColorButtonContainer = document.createElement("div");
+                    backColorButtonContainer.classList.add("editor-menubar-option-back-color-button-container");
+                    backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
+                    backColorInput.colorInput.prepend(backColorButtonContainer);
+                    this.menubar.append(backColorInput.colorInput);
                     break;
                 case "quote":
                     this.menubarOptions.quote = document.createElement("button");
@@ -1334,6 +1351,10 @@ class Editor {
                 var elem = document.createElement("span");
                 elem.style.color = style.color;
                 return elem;
+            case "backColor":
+                var elem = document.createElement("span");
+                elem.style.backgroundColor = style.color;
+                return elem;
         }
     }
 
@@ -1449,6 +1470,9 @@ class Editor {
         }
         if (node.style.color) {
             if (!styling.some(s => s.type == "foreColor")) styling.push({type: "foreColor", color: node.style.color});
+        }
+        if (node.style.backgroundColor) {
+            if (!styling.some(s => s.type == "backColor")) styling.push({type: "backColor", color: node.style.color});
         }
         if (node.style.textAlign) {
             var direction = node.style.textAlign.toLowerCase();
@@ -1923,6 +1947,11 @@ class Editor {
                         elem.style.color = "";
                     }
                     break;
+                case "backColor":
+                    if (elem.style.backgroundColor) {
+                        elem.style.backgroundColor = "";
+                    }
+                    break;
             }
 
             // If there aren't any styles left and the element itself doesn't apply a style, remove the element.
@@ -2263,7 +2292,7 @@ class Editor {
                     case "font":
                         if (currentReconstructedNode.tagName == "FONT") {
                             currentReconstructedNode.setAttribute("face", style.family);
-                        } else if (currentReconstructedNode.tagName == "SPAN") {
+                        } else {
                             currentReconstructedNode.style.fontFamily = style.family;
                         }
                         break;
@@ -2271,16 +2300,19 @@ class Editor {
                         if (currentReconstructedNode.tagName == "FONT") {
                             if (currentReconstructedNode.hasAttribute("size")) currentReconstructedNode.removeAttribute("size");
                             currentReconstructedNode.style.fontSize = String(style.size) + "px";
-                        } else if (currentReconstructedNode.tagName == "SPAN") {
+                        } else {
                             currentReconstructedNode.style.fontSize = String(style.size) + "px";
                         }
                         break;
                     case "foreColor":
                         if (currentReconstructedNode.tagName == "FONT") {
                             currentReconstructedNode.setAttribute("color", style.color);
-                        } else if (currentReconstructedNode.tagName == "SPAN") {
+                        } else {
                             currentReconstructedNode.style.color = style.color;
                         }
+                        break;
+                    case "backColor":
+                        currentReconstructedNode.style.backgroundColor = style.color;
                         break;
                 }
                 return currentReconstructedNode;
@@ -3386,7 +3418,15 @@ class Editor {
     */
     foreColor(color) {
         this.performStyleCommand({type: "foreColor", color: color});
-        if (color != null) this.menubarOptions.foreColor.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
+        if (color != null) this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
+    }
+
+    /*
+    Background color.
+    */
+    backColor(color) {
+        this.performStyleCommand({type: "backColor", color: color});
+        if (color != null) this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].style.textDecorationColor = color;
     }
 
     /*
