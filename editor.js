@@ -1228,6 +1228,16 @@ class Editor {
     }
 
     /*
+    Get a fallback range.
+    */
+    returnFallbackRange() {
+        const range = new Range();
+        range.setStart(this.editor, 0);
+        range.setEnd(this.editor, 0);
+        return range;
+    }
+
+    /*
     Get the current range.
     */
     getRange() {
@@ -1238,7 +1248,7 @@ class Editor {
             if (this.rangeCache) {
                 return this.rangeCache;
             }
-            return null;
+            return this.returnFallbackRange();
         }
         
         // Something is selected.
@@ -1248,7 +1258,7 @@ class Editor {
         } else if (this.rangeCache) {
             return this.rangeCache;
         }
-        return null;
+        return this.returnFallbackRange();
     }
 
     /* 

@@ -95,12 +95,13 @@ a rich text editor for javascript
 - [x] issue when block styling BR (`abc<div><br></div>`)
 - [x] join adjacent list nodes when applying style
 - [x] getTextNodesInRange doesn't stop before the last one
-- [ ] more styling options
-- [ ] todo: if nothing selected, go to the end of the editor
+- [x] more styling options
+- [x] todo: if nothing selected, go to the beginning of the editor
 - [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [x] retain selection when leaving editor
 - [ ] block styling options
 - [ ] LI nodes that contain another list should not display marker
+- [ ] make modals always show up on screen
 - [x] lists
 - [ ] images
 - [ ] format indent up/down
