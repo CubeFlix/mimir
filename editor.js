@@ -82,6 +82,7 @@ class Editor {
     */
     applySizeStyles() {
         this.editor.style.width = "600px" || this.settings.width;
+        this.menubar.style.width = "600px" || this.settings.width;
 
         if (this.settings.height) {
             this.editor.style.height = this.settings.height;
@@ -1162,7 +1163,7 @@ class Editor {
     Called on selection change and on styling change.
     */
     onChangeSelect() {
-        const range = this.getRange();
+        var range = this.getRange();
         if (range == null) {
             return;
         }
@@ -1283,15 +1284,11 @@ class Editor {
         if (range == null) {
             return null;
         }
+
         const nodes = [];
         var currentNode = range.startContainer;
         var startOffset = range.startOffset;
         var endOffset = range.endOffset;
-
-        // Clone the range so it doesn't affect the user's current selection.
-        range = new Range();
-        range.setStart(range.startContainer, range.startOffset);
-        range.setEnd(range.endContainer, range.endOffset);
     
         while (currentNode.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(currentNode.tagName)) {
             // If there are no children of this node, exit.
@@ -1563,6 +1560,11 @@ class Editor {
     in the range must be the same.
     */
     detectStyling(range) {
+        // Clone the range so it doesn't affect the user's current selection.
+        range = new Range();
+        range.setStart(range.startContainer, range.startOffset);
+        range.setEnd(range.endContainer, range.endOffset);
+
         var styling = [];
         const nodes = this.getTextNodesInRange(range).nodes;
         
@@ -3403,9 +3405,13 @@ class Editor {
                 continue;
             }
 
+            if (node.parentNode.childNodes.length == 1) {
+                node = node.parentNode;
+            }
+
             // Find the topmost indent-able node.
-            const topmost = this.findLastParent(node, (n) => ["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px");
-            console.log(topmost);
+            const topmost = this.findLastParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
+            console.log(topmost, node);
 
             /*const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, false);
             if (!firstStyled) firstStyled = styledNode;
@@ -3429,7 +3435,6 @@ class Editor {
             } else {
                 lastNode = node;
             }*/
-            console.log(node);
         }
         return;
 

@@ -97,6 +97,7 @@ a rich text editor for javascript
 - [x] getTextNodesInRange doesn't stop before the last one
 - [x] more styling options
 - [x] todo: if nothing selected, go to the beginning of the editor
+- [x] urgent bug: issue with getTextNodesInRange extending beyond selection (possible issue with range)
 - [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [x] retain selection when leaving editor
 - [ ] block styling options

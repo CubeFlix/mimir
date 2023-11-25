@@ -24,6 +24,7 @@
     display: flex;
     gap: 5px;
     padding: 5px;
+    flex-wrap: wrap;
 }
 
 #editor-menubar > button,
