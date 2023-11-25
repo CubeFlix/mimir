@@ -18,10 +18,11 @@ class Editor {
     childlessTags = ["BR", "IMG"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub"];
-    blockStylingCommands = ["quote", "header", "align", "list"];
-    inlineBlockStylingCommands = ["header", "align"];
+    blockStylingCommands = ["quote", "header", "align", "list", "indent", "outdent"];
+    inlineBlockStylingCommands = ["header", "align", "indent", "outdent"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor"];
+    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent"];
 
     /* 
     Create the editor. 
@@ -30,7 +31,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "quote", "header", "align", "list", "foreColor", "backColor", "sup", "sub"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "quote", "header", "align", "list", "indent", "outdent"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -258,6 +259,20 @@ class Editor {
                     this.menubarOptions.listUnordered.innerHTML = "UL";
                     this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
                     this.menubar.append(this.menubarOptions.listUnordered);
+                    break;
+                case "indent":
+                    this.menubarOptions.indent = document.createElement("button");
+                    this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
+                    this.menubarOptions.indent.innerHTML = ">";
+                    this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
+                    this.menubar.append(this.menubarOptions.indent);
+                    break;
+                case "outdent":
+                    this.menubarOptions.outdent = document.createElement("button");
+                    this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
+                    this.menubarOptions.outdent.innerHTML = "<";
+                    this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
+                    this.menubar.append(this.menubarOptions.outdent);
                     break;
             }
         }
@@ -1119,7 +1134,7 @@ class Editor {
                 continue;
             }
 
-            if (option == "foreColor" || option == "backColor") {continue;}
+            if (this.noUIUpdateStylingCommands.includes(option)) {continue;}
 
             if (option == "list") {
                 if (styling.find(s => s.type == "list" && s.listType == "ordered")) {
@@ -1358,6 +1373,18 @@ class Editor {
                 var elem = document.createElement("span");
                 elem.style.fontSize = String(style.size) + "px";
                 return elem;
+            case "foreColor":
+                var elem = document.createElement("span");
+                elem.style.color = style.color;
+                return elem;
+            case "backColor":
+                var elem = document.createElement("span");
+                elem.style.backgroundColor = style.color;
+                return elem;
+            case "sup":
+                return document.createElement("sup");
+            case "sub":
+                return document.createElement("sub");
             case "quote":
                 return document.createElement("blockquote");
             case "header":
@@ -1371,18 +1398,6 @@ class Editor {
                 const firstLi = document.createElement("li");
                 elem.append(firstLi);
                 return elem;
-            case "foreColor":
-                var elem = document.createElement("span");
-                elem.style.color = style.color;
-                return elem;
-            case "backColor":
-                var elem = document.createElement("span");
-                elem.style.backgroundColor = style.color;
-                return elem;
-            case "sup":
-                return document.createElement("sup");
-            case "sub":
-                return document.createElement("sub");
         }
     }
 
@@ -3536,6 +3551,20 @@ class Editor {
     */
     listUnordered() {
         this.performStyleCommand({type: "list", listType: "unordered"});
+    }
+
+    /*
+    Indent.
+    */
+    indent() {
+
+    }
+
+    /*
+    Outdent.
+    */
+    outdent() {
+        
     }
 
     /*
