@@ -118,6 +118,7 @@ a rich text editor for javascript
 ## future todo
 
 - [x] make new block styling nodes go inside (this can be done during the fixDisallowedChildrenOfNode process, by entering block nodes (this could break joining, however))
+- [ ] remove extraneous style nodes
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] bugs (when adjusting start container to be relative to inline nodes in getNextTextNodeInRange and applyStyleToBlockNode, it is not considering empty nodes);
 - [ ] maybe think about fixing nested divs when pasting (not joining sufficiently)

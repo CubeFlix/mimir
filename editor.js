@@ -3335,6 +3335,122 @@ class Editor {
     }
 
     /*
+    Block indent a range.
+    */
+    blockIndent(range) {
+        this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
+
+        var startContainer = range.startContainer;
+        var startOffset = range.startOffset;
+        var endContainer = range.endContainer;
+        var endOffset = range.endOffset;
+
+        // Adjust the start point so that it is always relative to inline nodes.
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (startContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (startOffset == startContainer.childNodes.length) {
+                startContainer = startContainer.childNodes[startOffset - 1];
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
+            } else {
+                startContainer = startContainer.childNodes[startOffset];
+                startOffset = 0;
+            }
+        }
+
+        // Adjust the end point so that it is always relative to inline nodes.
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (endContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (endOffset == 0) {
+                endContainer = endContainer.childNodes[endOffset];
+                endOffset = 0;
+            } else {
+                endContainer = endContainer.childNodes[endOffset - 1];
+                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            }
+        }
+
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range);
+        
+        // Get the block nodes within the range.
+        const nodes = this.getBlockNodesInRange(blockExtended);
+
+        // Style the nodes.
+        var firstStyled = null;
+        var lastStyled = null;
+        var lastNode = null;
+        for (const node of nodes) {
+            if (this.isEmpty(node)) {
+                // Empty nodes.
+                node.remove();
+                continue;
+            }
+
+            /*const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, false);
+            if (!firstStyled) firstStyled = styledNode;
+            if (lastStyled && lastStyled.nextSibling == styledNode) {
+                if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
+                    // For non-block lists, we want to join the interior nodes inside the LI.
+                    lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
+                    styledNode.remove();
+                } else {
+                    lastStyled.append(...styledNode.childNodes);
+                    styledNode.remove();
+                }
+            } else {
+                lastStyled = styledNode;
+            }
+            if (inside && ["DIV", "P"].includes(node.tagName)) {
+                // Extraneous node.
+                node.after(...node.childNodes);
+                node.remove();
+                lastNode = node.childNodes[0];
+            } else {
+                lastNode = node;
+            }*/
+            console.log(node);
+        }
+        return;
+
+        // See if the first node and last node can be joined.
+        if (style.type == "list") {
+            if (firstStyled.previousSibling?.tagName == firstStyled.tagName) {
+                // Join.
+                const previousSibling = firstStyled.previousSibling;
+                previousSibling.append(...firstStyled.childNodes);
+                firstStyled.remove();
+                if (lastStyled == firstStyled) lastStyled = previousSibling;
+                firstStyled = previousSibling;
+            }
+            if (lastStyled.nextSibling?.tagName == lastStyled.tagName) {
+                // Join.
+                const nextSibling = lastStyled.nextSibling;
+                nextSibling.prepend(...lastStyled.childNodes);
+                lastStyled.remove();
+                lastStyled = nextSibling;
+            }
+        }
+
+        const newRange = new Range();
+        newRange.setStart(startContainer, startOffset);
+        newRange.setEnd(endContainer, endOffset);
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
+    }
+
+    /*
     Perform a style command.
     */
     performStyleCommand(style) {
@@ -3438,6 +3554,12 @@ class Editor {
                             this.applyBlockStyle(style, range);
                         }
                     }
+                    break;
+                case "indent":
+                    this.blockIndent(range);
+                    break;
+                case "outdent":
+                    this.blockOutdent(range);
                     break;
             }
         }
@@ -3557,14 +3679,14 @@ class Editor {
     Indent.
     */
     indent() {
-
+        this.performStyleCommand({type: "indent"});
     }
 
     /*
     Outdent.
     */
     outdent() {
-        
+
     }
 
     /*
