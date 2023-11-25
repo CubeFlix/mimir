@@ -1280,10 +1280,15 @@ class Editor {
     /* 
     Get an array of all the text nodes within a range. Returns the newly calculated start and end offsets.
     */
-    getTextNodesInRange(range) {
-        if (range == null) {
+    getTextNodesInRange(oldRange) {
+        if (oldRange == null) {
             return null;
         }
+
+        // Clone the range so it doesn't affect the user's current selection.
+        const range = new Range();
+        range.setStart(oldRange.startContainer, oldRange.startOffset);
+        range.setEnd(oldRange.endContainer, oldRange.endOffset);
 
         const nodes = [];
         var currentNode = range.startContainer;
@@ -1560,11 +1565,6 @@ class Editor {
     in the range must be the same.
     */
     detectStyling(range) {
-        // Clone the range so it doesn't affect the user's current selection.
-        range = new Range();
-        range.setStart(range.startContainer, range.startOffset);
-        range.setEnd(range.endContainer, range.endOffset);
-
         var styling = [];
         const nodes = this.getTextNodesInRange(range).nodes;
         
