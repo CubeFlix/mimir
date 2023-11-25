@@ -1287,6 +1287,11 @@ class Editor {
         var currentNode = range.startContainer;
         var startOffset = range.startOffset;
         var endOffset = range.endOffset;
+
+        // Clone the range so it doesn't affect the user's current selection.
+        range = new Range();
+        range.setStart(range.startContainer, range.startOffset);
+        range.setEnd(range.endContainer, range.endOffset);
     
         while (currentNode.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(currentNode.tagName)) {
             // If there are no children of this node, exit.
@@ -3397,6 +3402,10 @@ class Editor {
                 node.remove();
                 continue;
             }
+
+            // Find the topmost indent-able node.
+            const topmost = this.findLastParent(node, (n) => ["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px");
+            console.log(topmost);
 
             /*const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, false);
             if (!firstStyled) firstStyled = styledNode;
