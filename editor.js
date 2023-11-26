@@ -477,6 +477,54 @@ class Editor {
                 e.preventDefault();
                 this.redo();
                 return;
+            } else if (e.inputType == "insertParagraph") {
+                // Handles a specific Chrome bug where inserting a paragraph at the end of a nested list creates a OL/UL element directly within another OL/UL. Note that this does not occur in Mozilla UAs.
+                // This overrides the standard contentEditable insertParagraph only when the user is pressing enter within an empty list element.
+                
+                // Find the topmost block container. We split out of extraneous DIVs.
+                var container = this.getRange()?.commonAncestorContainer;
+                while (!this.blockTags.includes(container.tagName) && this.inEditor(container)) {
+                    container = container.parentNode;
+                }
+                if (container.tagName == "DIV" || container.tagName == "P") {
+                    // See W3 bug 13841.
+                    var outerContainer = container;
+                    while (outerContainer.tagName != "LI" && this.inEditor(outerContainer.parentNode)) {outerContainer = outerContainer.parentNode};
+                    if (outerContainer.tagName == "LI") {container = outerContainer;}
+                }
+
+                // If the outermost container is a LI and it is empty, escape out of it,
+                if (container.tagName == "LI" && (this.isEmptyOrLineBreak(container))) {
+                    e.preventDefault();
+                    // Split out of the parent.
+                    const parentList = container.parentNode;
+                    const nodesAfterCurrentNode = Array.from(parentList.childNodes).slice(Array.from(parentList.childNodes).indexOf(container) + 1, parentList.childNodes.length);
+                    const newList = parentList.cloneNode(false);
+                    newList.append(...nodesAfterCurrentNode);
+                    parentList.after(container, newList);
+
+                    // Remove split lists if empty.
+                    if (this.isEmpty(newList)) {
+                        newList.remove();
+                    }
+                    if (this.isEmpty(parentList)) {
+                        parentList.remove();
+                    }
+
+                    if (!["UL", "OL"].includes(container.parentNode.tagName)) {
+                        // Don't leave dangling LI nodes.
+                        const newDiv = document.createElement("div");
+                        newDiv.append(...container.childNodes);
+                        container.after(newDiv);
+                        container.remove();
+                        container = newDiv;
+                    }
+                    
+                    const range = new Range();
+                    range.setStart(container, 0);
+                    document.getSelection().removeAllRanges();
+                    document.getSelection().addRange(range);
+                }
             }
         }.bind(this));
     }
@@ -1847,6 +1895,45 @@ class Editor {
             }
             if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent.replace(this.invisibleParsed, "") != "") {
                 return false;
+            }
+        
+            if (currentNode.childNodes.length != 0) {
+                // If there are children of this node, enter the node.
+                currentNode = currentNode.firstChild;
+            } else if (!currentNode.nextSibling) {
+                // If this is the last node in the parent, move to the parent's next neighbor.
+                while (!currentNode.nextSibling && node.contains(currentNode) && node != currentNode) {
+                    currentNode = currentNode.parentNode;
+                } 
+                currentNode = currentNode.nextSibling;
+            } else {
+                // Go to the next node.
+                currentNode = currentNode.nextSibling;
+            }
+        }
+        return true;
+    }
+
+    /*
+    Check if a node is empty or only contains one BR node.
+    */
+    isEmptyOrLineBreak(node) {
+        var currentNode = node;
+        var brNodes = 0;
+        const contentTags = this.contentTags.filter(t => t != "BR");
+        while (node.contains(currentNode) && currentNode != this.editor) {
+            if (currentNode.nodeType == Node.ELEMENT_NODE && contentTags.includes(currentNode.tagName)) {
+                return false;
+            }
+            if (currentNode.nodeType == Node.TEXT_NODE && currentNode.textContent.replace(this.invisibleParsed, "") != "") {
+                return false;
+            }
+            if (currentNode.tagName == "BR") {
+                if (brNodes == 1) {
+                    return false;
+                } else {
+                    brNodes = 1;
+                }
             }
         
             if (currentNode.childNodes.length != 0) {
@@ -3395,10 +3482,8 @@ class Editor {
         const nodes = this.getBlockNodesInRange(blockExtended);
 
         // Style the nodes.
-        var firstStyled = null;
         var lastStyled = null;
-        var lastNode = null;
-        for (const node of nodes) {
+        for (var node of nodes) {
             if (this.isEmpty(node)) {
                 // Empty nodes.
                 node.remove();
@@ -3409,51 +3494,47 @@ class Editor {
                 node = node.parentNode;
             }
 
-            // Find the topmost indent-able node.
-            const topmost = this.findLastParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
-            console.log(topmost, node);
-
-            /*const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, false);
-            if (!firstStyled) firstStyled = styledNode;
-            if (lastStyled && lastStyled.nextSibling == styledNode) {
-                if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
-                    // For non-block lists, we want to join the interior nodes inside the LI.
-                    lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
-                    styledNode.remove();
+            // Find the topmost indent-able node and wrap the child with it.
+            const topmost = this.findClosestParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
+            var styled = null;
+            if (topmost) {
+                const clone = topmost.cloneNode(false);
+                if (node.tagName == "LI") {
+                    if (["OL", "UL"].includes(clone.tagName)) {
+                        clone.append(document.createElement("li"));
+                        clone.childNodes[0].append(...node.childNodes);
+                        node.append(clone);
+                        styled = node;
+                    } else {
+                        clone.append(...node.childNodes);
+                        node.append(clone);
+                        styled = node;
+                    }
                 } else {
-                    lastStyled.append(...styledNode.childNodes);
-                    styledNode.remove();
+                    if (["OL", "UL"].includes(clone.tagName)) {
+                        node.after(clone);
+                        clone.append(document.createElement("li"));
+                        clone.childNodes[0].append(node);
+                    } else {
+                        node.after(clone);
+                        clone.append(node);
+                    }
+                    styled = clone;
                 }
             } else {
-                lastStyled = styledNode;
+                const div = document.createElement("div");
+                div.style.marginLeft = "40px";
+                node.after(div);
+                div.append(node);
+                styled = div;
             }
-            if (inside && ["DIV", "P"].includes(node.tagName)) {
-                // Extraneous node.
-                node.after(...node.childNodes);
-                node.remove();
-                lastNode = node.childNodes[0];
-            } else {
-                lastNode = node;
-            }*/
-        }
-        return;
 
-        // See if the first node and last node can be joined.
-        if (style.type == "list") {
-            if (firstStyled.previousSibling?.tagName == firstStyled.tagName) {
-                // Join.
-                const previousSibling = firstStyled.previousSibling;
-                previousSibling.append(...firstStyled.childNodes);
-                firstStyled.remove();
-                if (lastStyled == firstStyled) lastStyled = previousSibling;
-                firstStyled = previousSibling;
-            }
-            if (lastStyled.nextSibling?.tagName == lastStyled.tagName) {
-                // Join.
-                const nextSibling = lastStyled.nextSibling;
-                nextSibling.prepend(...lastStyled.childNodes);
-                lastStyled.remove();
-                lastStyled = nextSibling;
+            // Join.
+            if (lastStyled && lastStyled.nextChild == styled) {
+                lastStyled.append(...styled.childNodes);
+                styled.remove();
+            } else {
+                lastStyled = styled;
             }
         }
 
