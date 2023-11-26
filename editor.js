@@ -3080,14 +3080,19 @@ class Editor {
             }
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
             if (!firstStyled) firstStyled = styledNode;
-            if (lastStyled && lastStyled.nextSibling == styledNode && shouldJoin) {
-                if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
-                    // For non-block lists, we want to join the interior nodes inside the LI.
-                    lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
-                    styledNode.remove();
+            if (lastStyled && lastStyled.nextSibling == styledNode) {
+                if (!shouldJoin && this.blockTags.includes(node.tagName)) {
+                    // If shouldJoin is false, we only want to join inline nodes. Therefore, if the current node is not inline, don't join it.
+                    lastStyled = styledNode;
                 } else {
-                    lastStyled.append(...styledNode.childNodes);
-                    styledNode.remove();
+                    if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
+                        // For non-block lists, we want to join the interior nodes inside the LI.
+                        lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
+                        styledNode.remove();
+                    } else {
+                        lastStyled.append(...styledNode.childNodes);
+                        styledNode.remove();
+                    }
                 }
             } else {
                 lastStyled = styledNode;
@@ -3497,6 +3502,25 @@ class Editor {
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
 
+        // Fix disallowed children.
+        const fixedNodes = [];
+        const disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]";
+        function fixDisallowedChildrenOfNode(node) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren))))) {
+                // Append the children instead.
+                for (const child of node.childNodes) {
+                    fixDisallowedChildrenOfNode(child);
+                }
+            } else {
+                // Append the node.
+                fixedNodes.push(node);
+            }
+        }
+        fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
+        for (const node of nodes) {
+            fixDisallowedChildrenOfNode(node);
+        }
+
         // Style the nodes.
         var lastStyled = null;
         for (var node of nodes) {
@@ -3506,11 +3530,13 @@ class Editor {
                 continue;
             }
 
-            if (node.parentNode.childNodes.length == 1) {
-                node = node.parentNode;
-            }
+            // Escape extraneous parents.
+            // if (node.parentNode.childNodes.length == 1 && ["DIV", "P"].includes(node.parentNode.tagName) && !node.parentNode.getAttribute("style")) {
+            //     node = node.parentNode;
+            // }
 
             // Find the topmost indent-able node and wrap the child with it.
+            // TODO: handle invalid children
             const topmost = this.findClosestParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
             var styled = null;
             if (topmost) {
@@ -3602,7 +3628,6 @@ class Editor {
                 }
             }
         } else if (this.blockStylingCommands.includes(style.type)) {
-            const join = ["quote"].includes(style.type);
             switch (style.type) {
                 case "quote":
                     // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
@@ -3610,7 +3635,7 @@ class Editor {
                     if (currentStyling.some(s => s.type == style.type)) {
                         this.removeBlockStyle(style, range);
                     } else {
-                        this.applyBlockStyle(style, range, join);
+                        this.applyBlockStyle(style, range);
                     }
                     break;
                 case "header":
