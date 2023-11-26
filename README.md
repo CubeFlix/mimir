@@ -98,6 +98,7 @@ a rich text editor for javascript
 - [x] more styling options
 - [x] todo: if nothing selected, go to the beginning of the editor
 - [x] urgent bug: issue with getTextNodesInRange extending beyond selection (possible issue with range)
+- [x] blockIndent is indenting outside of editor
 - [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [x] retain selection when leaving editor
 - [ ] block styling options
@@ -119,7 +120,7 @@ a rich text editor for javascript
 ## future todo
 
 - [x] make new block styling nodes go inside (this can be done during the fixDisallowedChildrenOfNode process, by entering block nodes (this could break joining, however))
-- [ ] bug: when list styling `<p><p>abc</p></p><p><p>abc</p></p><p><p>abc</p></p>`, where all Ps have margin, uneven list ordering
+- [x] bug: when list styling `<p><p>abc</p></p><p><p>abc</p></p><p><p>abc</p></p>`, where all Ps have margin, uneven list ordering
 - [ ] remove extraneous style nodes
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] bugs (when adjusting start container to be relative to inline nodes in getNextTextNodeInRange and applyStyleToBlockNode, it is not considering empty nodes);

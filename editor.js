@@ -2726,7 +2726,7 @@ class Editor {
             }
         } else {
             // Only ascend out of extraneous ancestors.
-            while (startOffset == 0 && startContainer != this.editor && ["DIV", "P"].includes(startContainer.tagName) && !startContainer.getAttribute("style")) {
+            while (startOffset == 0 && startContainer != this.editor && ["DIV", "P"].includes(startContainer.tagName)) {
                 startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
                 startContainer = startContainer.parentNode;
             }
@@ -2757,7 +2757,7 @@ class Editor {
             }
         } else {
             // Only ascend out of extraneous ancestors.
-            while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor && ["DIV", "P"].includes(endContainer.tagName) && !endContainer.getAttribute("style")) {
+            while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor && ["DIV", "P"].includes(endContainer.tagName)) {
                 endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
                 endContainer = endContainer.parentNode;
             }
@@ -3435,6 +3435,11 @@ class Editor {
         this.saveHistory();
         this.shouldTakeSnapshotOnNextChange = true;
 
+        if (this.editor.innerHTML == "") {
+            this.editor.append(document.createElement("br"));
+            range = this.getRange();
+        }
+
         var startContainer = range.startContainer;
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
@@ -3499,7 +3504,8 @@ class Editor {
             var styled = null;
             if (topmost) {
                 const clone = topmost.cloneNode(false);
-                if (node.tagName == "LI") {
+                if (node.tagName == "LI" || node == this.editor) {
+                    // Place inside.
                     if (["OL", "UL"].includes(clone.tagName)) {
                         clone.append(document.createElement("li"));
                         clone.childNodes[0].append(...node.childNodes);
@@ -3524,9 +3530,16 @@ class Editor {
             } else {
                 const div = document.createElement("div");
                 div.style.marginLeft = "40px";
-                node.after(div);
-                div.append(node);
-                styled = div;
+                if (node.tagName == "LI" || node == this.editor) {
+                    // Place inside.
+                    div.append(...node.childNodes);
+                    node.append(div);
+                    styled = node;
+                } else {
+                    node.after(div);
+                    div.append(node);
+                    styled = div;
+                }
             }
 
             // Join.
