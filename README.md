@@ -119,6 +119,7 @@ a rich text editor for javascript
 ## future todo
 
 - [x] make new block styling nodes go inside (this can be done during the fixDisallowedChildrenOfNode process, by entering block nodes (this could break joining, however))
+- [ ] bug: when list styling `<p><p>abc</p></p><p><p>abc</p></p><p><p>abc</p></p>`, where all Ps have margin, uneven list ordering
 - [ ] remove extraneous style nodes
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] bugs (when adjusting start container to be relative to inline nodes in getNextTextNodeInRange and applyStyleToBlockNode, it is not considering empty nodes);

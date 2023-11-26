@@ -2726,10 +2726,10 @@ class Editor {
             }
         } else {
             // Only ascend out of extraneous ancestors.
-            // while (startOffset == 0 && startContainer != this.editor && ["DIV", "P"].includes(startContainer.parentNode.tagName)) {
-            //     startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
-            //     startContainer = startContainer.parentNode;
-            // }
+            while (startOffset == 0 && startContainer != this.editor && ["DIV", "P"].includes(startContainer.tagName) && !startContainer.getAttribute("style")) {
+                startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
+                startContainer = startContainer.parentNode;
+            }
         }
 
         // If the end offset is at the start of an element node, move it forward one.
@@ -2757,10 +2757,10 @@ class Editor {
             }
         } else {
             // Only ascend out of extraneous ancestors.
-            // while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor && ["DIV", "P"].includes(endContainer.parentNode.tagName)) {
-            //     endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
-            //     endContainer = endContainer.parentNode;
-            // }
+            while (endOffset == (endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) && endContainer != this.editor && ["DIV", "P"].includes(endContainer.tagName) && !endContainer.getAttribute("style")) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer) + 1;
+                endContainer = endContainer.parentNode;
+            }
         }
 
         const newRange = new Range();
