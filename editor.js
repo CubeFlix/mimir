@@ -2991,6 +2991,8 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        const shouldJoin = !this.inlineBlockStylingCommands.includes(style.type);
+
         // Adjust the start point so that it is always relative to inline nodes.
         while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
             // If there are no children of this node, exit.
@@ -3078,7 +3080,7 @@ class Editor {
             }
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
             if (!firstStyled) firstStyled = styledNode;
-            if (lastStyled && lastStyled.nextSibling == styledNode) {
+            if (lastStyled && lastStyled.nextSibling == styledNode && shouldJoin) {
                 if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
                     // For non-block lists, we want to join the interior nodes inside the LI.
                     lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
