@@ -2687,7 +2687,7 @@ class Editor {
     /*
     Block extend a range.
     */
-    blockExtendRange(range, ascendAncestors = false) {
+    blockExtendRange(range, ascendAncestors = true) {
         var startContainer = range.startContainer;
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
@@ -2719,6 +2719,7 @@ class Editor {
             }
         }
         
+        // We always want to ascend ancestors. That way, we can traverse back into them only if necessary.
         if (ascendAncestors) {
             while (startOffset == 0 && startContainer != this.editor) {
                 startOffset = Array.from(startContainer.parentNode.childNodes).indexOf(startContainer);
@@ -2924,6 +2925,14 @@ class Editor {
             }
 
             node = splitIncludingNode;
+        }
+
+        // Since blockExtendRange and getBlockNodesInRange always ascended ancestors, we must re-traverse back through ancestors if the node must be placed inside.
+        if (inside) {
+            // Traverse all the way back down.
+            while (node.nodeType == Node.ELEMENT_NODE && node.childNodes.length == 1 && this.blockTags.includes(node.childNodes[0].tagName) && !this.childlessTags.includes(node.childNodes[0].tagName)) {
+                node = node.childNodes[0];
+            }
         }
 
         // Create a new style element and place the node within it.
