@@ -3445,6 +3445,105 @@ class Editor {
     }
 
     /*
+    Block indent a list of sibling nodes.
+    */
+    blockIndentSiblingNodes(siblings) {
+        const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px"));
+        var lastIndented = null;
+        var firstIndented = null;
+        if (siblings[0].tagName == "LI") {
+            // Wrap list nodes.
+            const newLi = document.createElement("li");
+            siblings[0].before(newLi);
+            const clone = parent.cloneNode(false);
+            clone.append(...siblings);
+            newLi.append(clone);
+            if (!firstIndented) firstIndented = clone;
+            lastIndented = clone;
+        } else {
+            const clone = parent ? parent.cloneNode(false) : document.createElement("div");
+            if (clone.tagName == "DIV") {
+                // Simple indentation.
+                clone.style.marginLeft = "40px";
+                const marker = document.createTextNode("");
+                siblings[0].before(marker);
+                const elements = [];
+                while (siblings.length != 0) {
+                    const node = siblings[0];
+                    if (this.blockTags.includes(node.tagName)) {
+                        // Block nodes go in their own LI node.
+                        const newClone = clone.cloneNode(false);
+                        newClone.append(node);
+                        elements.push(newClone);
+                        siblings.shift();
+                    } else {
+                        // Inline nodes get combined.
+                        const newClone = clone.cloneNode(false);
+                        newClone.append(node);
+                        siblings.shift();
+                        while (siblings.length != 0 && !this.blockTags.includes(siblings[0].tagName)) {
+                            newClone.append(siblings.shift());
+                        }
+                        elements.push(newClone);
+                    }
+                }
+                marker.before(...elements);
+                // No need to store the first and last indented nodes.
+            } else if (["OL", "UL"].includes(clone.tagName)) {
+                // List indentation.
+                siblings[0].before(clone);
+                const list = [];
+                while (siblings.length != 0) {
+                    const node = siblings[0];
+                    if (this.blockTags.includes(node.tagName)) {
+                        // Block nodes go in their own LI node.
+                        const newLi = document.createElement("li");
+                        newLi.append(node);
+                        list.push(newLi);
+                        siblings.shift();
+                    } else {
+                        // Inline nodes get combined.
+                        const newLi = document.createElement("li");
+                        newLi.append(node);
+                        siblings.shift();
+                        while (siblings.length != 0 && !this.blockTags.includes(siblings[0].tagName)) {
+                            newLi.append(siblings.shift());
+                        }
+                        list.push(newLi);
+                    }
+                }
+                clone.append(...list);
+                if (!firstIndented) firstIndented = clone;
+                lastIndented = clone;
+            }
+        }
+
+        // Join adjacent lists within a list.
+        if (["OL", "UL"].includes(firstIndented.tagName) && 
+            firstIndented.parentNode.tagName == "LI" && 
+            firstIndented.parentNode.previousSibling && 
+            firstIndented.parentNode.previousSibling.childNodes.length != 0 && 
+            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].tagName == firstIndented.tagName) {
+            // If first indented is the same as last indented, joining will mess up this process. 
+            if (firstIndented == lastIndented) {
+                lastIndented = firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1];
+            }
+
+            // Join.
+            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].append(...firstIndented.childNodes);
+
+            // Remove the original node. If possible, remove its parent as well.
+            const firstIndentedParent = firstIndented.parentNode;
+            firstIndented.remove();
+            if (firstIndentedParent.childNodes.length == 0) {
+                firstIndentedParent.remove();
+            }
+        }
+
+        return lastIndented;
+    }
+
+    /*
     Block indent a range.
     */
     blockIndent(range) {
@@ -3531,96 +3630,10 @@ class Editor {
                 siblings.push(nodes.pop());
             }
 
-            const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px"));
-            if (siblings[0].tagName == "LI") {
-                // Wrap list nodes.
-                const newLi = document.createElement("li");
-                siblings[0].before(newLi);
-                const clone = parent.cloneNode(false);
-                clone.append(...siblings);
-                newLi.append(clone);
-                if (!firstIndented) firstIndented = clone;
-                lastIndented = clone;
-            } else {
-                const clone = parent ? parent.cloneNode(false) : document.createElement("div");
-                if (clone.tagName == "DIV") {
-                    // Simple indentation.
-                    clone.style.marginLeft = "40px";
-                    const marker = document.createTextNode("");
-                    siblings[0].before(marker);
-                    const elements = [];
-                    while (siblings.length != 0) {
-                        const node = siblings[0];
-                        if (this.blockTags.includes(node.tagName)) {
-                            // Block nodes go in their own LI node.
-                            const newClone = clone.cloneNode(false);
-                            newClone.append(node);
-                            elements.push(newClone);
-                            siblings.shift();
-                        } else {
-                            // Inline nodes get combined.
-                            const newClone = clone.cloneNode(false);
-                            newClone.append(node);
-                            siblings.shift();
-                            while (siblings.length != 0 && !this.blockTags.includes(siblings[0].tagName)) {
-                                newClone.append(siblings.shift());
-                            }
-                            elements.push(newClone);
-                        }
-                    }
-                    marker.before(...elements);
-                    // No need to store the first and last indented nodes.
-                } else if (["OL", "UL"].includes(clone.tagName)) {
-                    // List indentation.
-                    siblings[0].before(clone);
-                    const list = [];
-                    while (siblings.length != 0) {
-                        const node = siblings[0];
-                        if (this.blockTags.includes(node.tagName)) {
-                            // Block nodes go in their own LI node.
-                            const newLi = document.createElement("li");
-                            newLi.append(node);
-                            list.push(newLi);
-                            siblings.shift();
-                        } else {
-                            // Inline nodes get combined.
-                            const newLi = document.createElement("li");
-                            newLi.append(node);
-                            siblings.shift();
-                            while (siblings.length != 0 && !this.blockTags.includes(siblings[0].tagName)) {
-                                newLi.append(siblings.shift());
-                            }
-                            list.push(newLi);
-                        }
-                    }
-                    clone.append(...list);
-                    if (!firstIndented) firstIndented = clone;
-                    lastIndented = clone;
-                }
-            }
+            lastIndented = this.blockIndentSiblingNodes(siblings);
         }
 
-        // Join adjacent lists within a list.
-        if (["OL", "UL"].includes(firstIndented.tagName) && 
-            firstIndented.parentNode.tagName == "LI" && 
-            firstIndented.parentNode.previousSibling && 
-            firstIndented.parentNode.previousSibling.childNodes.length != 0 && 
-            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].tagName == firstIndented.tagName) {
-            // If first indented is the same as last indented, joining will mess up this process. 
-            if (firstIndented == lastIndented) {
-                lastIndented = firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1];
-            }
-
-            // Join.
-            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].append(...firstIndented.childNodes);
-
-            // Remove the original node. If possible, remove its parent as well.
-            const firstIndentedParent = firstIndented.parentNode;
-            firstIndented.remove();
-            if (firstIndentedParent.childNodes.length == 0) {
-                firstIndentedParent.remove();
-            }
-        }
+        // Join the last list rightwards.
         if (["OL", "UL"].includes(lastIndented.tagName) && 
             lastIndented.parentNode.tagName == "LI" && 
             lastIndented.parentNode.nextSibling && 
