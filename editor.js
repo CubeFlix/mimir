@@ -3523,6 +3523,8 @@ class Editor {
 
         // Style the nodes.
         nodes = fixedNodes.reverse();
+        var firstIndented = null; // Store the first and last indented nodes so that we can join adjacent lists.
+        var lastIndented = null;
         while (nodes.length != 0) {
             const siblings = [nodes.pop()];
             while (nodes.length != 0 && siblings[siblings.length - 1].nextSibling == nodes[nodes.length - 1]) {
@@ -3537,6 +3539,8 @@ class Editor {
                 const clone = parent.cloneNode(false);
                 clone.append(...siblings);
                 newLi.append(clone);
+                if (!firstIndented) firstIndented = clone;
+                lastIndented = clone;
             } else {
                 const clone = parent ? parent.cloneNode(false) : document.createElement("div");
                 if (clone.tagName == "DIV") {
@@ -3565,6 +3569,7 @@ class Editor {
                         }
                     }
                     marker.before(...elements);
+                    // No need to store the first and last indented nodes.
                 } else if (["OL", "UL"].includes(clone.tagName)) {
                     // List indentation.
                     siblings[0].before(clone);
@@ -3588,8 +3593,47 @@ class Editor {
                             list.push(newLi);
                         }
                     }
-                    clone.append(...list);                    
+                    clone.append(...list);
+                    if (!firstIndented) firstIndented = clone;
+                    lastIndented = clone;
                 }
+            }
+        }
+
+        // Join adjacent lists within a list.
+        if (["OL", "UL"].includes(firstIndented.tagName) && 
+            firstIndented.parentNode.tagName == "LI" && 
+            firstIndented.parentNode.previousSibling && 
+            firstIndented.parentNode.previousSibling.childNodes.length != 0 && 
+            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].tagName == firstIndented.tagName) {
+            // If first indented is the same as last indented, joining will mess up this process. 
+            if (firstIndented == lastIndented) {
+                lastIndented = firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1];
+            }
+
+            // Join.
+            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].append(...firstIndented.childNodes);
+
+            // Remove the original node. If possible, remove its parent as well.
+            const firstIndentedParent = firstIndented.parentNode;
+            firstIndented.remove();
+            if (firstIndentedParent.childNodes.length == 0) {
+                firstIndentedParent.remove();
+            }
+        }
+        if (["OL", "UL"].includes(lastIndented.tagName) && 
+            lastIndented.parentNode.tagName == "LI" && 
+            lastIndented.parentNode.nextSibling && 
+            lastIndented.parentNode.nextSibling.childNodes.length != 0 && 
+            lastIndented.parentNode.nextSibling.childNodes[0].tagName == lastIndented.tagName) {
+            // Join.
+            lastIndented.parentNode.nextSibling.childNodes[0].prepend(...lastIndented.childNodes);
+
+            // Remove the original node. If possible, remove its parent as well.
+            const lastIndentedParent = lastIndented.parentNode;
+            lastIndented.remove();
+            if (lastIndentedParent.childNodes.length == 0) {
+                lastIndentedParent.remove();
             }
         }
 
@@ -3598,6 +3642,64 @@ class Editor {
         newRange.setEnd(endContainer, endOffset);
         document.getSelection().removeAllRanges();
         document.getSelection().addRange(newRange);
+    }
+
+    /*
+    Block outdent a range.
+    */
+    blockOutdent(range) {
+        if (this.editor.innerHTML == "") {
+            return;
+        }
+
+        this.saveHistory();
+        this.shouldTakeSnapshotOnNextChange = true;
+
+        var startContainer = range.startContainer;
+        var startOffset = range.startOffset;
+        var endContainer = range.endContainer;
+        var endOffset = range.endOffset;
+
+        // Adjust the start point so that it is always relative to inline nodes.
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (startContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (startOffset == startContainer.childNodes.length) {
+                startContainer = startContainer.childNodes[startOffset - 1];
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
+            } else {
+                startContainer = startContainer.childNodes[startOffset];
+                startOffset = 0;
+            }
+        }
+
+        // Adjust the end point so that it is always relative to inline nodes.
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (endContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (endOffset == 0) {
+                endContainer = endContainer.childNodes[endOffset];
+                endOffset = 0;
+            } else {
+                endContainer = endContainer.childNodes[endOffset - 1];
+                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            }
+        }
+
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range);
+        
+        // Get the block nodes within the range.
+        var nodes = this.getBlockNodesInRange(blockExtended);
     }
 
     /*
@@ -3835,7 +3937,7 @@ class Editor {
     Outdent.
     */
     outdent() {
-
+        this.performStyleCommand({type: "outdent"});
     }
 
     /*
