@@ -3449,7 +3449,7 @@ class Editor {
     */
     blockIndentSiblingNodes(siblings) {
         const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px"));
-        var lastIndented = null;
+        var lastIndented = null; // Store the first and last indented nodes so that we can join adjacent lists.
         var firstIndented = null;
         if (siblings[0].tagName == "LI") {
             // Wrap list nodes.
@@ -3519,7 +3519,7 @@ class Editor {
         }
 
         // Join adjacent lists within a list.
-        if (["OL", "UL"].includes(firstIndented.tagName) && 
+        if (firstIndented && ["OL", "UL"].includes(firstIndented.tagName) && 
             firstIndented.parentNode.tagName == "LI" && 
             firstIndented.parentNode.previousSibling && 
             firstIndented.parentNode.previousSibling.childNodes.length != 0 && 
@@ -3622,8 +3622,7 @@ class Editor {
 
         // Style the nodes.
         nodes = fixedNodes.reverse();
-        var firstIndented = null; // Store the first and last indented nodes so that we can join adjacent lists.
-        var lastIndented = null;
+        var lastIndented = null; // Store the last indented node so that we can join adjacent lists.
         while (nodes.length != 0) {
             const siblings = [nodes.pop()];
             while (nodes.length != 0 && siblings[siblings.length - 1].nextSibling == nodes[nodes.length - 1]) {
@@ -3634,7 +3633,7 @@ class Editor {
         }
 
         // Join the last list rightwards.
-        if (["OL", "UL"].includes(lastIndented.tagName) && 
+        if (lastIndented && ["OL", "UL"].includes(lastIndented.tagName) && 
             lastIndented.parentNode.tagName == "LI" && 
             lastIndented.parentNode.nextSibling && 
             lastIndented.parentNode.nextSibling.childNodes.length != 0 && 

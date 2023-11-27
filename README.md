@@ -102,6 +102,7 @@ a rich text editor for javascript
 - [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [x] todo: bug with this situation: `<ol><li><ol><li><ol><li>asdasd</li></ol></li></ol></li><li><ol><li><div>asd</div></li></ol></li><li><div>as</div></li><li><ol><li><div>a</div></li></ol></li></ol>` (not joining. consider joining every time we have a group of consecutive siblings. offload the joining of consecutive siblings to a separate function and join every time in there)
 - [ ] sometimes when pressing ctrl-z it produces the letter a ?
+- [ ] indenting does not select
 - [x] retain selection when leaving editor
 - [ ] block styling options
 - [ ] LI nodes that contain another list should not display marker
