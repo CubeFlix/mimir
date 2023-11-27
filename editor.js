@@ -3500,13 +3500,13 @@ class Editor {
         const blockExtended = this.blockExtendRange(range);
         
         // Get the block nodes within the range.
-        const nodes = this.getBlockNodesInRange(blockExtended);
+        var nodes = this.getBlockNodesInRange(blockExtended);
 
         // Fix disallowed children.
         const fixedNodes = [];
-        const disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]";
         function fixDisallowedChildrenOfNode(node) {
-            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren))))) {
+            // If the current node is not a OL/UL element but contains a OL/UL, go inside.
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("ol, ul")))) {
                 // Append the children instead.
                 for (const child of node.childNodes) {
                     fixDisallowedChildrenOfNode(child);
@@ -3522,22 +3522,80 @@ class Editor {
         }
 
         // Style the nodes.
-        var lastStyled = null;
-        for (var node of nodes) {
-            if (this.isEmpty(node)) {
-                // Empty nodes.
-                node.remove();
-                continue;
+        nodes = fixedNodes.reverse();
+        while (nodes.length != 0) {
+            const siblings = [nodes.pop()];
+            while (nodes.length != 0 && siblings[siblings.length - 1].nextSibling == nodes[nodes.length - 1]) {
+                siblings.push(nodes.pop());
             }
 
-            // Escape extraneous parents.
-            // if (node.parentNode.childNodes.length == 1 && ["DIV", "P"].includes(node.parentNode.tagName) && !node.parentNode.getAttribute("style")) {
-            //     node = node.parentNode;
-            // }
+            console.log(siblings);
+            const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px"));
+            if (siblings[0].tagName == "LI") {
+                // Wrap list nodes.
+                const newLi = document.createElement("li");
+                siblings[0].before(newLi);
+                const clone = parent.cloneNode(false);
+                clone.append(...siblings);
+                newLi.append(clone);
+            } else {
+                const clone = parent ? parent.cloneNode(false) : document.createElement("div");
+                if (clone.tagName == "DIV") {
+                    // Simple indentation.
+                    clone.style.marginLeft = "40px";
+                    const marker = document.createTextNode("");
+                    siblings[0].before(marker);
+                    const elements = [];
+                    while (siblings.length != 0) {
+                        const node = siblings[0];
+                        if (this.blockTags.includes(node.tagName)) {
+                            // Block nodes go in their own LI node.
+                            const newClone = clone.cloneNode(false);
+                            newClone.append(node);
+                            elements.push(newClone);
+                            siblings.shift();
+                        } else {
+                            // Inline nodes get combined.
+                            const newClone = clone.cloneNode(false);
+                            newClone.append(node);
+                            siblings.shift();
+                            while (siblings.length != 0 && !this.blockTags.includes(siblings[0].tagName)) {
+                                newClone.append(siblings.shift());
+                            }
+                            elements.push(newClone);
+                        }
+                    }
+                    marker.before(...elements);
+                } else if (["OL", "UL"].includes(clone.tagName)) {
+                    // List indentation.
+                    siblings[0].before(clone);
+                    const list = [];
+                    while (siblings.length != 0) {
+                        const node = siblings[0];
+                        if (this.blockTags.includes(node.tagName)) {
+                            // Block nodes go in their own LI node.
+                            const newLi = document.createElement("li");
+                            newLi.append(node);
+                            list.push(newLi);
+                            siblings.shift();
+                        } else {
+                            // Inline nodes get combined.
+                            const newLi = document.createElement("li");
+                            newLi.append(node);
+                            siblings.shift();
+                            while (siblings.length != 0 && !this.blockTags.includes(siblings[0].tagName)) {
+                                newLi.append(siblings.shift());
+                            }
+                            list.push(newLi);
+                        }
+                    }
+                    clone.append(...list);                    
+                }
+            }
 
             // Find the topmost indent-able node and wrap the child with it.
             // TODO: handle invalid children
-            const topmost = this.findClosestParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
+            /*const topmost = this.findClosestParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
             var styled = null;
             if (topmost) {
                 const clone = topmost.cloneNode(false);
@@ -3585,7 +3643,7 @@ class Editor {
                 styled.remove();
             } else {
                 lastStyled = styled;
-            }
+            }*/
         }
 
         const newRange = new Range();
