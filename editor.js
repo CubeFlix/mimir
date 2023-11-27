@@ -1282,6 +1282,13 @@ class Editor {
                 }
             }
         }.bind(this));
+
+        document.addEventListener("keydown", function(e) {
+            // Block external undo/redo commands.
+            if ((e.metaKey || e.ctrlKey) && (e.key == "z" || e.key == "y")) {
+                e.preventDefault();
+            }
+        }.bind(this));
     }
 
     /* 
@@ -3519,7 +3526,7 @@ class Editor {
         }
 
         // Join adjacent lists within a list.
-        if (firstIndented && ["OL", "UL"].includes(firstIndented.tagName) && 
+        if (firstIndented && !firstIndented.previousSibling && ["OL", "UL"].includes(firstIndented.tagName) && 
             firstIndented.parentNode.tagName == "LI" && 
             firstIndented.parentNode.previousSibling && 
             firstIndented.parentNode.previousSibling.childNodes.length != 0 && 
@@ -3633,7 +3640,7 @@ class Editor {
         }
 
         // Join the last list rightwards.
-        if (lastIndented && ["OL", "UL"].includes(lastIndented.tagName) && 
+        if (lastIndented && !lastIndented.nextSibling && ["OL", "UL"].includes(lastIndented.tagName) && 
             lastIndented.parentNode.tagName == "LI" && 
             lastIndented.parentNode.nextSibling && 
             lastIndented.parentNode.nextSibling.childNodes.length != 0 && 

@@ -105,7 +105,7 @@ a rich text editor for javascript
 - [ ] indenting does not select
 - [x] retain selection when leaving editor
 - [ ] block styling options
-- [ ] LI nodes that contain another list should not display marker
+- [ ] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [ ] make modals always show up on screen
 - [x] lists
 - [ ] images
