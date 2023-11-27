@@ -3529,7 +3529,6 @@ class Editor {
                 siblings.push(nodes.pop());
             }
 
-            console.log(siblings);
             const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px"));
             if (siblings[0].tagName == "LI") {
                 // Wrap list nodes.
@@ -3592,58 +3591,6 @@ class Editor {
                     clone.append(...list);                    
                 }
             }
-
-            // Find the topmost indent-able node and wrap the child with it.
-            // TODO: handle invalid children
-            /*const topmost = this.findClosestParent(node, (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || getComputedStyle(n).marginLeft.toLowerCase() == "40px"));
-            var styled = null;
-            if (topmost) {
-                const clone = topmost.cloneNode(false);
-                if (node.tagName == "LI" || node == this.editor) {
-                    // Place inside.
-                    if (["OL", "UL"].includes(clone.tagName)) {
-                        clone.append(document.createElement("li"));
-                        clone.childNodes[0].append(...node.childNodes);
-                        node.append(clone);
-                        styled = node;
-                    } else {
-                        clone.append(...node.childNodes);
-                        node.append(clone);
-                        styled = node;
-                    }
-                } else {
-                    if (["OL", "UL"].includes(clone.tagName)) {
-                        node.after(clone);
-                        clone.append(document.createElement("li"));
-                        clone.childNodes[0].append(node);
-                    } else {
-                        node.after(clone);
-                        clone.append(node);
-                    }
-                    styled = clone;
-                }
-            } else {
-                const div = document.createElement("div");
-                div.style.marginLeft = "40px";
-                if (node.tagName == "LI" || node == this.editor) {
-                    // Place inside.
-                    div.append(...node.childNodes);
-                    node.append(div);
-                    styled = node;
-                } else {
-                    node.after(div);
-                    div.append(node);
-                    styled = div;
-                }
-            }
-
-            // Join.
-            if (lastStyled && lastStyled.nextChild == styled) {
-                lastStyled.append(...styled.childNodes);
-                styled.remove();
-            } else {
-                lastStyled = styled;
-            }*/
         }
 
         const newRange = new Range();
