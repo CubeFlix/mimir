@@ -3506,7 +3506,7 @@ class Editor {
         const fixedNodes = [];
         function fixDisallowedChildrenOfNode(node) {
             // If the current node is not a OL/UL element but contains a OL/UL, go inside.
-            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("ol, ul")))) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (node.querySelector("ol, ul")))) {
                 // Append the children instead.
                 for (const child of node.childNodes) {
                     fixDisallowedChildrenOfNode(child);
