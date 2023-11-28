@@ -3587,10 +3587,22 @@ class Editor {
     */
     blockOutdentSiblingNodes(siblings) {
         for (const node of siblings) {
+            // If the node we're out-denting is already a indent-able node, outdent it.
+            // Otherwise, the nearest out-dentable node will be one of its parents.
             if (["OL", "UL"].includes(node.tagName)) {
                 // Escape a list.
             } else if (node.tagName == "LI") {
                 // List item.
+            } else if (node.nodeType == Node.ELEMENT_NODE && node.style.marginLeft.toLowerCase() == "40px") {
+                // Simple indent.
+            } else {
+                // If it's neither of these types, find a parent to escape from.
+                const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
+                
+                // Per pg. 9.23 step 5, we want to get the topmost list to outdent if the current parent is a list.
+                if (["OL", "UL"].includes(nearestOutdentableParent.tagName)) {
+                    const farthestOutdentableList = this.findLastParent(nearestOutdentableParent, (n) => ["OL", "UL"].includes(n.tagName));
+                }
             }
         }
     }
@@ -3627,7 +3639,7 @@ class Editor {
         function getInnerChildren(node) {
             // If the current node is not a indent-able node but contains an indent-able node, go inside.
             // With lists, we want to get to topmost one, but with simple indenters, we want to go inside.
-            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("ol, ul")) || (node.querySelector("[style*=\"margin-left: 40px\"]")))) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL", "LI"].includes(node.tagName) && node.querySelector("ol, ul")) || (node.querySelector("[style*=\"margin-left: 40px\"]")))) {
                 // Append the children instead.
                 for (const child of node.childNodes) {
                     getInnerChildren(child);
