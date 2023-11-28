@@ -2898,6 +2898,45 @@ class Editor {
     */
 
     /*
+    Adjust the start and end points of a range to be relative to inline nodes.
+    */
+    adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset) {
+        // Adjust the start point so that it is always relative to inline nodes.
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (startContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (startOffset == startContainer.childNodes.length) {
+                startContainer = startContainer.childNodes[startOffset - 1];
+                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
+            } else {
+                startContainer = startContainer.childNodes[startOffset];
+                startOffset = 0;
+            }
+        }
+
+        // Adjust the end point so that it is always relative to inline nodes.
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+            // If there are no children of this node, exit.
+            if (endContainer.childNodes.length == 0) {
+                break;
+            }
+
+            if (endOffset == 0) {
+                endContainer = endContainer.childNodes[endOffset];
+                endOffset = 0;
+            } else {
+                endContainer = endContainer.childNodes[endOffset - 1];
+                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+            }
+        }
+
+        return [startContainer, startOffset, endContainer, endOffset];
+    }
+
+    /*
     Apply a block style to a node. The disallowedParents value should be a predicate.
     */
     applyBlockStyleToNode(node, style, disallowedParents = null, inside = false) {
@@ -3000,37 +3039,7 @@ class Editor {
 
         const shouldJoin = !this.inlineBlockStylingCommands.includes(style.type);
 
-        // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (startContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (startOffset == startContainer.childNodes.length) {
-                startContainer = startContainer.childNodes[startOffset - 1];
-                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
-            } else {
-                startContainer = startContainer.childNodes[startOffset];
-                startOffset = 0;
-            }
-        }
-
-        // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (endContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (endOffset == 0) {
-                endContainer = endContainer.childNodes[endOffset];
-                endOffset = 0;
-            } else {
-                endContainer = endContainer.childNodes[endOffset - 1];
-                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-            }
-        }
+        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
@@ -3254,37 +3263,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (startContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (startOffset == startContainer.childNodes.length) {
-                startContainer = startContainer.childNodes[startOffset - 1];
-                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
-            } else {
-                startContainer = startContainer.childNodes[startOffset];
-                startOffset = 0;
-            }
-        }
-
-        // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (endContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (endOffset == 0) {
-                endContainer = endContainer.childNodes[endOffset];
-                endOffset = 0;
-            } else {
-                endContainer = endContainer.childNodes[endOffset - 1];
-                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-            }
-        }
+        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
@@ -3396,37 +3375,7 @@ class Editor {
             }
         }
 
-        // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (startContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (startOffset == startContainer.childNodes.length) {
-                startContainer = startContainer.childNodes[startOffset - 1];
-                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
-            } else {
-                startContainer = startContainer.childNodes[startOffset];
-                startOffset = 0;
-            }
-        }
-
-        // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (endContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (endOffset == 0) {
-                endContainer = endContainer.childNodes[endOffset];
-                startOffset = 0;
-            } else {
-                endContainer = endContainer.childNodes[endOffset - 1];
-                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-            }
-        }
+        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
@@ -3567,37 +3516,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (startContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (startOffset == startContainer.childNodes.length) {
-                startContainer = startContainer.childNodes[startOffset - 1];
-                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
-            } else {
-                startContainer = startContainer.childNodes[startOffset];
-                startOffset = 0;
-            }
-        }
-
-        // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (endContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (endOffset == 0) {
-                endContainer = endContainer.childNodes[endOffset];
-                endOffset = 0;
-            } else {
-                endContainer = endContainer.childNodes[endOffset - 1];
-                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-            }
-        }
+        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
@@ -3679,38 +3598,8 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (startContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (startOffset == startContainer.childNodes.length) {
-                startContainer = startContainer.childNodes[startOffset - 1];
-                startOffset = startContainer.nodeType == Node.ELEMENT_NODE ? startContainer.childNodes.length : startContainer.textContent.length;
-            } else {
-                startContainer = startContainer.childNodes[startOffset];
-                startOffset = 0;
-            }
-        }
-
-        // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
-            // If there are no children of this node, exit.
-            if (endContainer.childNodes.length == 0) {
-                break;
-            }
-
-            if (endOffset == 0) {
-                endContainer = endContainer.childNodes[endOffset];
-                endOffset = 0;
-            } else {
-                endContainer = endContainer.childNodes[endOffset - 1];
-                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-            }
-        }
-
+        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
+        
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
 
@@ -3719,6 +3608,12 @@ class Editor {
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
+
+        const newRange = new Range();
+        newRange.setStart(startContainer, startOffset);
+        newRange.setEnd(endContainer, endOffset);
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
     }
 
     /*
