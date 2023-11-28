@@ -3583,6 +3583,19 @@ class Editor {
     }
 
     /*
+    Block outdent a list of sibling nodes.
+    */
+    blockOutdentSiblingNodes(siblings) {
+        for (const node of siblings) {
+            if (["OL", "UL"].includes(node.tagName)) {
+                // Escape a list.
+            } else if (node.tagName == "LI") {
+                // List item.
+            }
+        }
+    }
+
+    /*
     Block outdent a range.
     */
     blockOutdent(range) {
@@ -3608,6 +3621,26 @@ class Editor {
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
+
+        // If possible, get inner children.
+        const fixedNodes = [];
+        function getInnerChildren(node) {
+            // If the current node is not a indent-able node but contains an indent-able node, go inside.
+            // With lists, we want to get to topmost one, but with simple indenters, we want to go inside.
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("ol, ul")) || (node.querySelector("[style*=\"margin-left: 40px\"]")))) {
+                // Append the children instead.
+                for (const child of node.childNodes) {
+                    getInnerChildren(child);
+                }
+            } else {
+                // Append the node.
+                fixedNodes.push(node);
+            }
+        }
+        getInnerChildren = getInnerChildren.bind(this);
+        for (const node of nodes) {
+            getInnerChildren(node);
+        }
 
         // Style the nodes.
         nodes = fixedNodes.reverse();
