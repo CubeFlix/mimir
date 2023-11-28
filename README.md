@@ -99,17 +99,18 @@ a rich text editor for javascript
 - [x] todo: if nothing selected, go to the beginning of the editor
 - [x] urgent bug: issue with getTextNodesInRange extending beyond selection (possible issue with range)
 - [x] blockIndent is indenting outside of editor
-- [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [x] todo: bug with this situation: `<ol><li><ol><li><ol><li>asdasd</li></ol></li></ol></li><li><ol><li><div>asd</div></li></ol></li><li><div>as</div></li><li><ol><li><div>a</div></li></ol></li></ol>` (not joining. consider joining every time we have a group of consecutive siblings. offload the joining of consecutive siblings to a separate function and join every time in there)
-- [ ] sometimes when pressing ctrl-z it produces the letter a ?
-- [ ] indenting does not select
+- [x] sometimes when pressing ctrl-z it produces the letter a ?
+- [x] indenting does not select
 - [x] retain selection when leaving editor
+- [ ] consider joining adjacent list nodes during indent, event at different levels. see `<ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol>`
 - [ ] block styling options
 - [ ] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [ ] make modals always show up on screen
 - [x] lists
 - [ ] images
-- [ ] format indent up/down
+- [x] format indent up
+- [ ] format indent down
 - [x] `sup`
 - [x] `pre`
 - [ ] handle tab button
@@ -125,6 +126,7 @@ a rich text editor for javascript
 - [x] make new block styling nodes go inside (this can be done during the fixDisallowedChildrenOfNode process, by entering block nodes (this could break joining, however))
 - [x] bug: when list styling `<p><p>abc</p></p><p><p>abc</p></p><p><p>abc</p></p>`, where all Ps have margin, uneven list ordering
 - [x] possibly join adjacent lists during indent
+- [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css
 - [ ] remove extraneous style nodes
 - [ ] bugs (fix empty styling elements, may be a possibility of text in empty text thing)
 - [ ] bugs (when adjusting start container to be relative to inline nodes in getNextTextNodeInRange and applyStyleToBlockNode, it is not considering empty nodes);
