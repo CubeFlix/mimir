@@ -3527,23 +3527,23 @@ class Editor {
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
 
-        // Fix disallowed children.
+        // If possible, get inner children.
         const fixedNodes = [];
-        function fixDisallowedChildrenOfNode(node) {
+        function getInnerChildren(node) {
             // If the current node is not a OL/UL element but contains a OL/UL, go inside.
-            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (node.querySelector("ol, ul")))) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("ol, ul")))) {
                 // Append the children instead.
                 for (const child of node.childNodes) {
-                    fixDisallowedChildrenOfNode(child);
+                    getInnerChildren(child);
                 }
             } else {
                 // Append the node.
                 fixedNodes.push(node);
             }
         }
-        fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
+        getInnerChildren = getInnerChildren.bind(this);
         for (const node of nodes) {
-            fixDisallowedChildrenOfNode(node);
+            getInnerChildren(node);
         }
 
         // Style the nodes.
@@ -3608,6 +3608,18 @@ class Editor {
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
+
+        // Style the nodes.
+        nodes = fixedNodes.reverse();
+        var lastIndented = null; // Store the last indented node so that we can join adjacent lists.
+        while (nodes.length != 0) {
+            const siblings = [nodes.pop()];
+            while (nodes.length != 0 && siblings[siblings.length - 1].nextSibling == nodes[nodes.length - 1]) {
+                siblings.push(nodes.pop());
+            }
+
+            lastIndented = this.blockOutdentSiblingNodes(siblings);
+        }
 
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
