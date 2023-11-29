@@ -3592,22 +3592,60 @@ class Editor {
             console.log(nearestOutdentableParent);
             if (!nearestOutdentableParent) {
                 // If there isn't an outdent-able parent, we know it won't be any of its children either, since the inner child traversal process gets all the outdent-able children.
-                console.log("ba")
                 continue;
             } else if (["OL", "UL"].includes(nearestOutdentableParent.tagName)) {
                 // Escape a list.
-                // Per pg. 9.23 step 5, we want to get the topmost list to outdent if the current parent is a list.
-                const farthestOutdentableList = this.findLastParent(nearestOutdentableParent, (n) => ["OL", "UL"].includes(n.tagName));
-            } else if (nearestOutdentableParent.tagName == "LI") {
-                // List item.
+                if (nearestOutdentableParent == node) {
+                    const list = Array.from(nearestOutdentableParent.childNodes);
+                    const final = [];
+                    for (const li of list) {
+                        // Expand the children.
+                        const children = Array.from(li.childNodes);
+                        if (children.every((n) => this.blockTags.includes(n.tagName))) {
+                            final.push(...children);
+                        } else {
+                            const newDiv = document.createElement("div");
+                            newDiv.append(...children);
+                            final.push(newDiv);
+                        }
+                    }
+                    nearestOutdentableParent.after(...final);
+                    nearestOutdentableParent.remove();
+                    continue;
+                }
+
+                // Split out of the list.
+                const splitIncludingNode = this.splitNodeAtChild(nearestOutdentableParent, node, true);
+                const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node, false);
+                const list = Array.from(splitIncludingNode.childNodes);
+                const final = [];
+                for (const li of list) {
+                    // Expand the children.
+                    const children = Array.from(li.childNodes);
+                    if (children.every((n) => this.blockTags.includes(n.tagName))) {
+                        final.push(...children);
+                    } else {
+                        const newDiv = document.createElement("div");
+                        newDiv.append(...children);
+                        final.push(newDiv);
+                    }
+                }
+                nearestOutdentableParent.after(...final, splitAfterNode);
+                splitIncludingNode.remove();
+                if (this.isEmpty(nearestOutdentableParent)) {
+                    nearestOutdentableParent.remove();
+                }
+                if (this.isEmpty(splitAfterNode)) {
+                    splitAfterNode.remove();
+                }
+
+                // Todo: join
+                // TODO: fix <ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol>
             } else if (nearestOutdentableParent.nodeType == Node.ELEMENT_NODE && nearestOutdentableParent.style.marginLeft.toLowerCase() == "40px") {
                 // Simple indent.
-                // TEST: <div style="margin-left: 40px;"><div>abc</div><div>abc</div></div>
-                console.log("hello")
                 if (nearestOutdentableParent == node) {
                     nearestOutdentableParent.style.marginLeft = "";
                     const children = Array.from(nearestOutdentableParent.childNodes);
-                    console.log(children);
                     if (children.every((n) => this.blockTags.includes(n.tagName)) && ["DIV", "P"].includes(nearestOutdentableParent.tagName) && !nearestOutdentableParent.getAttribute("style")) {
                         nearestOutdentableParent.after(...children);
                         nearestOutdentableParent.remove();
@@ -3622,7 +3660,6 @@ class Editor {
                 // Remove the style on the node and add the nodes back in. If possible, remove the node itself.
                 splitIncludingNode.style.marginLeft = "";
                 const children = Array.from(splitIncludingNode.childNodes);
-                console.log(children);
                 if (children.every((n) => this.blockTags.includes(n.tagName)) && ["DIV", "P"].includes(nearestOutdentableParent.tagName) && !nearestOutdentableParent.getAttribute("style")) {
                     nearestOutdentableParent.after(...children, splitAfterNode);
                 } else {
@@ -3634,11 +3671,6 @@ class Editor {
                 if (this.isEmpty(splitAfterNode)) {
                     splitAfterNode.remove();
                 }
-            } else {
-                // If it's neither of these types, find a parent to escape from.
-                
-                
-                
             }
         }
     }
@@ -3674,8 +3706,7 @@ class Editor {
         const fixedNodes = [];
         function getInnerChildren(node) {
             // If the current node is not a indent-able node but contains an indent-able node, go inside.
-            // With lists, we want to get to topmost one, but with simple indenters, we want to go inside.
-            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL", "LI"].includes(node.tagName) && node.querySelector("ol, ul")) || (node.querySelector("[style*=\"margin-left: 40px\"]")))) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (node.querySelector("ol, ul")) || (node.querySelector("[style*=\"margin-left: 40px\"]")))) {
                 // Append the children instead.
                 for (const child of node.childNodes) {
                     getInnerChildren(child);
@@ -3701,6 +3732,8 @@ class Editor {
 
             lastIndented = this.blockOutdentSiblingNodes(siblings);
         }
+
+        // TODO: join
 
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
