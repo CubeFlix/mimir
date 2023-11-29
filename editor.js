@@ -3401,6 +3401,56 @@ class Editor {
     }
 
     /*
+    Join adjacent nested lists, leftwards. Returns the new node.
+    */
+    joinAdjacentNestedListsLeft(node) {
+        // Join adjacent lists within a list.
+        if (node && !node.previousSibling && ["OL", "UL"].includes(node.tagName) && 
+            node.parentNode.tagName == "LI" && 
+            node.parentNode.previousSibling && 
+            node.parentNode.previousSibling.childNodes.length != 0 && 
+            node.parentNode.previousSibling.childNodes[node.parentNode.previousSibling.childNodes.length - 1].tagName == node.tagName) {
+
+            // Save the joined nodes.
+            const outputNode = node.parentNode.previousSibling.childNodes[node.parentNode.previousSibling.childNodes.length - 1];
+
+            // Join.
+            node.parentNode.previousSibling.childNodes[node.parentNode.previousSibling.childNodes.length - 1].append(...node.childNodes);
+
+            // Remove the original node. If possible, remove its parent as well.
+            const nodeParent = node.parentNode;
+            node.remove();
+            if (nodeParent.childNodes.length == 0) {
+                nodeParent.remove();
+            }
+            return outputNode;
+        }
+        return node;
+    }
+
+    /*
+    Join adjacent nested lists, rightwards. Returns the new node.
+    */
+    joinAdjacentNestedListsRight(node) {
+        // Join the last list rightwards.
+        if (node && !node.nextSibling && ["OL", "UL"].includes(node.tagName) && 
+            node.parentNode.tagName == "LI" && 
+            node.parentNode.nextSibling && 
+            node.parentNode.nextSibling.childNodes.length != 0 && 
+            node.parentNode.nextSibling.childNodes[0].tagName == node.tagName) {
+            // Join.
+            node.parentNode.nextSibling.childNodes[0].prepend(...node.childNodes);
+
+            // Remove the original node. If possible, remove its parent as well.
+            const nodeParent = node.parentNode;
+            node.remove();
+            if (nodeParent.childNodes.length == 0) {
+                nodeParent.remove();
+            }
+        }
+    }
+
+    /*
     Block indent a list of sibling nodes.
     */
     blockIndentSiblingNodes(siblings) {
@@ -3474,27 +3524,10 @@ class Editor {
             }
         }
 
-        // Join adjacent lists within a list.
-        if (firstIndented && !firstIndented.previousSibling && ["OL", "UL"].includes(firstIndented.tagName) && 
-            firstIndented.parentNode.tagName == "LI" && 
-            firstIndented.parentNode.previousSibling && 
-            firstIndented.parentNode.previousSibling.childNodes.length != 0 && 
-            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].tagName == firstIndented.tagName) {
-            // If first indented is the same as last indented, joining will mess up this process. 
-            if (firstIndented == lastIndented) {
-                lastIndented = firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1];
-            }
-
-            // Join.
-            firstIndented.parentNode.previousSibling.childNodes[firstIndented.parentNode.previousSibling.childNodes.length - 1].append(...firstIndented.childNodes);
-
-            // Remove the original node. If possible, remove its parent as well.
-            const firstIndentedParent = firstIndented.parentNode;
-            firstIndented.remove();
-            if (firstIndentedParent.childNodes.length == 0) {
-                firstIndentedParent.remove();
-            }
-        }
+        // Join adjacent nested lists.
+        const firstIndentedWasLastIndented = firstIndented == lastIndented;
+        const joinedNode = this.joinAdjacentNestedListsLeft(firstIndented);
+        if (firstIndentedWasLastIndented) {lastIndented = joinedNode;}
 
         return lastIndented;
     }
@@ -3558,22 +3591,7 @@ class Editor {
             lastIndented = this.blockIndentSiblingNodes(siblings);
         }
 
-        // Join the last list rightwards.
-        if (lastIndented && !lastIndented.nextSibling && ["OL", "UL"].includes(lastIndented.tagName) && 
-            lastIndented.parentNode.tagName == "LI" && 
-            lastIndented.parentNode.nextSibling && 
-            lastIndented.parentNode.nextSibling.childNodes.length != 0 && 
-            lastIndented.parentNode.nextSibling.childNodes[0].tagName == lastIndented.tagName) {
-            // Join.
-            lastIndented.parentNode.nextSibling.childNodes[0].prepend(...lastIndented.childNodes);
-
-            // Remove the original node. If possible, remove its parent as well.
-            const lastIndentedParent = lastIndented.parentNode;
-            lastIndented.remove();
-            if (lastIndentedParent.childNodes.length == 0) {
-                lastIndentedParent.remove();
-            }
-        }
+        this.joinAdjacentNestedListsRight(lastIndented);
 
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
