@@ -3587,22 +3587,58 @@ class Editor {
     */
     blockOutdentSiblingNodes(siblings) {
         for (const node of siblings) {
-            // If the node we're out-denting is already a indent-able node, outdent it.
-            // Otherwise, the nearest out-dentable node will be one of its parents.
-            if (["OL", "UL"].includes(node.tagName)) {
+            // Find the nearest outdent-able node to outdent.
+            const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
+            console.log(nearestOutdentableParent);
+            if (!nearestOutdentableParent) {
+                // If there isn't an outdent-able parent, we know it won't be any of its children either, since the inner child traversal process gets all the outdent-able children.
+                console.log("ba")
+                continue;
+            } else if (["OL", "UL"].includes(nearestOutdentableParent.tagName)) {
                 // Escape a list.
-            } else if (node.tagName == "LI") {
+                // Per pg. 9.23 step 5, we want to get the topmost list to outdent if the current parent is a list.
+                const farthestOutdentableList = this.findLastParent(nearestOutdentableParent, (n) => ["OL", "UL"].includes(n.tagName));
+            } else if (nearestOutdentableParent.tagName == "LI") {
                 // List item.
-            } else if (node.nodeType == Node.ELEMENT_NODE && node.style.marginLeft.toLowerCase() == "40px") {
+            } else if (nearestOutdentableParent.nodeType == Node.ELEMENT_NODE && nearestOutdentableParent.style.marginLeft.toLowerCase() == "40px") {
                 // Simple indent.
+                // TEST: <div style="margin-left: 40px;"><div>abc</div><div>abc</div></div>
+                console.log("hello")
+                if (nearestOutdentableParent == node) {
+                    nearestOutdentableParent.style.marginLeft = "";
+                    const children = Array.from(nearestOutdentableParent.childNodes);
+                    console.log(children);
+                    if (children.every((n) => this.blockTags.includes(n.tagName)) && ["DIV", "P"].includes(nearestOutdentableParent.tagName) && !nearestOutdentableParent.getAttribute("style")) {
+                        nearestOutdentableParent.after(...children);
+                        nearestOutdentableParent.remove();
+                    }
+                    continue;
+                }
+
+                // Split out of the parent.
+                const splitIncludingNode = this.splitNodeAtChild(nearestOutdentableParent, node, true);
+                const splitAfterNode = this.splitNodeAtChild(splitIncludingNode, node, false);
+
+                // Remove the style on the node and add the nodes back in. If possible, remove the node itself.
+                splitIncludingNode.style.marginLeft = "";
+                const children = Array.from(splitIncludingNode.childNodes);
+                console.log(children);
+                if (children.every((n) => this.blockTags.includes(n.tagName)) && ["DIV", "P"].includes(nearestOutdentableParent.tagName) && !nearestOutdentableParent.getAttribute("style")) {
+                    nearestOutdentableParent.after(...children, splitAfterNode);
+                } else {
+                    nearestOutdentableParent.after(splitIncludingNode, splitAfterNode);
+                }
+                if (this.isEmpty(nearestOutdentableParent)) {
+                    nearestOutdentableParent.remove();
+                }
+                if (this.isEmpty(splitAfterNode)) {
+                    splitAfterNode.remove();
+                }
             } else {
                 // If it's neither of these types, find a parent to escape from.
-                const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
                 
-                // Per pg. 9.23 step 5, we want to get the topmost list to outdent if the current parent is a list.
-                if (["OL", "UL"].includes(nearestOutdentableParent.tagName)) {
-                    const farthestOutdentableList = this.findLastParent(nearestOutdentableParent, (n) => ["OL", "UL"].includes(n.tagName));
-                }
+                
+                
             }
         }
     }
