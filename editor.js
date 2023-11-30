@@ -3405,6 +3405,15 @@ class Editor {
     */
     joinAdjacentNestedListsLeft(node) {
         // Join adjacent lists within a list.
+        if (node && node.lastSibling && ["OL", "UL"].includes(node.tagName) && node.lastSibling.tagName == node.tagName) {
+            // Join.
+            const nodeSibling = node.lastSibling;
+            node.lastSibling.append(...node.childNodes);
+            
+            // Remove the original node.
+            node.remove();
+            return nodeSibling;
+        }
         if (node && !node.previousSibling && ["OL", "UL"].includes(node.tagName) && 
             node.parentNode.tagName == "LI" && 
             node.parentNode.previousSibling && 
@@ -3433,6 +3442,16 @@ class Editor {
     */
     joinAdjacentNestedListsRight(node) {
         // Join the last list rightwards.
+        if (node && node.nextSibling && ["OL", "UL"].includes(node.tagName) && node.nextSibling.tagName && node.tagName) {
+            // Join.
+            const nodeSibling = node.nextSibling;
+            node.nextSibling.prepend(...node.childNodes);
+            
+            // Remove the original node.
+            node.remove();
+            return nodeSibling;
+        }
+
         if (node && !node.nextSibling && ["OL", "UL"].includes(node.tagName) && 
             node.parentNode.tagName == "LI" && 
             node.parentNode.nextSibling && 
