@@ -3696,8 +3696,6 @@ class Editor {
                     }
 
                     if (this.isEmpty(parentLi)) {parentLi.remove();}
-                    //if (!firstIndented) firstIndented = ;
-                    //lastIndented = clone;
                 }
 
                 // Todo: join
