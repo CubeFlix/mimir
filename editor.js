@@ -3451,6 +3451,22 @@ class Editor {
     }
 
     /*
+    Update hidden list styling on nested lists.
+    */
+    updateHideNestedLists(node) {
+        const liNodes = node.querySelectorAll("li");
+        console.log(liNodes);
+        for (const li of liNodes) {
+            if (li.firstChild && ["OL", "UL"].includes(li.firstChild.tagName)) {
+                // If the first child is another list, hide the list styling.
+                li.style.listStyleType = "none";
+            } else {
+                if (li.style.listStyleType) li.style.listStyleType = "";
+            }
+        }
+    }
+
+    /*
     Block indent a list of sibling nodes.
     */
     blockIndentSiblingNodes(siblings) {
@@ -3529,6 +3545,9 @@ class Editor {
         const joinedNode = this.joinAdjacentNestedListsLeft(firstIndented);
         if (firstIndentedWasLastIndented) {lastIndented = joinedNode;}
 
+        this.updateHideNestedLists(lastIndented.parentNode.parentNode)
+        console.log(lastIndented.parentNode);
+
         return lastIndented;
     }
 
@@ -3604,8 +3623,8 @@ class Editor {
     Block outdent a list of sibling nodes.
     */
     blockOutdentSiblingNodes(siblings) {
-        var firstOutdented = null;
-        var lastOutdented = null;
+        // var firstOutdented = null;
+        // var lastOutdented = null;
         for (const node of siblings) {
             // Find the nearest outdent-able node to outdent.
             const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
