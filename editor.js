@@ -3604,6 +3604,8 @@ class Editor {
     Block outdent a list of sibling nodes.
     */
     blockOutdentSiblingNodes(siblings) {
+        var firstOutdented = null;
+        var lastOutdented = null;
         for (const node of siblings) {
             // Find the nearest outdent-able node to outdent.
             const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
@@ -3657,8 +3659,53 @@ class Editor {
                     splitAfterNode.remove();
                 }
 
+                if (final.length == 0) {continue;}
+
+                // If the nodes we outdented are now inside another list, break them place them on their own list elements.
+                if (final[0].parentNode.tagName == "LI") {
+                    // First, split out of the parent LI node.
+                    const parentLi = final[0].parentNode;
+                    const nodesAfterFinal = Array.from(parentLi.childNodes).slice(Array.from(parentLi.childNodes).indexOf(final[final.length - 1]) + 1, parentLi.childNodes.length);
+                    const newLiForSplitNodes = document.createElement("li");
+                    newLiForSplitNodes.append(...nodesAfterFinal);
+                    parentLi.after(newLiForSplitNodes);
+                    console.log(newLiForSplitNodes, this.isEmpty(newLiForSplitNodes), Array.from(newLiForSplitNodes.childNodes));
+                    if (this.isEmpty(newLiForSplitNodes)) {newLiForSplitNodes.remove()};
+
+                    // Now, place each block in its own LI.
+                    const list = [];
+                    while (final.length != 0) {
+                        const node = final[0];
+                        if (this.blockTags.includes(node.tagName)) {
+                            // Block nodes go in their own LI node.
+                            const newLi = document.createElement("li");
+                            newLi.append(node);
+                            list.push(newLi);
+                            final.shift();
+                        } else {
+                            // Inline nodes get combined.
+                            const newLi = document.createElement("li");
+                            newLi.append(node);
+                            final.shift();
+                            while (final.length != 0 && !this.blockTags.includes(final[0].tagName)) {
+                                newLi.append(final.shift());
+                            }
+                            list.push(newLi);
+                        }
+                        parentLi.after(...list);
+                    }
+
+                    if (this.isEmpty(parentLi)) {parentLi.remove();}
+                    //if (!firstIndented) firstIndented = ;
+                    //lastIndented = clone;
+                }
+
                 // Todo: join
-                // TODO: fix <ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol>
+                // if (!firstOutdented)
+                // lastOutdented = this.joinAdjacentNestedListsLeft()
+                // TODO: fix <ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol> (joining)
+                // TODO: fix <ol><li><ol><li>asdasd</li><li><div>asdasd</div></li></ol></li></ol> (splitting)
+                // place nested lists on their own LI node
             } else if (nearestOutdentableParent.nodeType == Node.ELEMENT_NODE && nearestOutdentableParent.style.marginLeft.toLowerCase() == "40px") {
                 // Simple indent.
                 if (nearestOutdentableParent == node) {
