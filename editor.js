@@ -3564,8 +3564,7 @@ class Editor {
         const joinedNode = this.joinAdjacentNestedListsLeft(firstIndented);
         if (firstIndentedWasLastIndented) {lastIndented = joinedNode;}
 
-        this.updateHideNestedLists(lastIndented.parentNode.parentNode)
-        console.log(lastIndented.parentNode);
+        this.updateHideNestedLists(lastIndented.parentNode.parentNode);
 
         return lastIndented;
     }
@@ -3647,7 +3646,6 @@ class Editor {
         for (const node of siblings) {
             // Find the nearest outdent-able node to outdent.
             const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
-            console.log(nearestOutdentableParent);
             if (!nearestOutdentableParent) {
                 // If there isn't an outdent-able parent, we know it won't be any of its children either, since the inner child traversal process gets all the outdent-able children.
                 continue;
@@ -3668,6 +3666,7 @@ class Editor {
                         }
                     }
                     nearestOutdentableParent.after(...final);
+                    this.updateHideNestedLists(nearestOutdentableParent);
                     nearestOutdentableParent.remove();
                     continue;
                 }
@@ -3696,6 +3695,7 @@ class Editor {
                 if (this.isEmpty(splitAfterNode)) {
                     splitAfterNode.remove();
                 }
+                this.updateHideNestedLists(nearestOutdentableParent);
 
                 if (final.length == 0) {continue;}
 
@@ -3707,7 +3707,6 @@ class Editor {
                     const newLiForSplitNodes = document.createElement("li");
                     newLiForSplitNodes.append(...nodesAfterFinal);
                     parentLi.after(newLiForSplitNodes);
-                    console.log(newLiForSplitNodes, this.isEmpty(newLiForSplitNodes), Array.from(newLiForSplitNodes.childNodes));
                     if (this.isEmpty(newLiForSplitNodes)) {newLiForSplitNodes.remove()};
 
                     // Now, place each block in its own LI.
@@ -3733,6 +3732,8 @@ class Editor {
                         parentLi.after(...list);
                     }
 
+                    list.forEach((l) => this.updateHideNestedLists(l));
+
                     if (this.isEmpty(parentLi)) {parentLi.remove();}
                 }
 
@@ -3742,6 +3743,8 @@ class Editor {
                 // TODO: fix <ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol> (joining)
                 // TODO: fix <ol><li><ol><li>asdasd</li><li><div>asdasd</div></li></ol></li></ol> (splitting)
                 // place nested lists on their own LI node
+                // TODO: list hiding giving error with simple indenting and list (this.updateHideNestedLists(lastIndented.parentNode.parentNode);
+                // TODO: list outdenting
             } else if (nearestOutdentableParent.nodeType == Node.ELEMENT_NODE && nearestOutdentableParent.style.marginLeft.toLowerCase() == "40px") {
                 // Simple indent.
                 if (nearestOutdentableParent == node) {
@@ -3774,6 +3777,7 @@ class Editor {
                 }
             }
         }
+
     }
 
     /*
