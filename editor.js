@@ -317,6 +317,12 @@ class Editor {
                 this.shouldTakeSnapshotOnNextChange = true;
             }
 
+            if (e.key == "Tab") {
+                // Tab key, insert a tab.
+                e.preventDefault();
+                this.insertTab();
+            }
+
             if (e.key == "ArrowLeft" || e.key == "Backspace" || e.key == "Delete") {
                 // Check if the caret is inside a cursor.
                 const range = this.getRange();
@@ -763,6 +769,25 @@ class Editor {
         }
 
         return Array.from(fragment.childNodes);
+    }
+
+    /*
+    Insert a tab.
+    */
+    insertTab() {
+        const range = this.getRange();
+        if (!range) {
+            return;
+        }
+        range.deleteContents();
+        const tabNode = document.createTextNode("\t");
+        range.insertNode(tabNode);
+
+        const newRange = new Range();
+        newRange.selectNodeContents(tabNode);
+        newRange.collapse(false);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(newRange);
     }
 
     /*
