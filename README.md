@@ -110,7 +110,9 @@ a rich text editor for javascript
 - [x] lists
 - [ ] images
 - [x] format indent up
-- [ ] format indent down
+- [x] format indent down
+- [ ] join format indent down
+- [ ] change list style
 - [x] `sup`
 - [x] `pre`
 - [ ] handle tab button

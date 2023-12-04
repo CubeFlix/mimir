@@ -19,7 +19,7 @@ class Editor {
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub"];
     blockStylingCommands = ["quote", "header", "align", "list", "indent", "outdent"];
-    inlineBlockStylingCommands = ["header", "align", "indent", "outdent"];
+    inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor"];
     noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent"];
@@ -663,6 +663,14 @@ class Editor {
                     newNode.setAttribute("src", child.getAttribute("src"));
                 } else if (child.getAttribute("alt")) {
                     newNode.setAttribute("alt", child.getAttribute("alt"));
+                }
+
+                // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
+                if (["DIV", "P"].includes(child.tagName) && child.style.marginLeft.toLowerCase() == "40px") {
+                    newNode.style.marginLeft = "40px";
+                }
+                if (["DIV", "P"].includes(child.tagName) && child.style.paddingLeft.toLowerCase() == "40px") {
+                    newNode.style.marginLeft = "40px";
                 }
 
                 // Reconstruct the node's children.
