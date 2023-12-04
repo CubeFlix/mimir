@@ -3474,14 +3474,25 @@ class Editor {
     */
     updateHideNestedLists(node) {
         const liNodes = node.querySelectorAll("li");
-        console.log(liNodes);
         for (const li of liNodes) {
             if (li.firstChild && ["OL", "UL"].includes(li.firstChild.tagName)) {
                 // If the first child is another list, hide the list styling.
                 li.style.listStyleType = "none";
             } else {
-                if (li.style.listStyleType) li.style.listStyleType = "";
+                if (li.style.listStyleType.toLowerCase() == "none") li.style.listStyleType = "";
             }
+        }
+
+        // Update nested lists for ancestors of node.
+        var currentNode = node;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (currentNode.tagName == "LI" && currentNode.firstChild && ["OL", "UL"].includes(currentNode.firstChild.tagName)) {
+                // Hide the current node's list style.
+                currentNode.style.listStyleType = "none";
+            } else if (currentNode.tagName == "LI") {
+                if (currentNode.style.listStyleType.toLowerCase() == "none") currentNode.style.listStyleType = "";
+            }
+            currentNode = currentNode.parentNode;
         }
     }
 
@@ -3564,7 +3575,7 @@ class Editor {
         const joinedNode = this.joinAdjacentNestedListsLeft(firstIndented);
         if (firstIndentedWasLastIndented) {lastIndented = joinedNode;}
 
-        this.updateHideNestedLists(lastIndented.parentNode.parentNode);
+        if (lastIndented) this.updateHideNestedLists(lastIndented);
 
         return lastIndented;
     }
@@ -3666,8 +3677,9 @@ class Editor {
                         }
                     }
                     nearestOutdentableParent.after(...final);
-                    this.updateHideNestedLists(nearestOutdentableParent);
+                    const outdentableParentParent = nearestOutdentableParent.parentNode;
                     nearestOutdentableParent.remove();
+                    this.updateHideNestedLists(outdentableParentParent);
                     continue;
                 }
 
@@ -3695,8 +3707,6 @@ class Editor {
                 if (this.isEmpty(splitAfterNode)) {
                     splitAfterNode.remove();
                 }
-                this.updateHideNestedLists(nearestOutdentableParent);
-
                 if (final.length == 0) {continue;}
 
                 // If the nodes we outdented are now inside another list, break them place them on their own list elements.
@@ -3732,10 +3742,15 @@ class Editor {
                         parentLi.after(...list);
                     }
 
+                    // Hide nested lists.
                     list.forEach((l) => this.updateHideNestedLists(l));
+                    this.updateHideNestedLists(parentLi);
 
                     if (this.isEmpty(parentLi)) {parentLi.remove();}
                 }
+
+                // Hide nested lists.
+                this.updateHideNestedLists(nearestOutdentableParent);
 
                 // Todo: join
                 // if (!firstOutdented)
@@ -3744,7 +3759,7 @@ class Editor {
                 // TODO: fix <ol><li><ol><li>asdasd</li><li><div>asdasd</div></li></ol></li></ol> (splitting)
                 // place nested lists on their own LI node
                 // TODO: list hiding giving error with simple indenting and list (this.updateHideNestedLists(lastIndented.parentNode.parentNode);
-                // TODO: list outdenting
+                // TODO: updateHideNestedLists needs to be done after everything has been cleaned up
             } else if (nearestOutdentableParent.nodeType == Node.ELEMENT_NODE && nearestOutdentableParent.style.marginLeft.toLowerCase() == "40px") {
                 // Simple indent.
                 if (nearestOutdentableParent == node) {
