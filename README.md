@@ -103,15 +103,14 @@ a rich text editor for javascript
 - [x] sometimes when pressing ctrl-z it produces the letter a ?
 - [x] indenting does not select
 - [x] retain selection when leaving editor
-- [ ] paste simple indenting
+- [x] paste simple indenting
 - [ ] block styling options
-- [ ] LI nodes that contain another list should not display marker (perform this change action on block style)
+- [x] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [ ] make modals always show up on screen
 - [x] lists
 - [ ] images
 - [x] format indent up
 - [x] format indent down
-- [ ] join format indent down
 - [ ] change list style
 - [x] `sup`
 - [x] `pre`
