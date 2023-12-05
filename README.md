@@ -105,6 +105,9 @@ a rich text editor for javascript
 - [x] retain selection when leaving editor
 - [x] paste simple indenting
 - [ ] block styling options
+- [ ] sanitize url for links
+- [ ] ctrl-click on links
+- [ ] fix dragging in color picker on mobile
 - [x] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [ ] make modals always show up on screen
 - [x] lists
@@ -117,7 +120,7 @@ a rich text editor for javascript
 - [x] handle tab button
 - [ ] accessibility (for, name, aria, etc.) and esc button handling
 - [ ] remove all styling from text, remove all color from text
-- [ ] a href (add mouse overlay, etc.)
+- [x] a href (add mouse overlay, etc.)
 - [x] change previous history's cursor location if hashes match
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI (undo redo buttons, etc.)

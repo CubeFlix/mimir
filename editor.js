@@ -17,12 +17,12 @@ class Editor {
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
-    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub"];
+    inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link"];
     blockStylingCommands = ["quote", "header", "align", "list", "indent", "outdent"];
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
-    multipleValueStylingCommands = ["font", "size", "foreColor", "backColor"];
-    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent"];
+    multipleValueStylingCommands = ["font", "size", "foreColor", "backColor", "link"];
+    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link"];
 
     /* 
     Create the editor. 
@@ -31,7 +31,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "quote", "header", "align", "list", "indent", "outdent"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -217,6 +217,15 @@ class Editor {
                     this.menubarOptions.sub.innerHTML = "x<sub>2</sub>";
                     this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
                     this.menubar.append(this.menubarOptions.sub);
+                    break;
+                case "link":
+                    const linkButton = document.createElement("button");
+                    linkButton.innerHTML = "&#128279;";
+                    linkButton.classList.add("editor-menubar-option-link-button");
+                    const linkInput = EditorUI.linkInput(this.link.bind(this), linkButton);
+                    this.menubarOptions.link = linkInput;
+                    linkInput.linkInput.setAttribute("id", "editor-menubar-option-link");
+                    this.menubar.append(linkInput.linkInput);
                     break;
                 case "quote":
                     this.menubarOptions.quote = document.createElement("button");
@@ -1215,7 +1224,7 @@ class Editor {
                 this.menubarOptions.size.value = styling.find(s => s.type == "size") ? styling.find(s => s.type == "size").size : this.defaultSize;
                 continue;
             }
-
+            
             if (this.noUIUpdateStylingCommands.includes(option)) {continue;}
 
             if (option == "list") {
@@ -1480,6 +1489,10 @@ class Editor {
                 return document.createElement("sup");
             case "sub":
                 return document.createElement("sub");
+            case "link":
+                var elem = document.createElement("a");
+                elem.setAttribute("href", style.url);
+                return elem;
             case "quote":
                 return document.createElement("blockquote");
             case "header":
@@ -1558,6 +1571,9 @@ class Editor {
                 break;
             case "SUB":
                 styling.push({type: "sub"});
+                break;
+            case "A":
+                styling.push({type: "link"});
                 break;
             case "BLOCKQUOTE":
                 styling.push({type: "quote"});
@@ -1643,8 +1659,10 @@ class Editor {
     */
     elementHasStyle(elem, style) {
         const styling = this.getStylingOfElement(elem);
+        // For certain styles with multiple possible values, we don't want to compare exact values, we just want to see if the style exists.
         if (styling.some(s => s.type == "foreColor") && style.type == "foreColor" && style.color == null) {return true;}
         if (styling.some(s => s.type == "backColor") && style.type == "backColor" && style.color == null) {return true;}
+        if (styling.some(s => s.type == "link") && style.type == "link") {return true;}
         return styling.some(s => this.compareStyling(s, style));
     }
 
@@ -2199,6 +2217,12 @@ class Editor {
                     elemRemoved = true;
                 }
                 break;
+            case "link":
+                if (elem.tagName == "A") {
+                    elem = elem.firstChild;
+                    elemRemoved = true;
+                }
+                break;
         }
 
         // If the previous element had styles on it, reapply the styles.
@@ -2508,6 +2532,9 @@ class Editor {
                         break;
                     case "backColor":
                         currentReconstructedNode.style.backgroundColor = style.color;
+                        break;
+                    case "link":
+                        currentReconstructedNode.setAttribute("href", style.url);
                         break;
                 }
                 return currentReconstructedNode;
@@ -3908,7 +3935,7 @@ class Editor {
 
         // Set the style.
         if (this.multipleValueStylingCommands.includes(style.type)) {
-            if ((style.type == "foreColor" || style.type == "backColor") && style.color == null) {
+            if (((style.type == "foreColor" || style.type == "backColor") && style.color == null) || (style.type == "link" && style.url == null)) {
                 // Remove the styling.
                 this.removeStyle(style, range);
             } else {
@@ -4083,6 +4110,13 @@ class Editor {
     size() {
         this.performStyleCommand({type: "size", size: this.menubarOptions.size.value});
     }
+
+    /*
+    Link.
+    */
+    link(url) {
+        this.performStyleCommand({type: "link", url: url});
+    } 
 
     /*
     Blockquote.

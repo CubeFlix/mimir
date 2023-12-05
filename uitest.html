@@ -19,8 +19,11 @@
         <script>
             const container = document.getElementById("container");
             const button = document.createElement("button");
-            button.innerHTML = "Open";
+            button.innerHTML = "Color Input";
+            const button2 = document.createElement("button");
+            button2.innerHTML = "Link Input";
             container.append(EditorUI.colorInput(() => {}, button, 200, 40, 200).colorInput);
+            container.append(EditorUI.linkInput(() => {}, button2, 200, 40, 200).linkInput);
         </script>
     </body>
 </html>

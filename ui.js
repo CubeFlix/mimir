@@ -373,3 +373,45 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
     return {colorInput: dropdown, dropdown: dropdownObj, getValue: getValue};
 }
+
+/*
+Create a link input.
+*/
+EditorUI.linkInput = (callback, button) => {
+    // Create the body of the color picker.
+    const body = document.createElement("div");
+    body.classList.add("editor-link-input-body");
+    
+    const title = document.createElement("p");
+    title.innerHTML = "Insert Link";
+    title.classList.add("editor-link-input-label");
+    const urlInput = document.createElement("input")
+    urlInput.classList.add("editor-link-input-input");
+    urlInput.setAttribute("placeholder", "URL");
+    body.append(title, urlInput);
+
+    // Create the dropdown.
+    button.classList.add("editor-link-input-button");
+    const dropdownObj = EditorUI.dropdown(button, body);
+    const dropdown = dropdownObj.dropdown;
+    const closeFunc = dropdownObj.close;
+
+    // Value.
+    var value = null;
+    function getValue() {
+        return value;
+    }
+
+    // Save and remove buttons.
+    const saveButton = document.createElement("button");
+    saveButton.classList.add("editor-link-input-save-button");
+    saveButton.innerHTML = "Save";
+    saveButton.addEventListener("click", () => {callback(urlInput.value); value = urlInput.value; closeFunc();});
+    const removeButton = document.createElement("button");
+    removeButton.classList.add("editor-link-input-remove-button");
+    removeButton.innerHTML = "Remove";
+    removeButton.addEventListener("click", () => {callback(null); closeFunc();});
+    body.append(saveButton, removeButton);
+
+    return {linkInput: dropdown, dropdown: dropdownObj, getValue: getValue};
+}
