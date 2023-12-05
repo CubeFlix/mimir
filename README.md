@@ -104,10 +104,10 @@ a rich text editor for javascript
 - [x] indenting does not select
 - [x] retain selection when leaving editor
 - [x] paste simple indenting
-- [ ] paste links? does it work
+- [x] paste links? does it work
 - [ ] block styling options
 - [ ] sanitize url for links
-- [ ] ctrl-click on links
+- [x] ctrl-click on links
 - [ ] fix dragging in color picker on mobile
 - [x] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [ ] make modals always show up on screen

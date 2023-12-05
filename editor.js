@@ -13,7 +13,7 @@ class Editor {
     contentTags = ["IMG", "BR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB"];
-    basicAllowedTags = ["DIV", "BR", "P", "IMG", "A", "LI", "UL", "OL", "BLOCKQUOTE"];
+    basicAllowedTags = ["DIV", "BR", "P", "IMG", "LI", "UL", "OL", "BLOCKQUOTE"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     childlessTags = ["BR", "IMG"];
 
@@ -540,6 +540,33 @@ class Editor {
                     document.getSelection().removeAllRanges();
                     document.getSelection().addRange(range);
                 }
+            }
+        }.bind(this));
+    }
+
+    /*
+    Handle ctrl-clicking on links.
+    */
+    handleClickLink(target) {
+        const nearestLink = this.findClosestParent(target, (n) => n.tagName == "A");
+        if (!nearestLink) {
+            return;
+        }
+        const url = nearestLink.getAttribute("href");
+        if (!url) {
+            return;
+        }
+        window.open(url);
+    }
+
+    /*
+    Bind click events.
+    */
+    bindClickEvents() {
+        this.editor.addEventListener("click", function(e) {
+            // Allow for ctrl-clicking on links.
+            if (e.ctrlKey) {
+                this.handleClickLink(e.target);
             }
         }.bind(this));
     }
@@ -1224,7 +1251,7 @@ class Editor {
                 this.menubarOptions.size.value = styling.find(s => s.type == "size") ? styling.find(s => s.type == "size").size : this.defaultSize;
                 continue;
             }
-            
+
             if (this.noUIUpdateStylingCommands.includes(option)) {continue;}
 
             if (option == "list") {
@@ -1573,7 +1600,7 @@ class Editor {
                 styling.push({type: "sub"});
                 break;
             case "A":
-                styling.push({type: "link"});
+                styling.push({type: "link", url: node.getAttribute("href") || ""});
                 break;
             case "BLOCKQUOTE":
                 styling.push({type: "quote"});
@@ -4383,6 +4410,9 @@ class Editor {
 
         // Bind event listeners for input events.
         this.bindInputEvents();
+
+        // Bind click events.
+        this.bindClickEvents();
 
         // Bind event listeners for select event.
         this.bindSelectEvents();
