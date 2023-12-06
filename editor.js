@@ -4142,6 +4142,7 @@ class Editor {
     Link.
     */
     link(url) {
+        if (url && url.trim().substring(0, 11).toLowerCase() == "javascript:") {url = "about:blank#blocked"};
         this.performStyleCommand({type: "link", url: url});
     } 
 

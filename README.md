@@ -106,7 +106,7 @@ a rich text editor for javascript
 - [x] paste simple indenting
 - [x] paste links? does it work
 - [ ] block styling options
-- [ ] sanitize url for links
+- [x] sanitize url for links
 - [x] ctrl-click on links
 - [x] fix dragging in color picker on mobile
 - [x] LI nodes that contain another list should not display marker (perform this change action on block style)
