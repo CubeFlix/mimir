@@ -43,6 +43,21 @@ EditorUI.dropdown = (button, content) => {
         dropdownBody.classList.add("editor-dropdown-show");
         document.addEventListener("mousedown", onClick);
         dropdown.dispatchEvent(new Event("editorDropdownOpen", {bubbles: true}));
+
+        // Adjust the x offset of the dropdown to make sure it always appears on screen.
+        console.log("dropdownclick")
+        const bounds = dropdownBody.getBoundingClientRect();
+        console.log(bounds.right > window.innerWidth,
+            (bounds.right - window.innerWidth) > 1,
+            (bounds.left - (bounds.right - window.innerWidth)) >= 0);
+        console.log(bounds.right, window.innerWidth, bounds)
+        if (bounds.right > window.innerWidth && (bounds.right - window.innerWidth) > 1 && (bounds.left - (bounds.right - window.innerWidth)) >= 0) { // We don't want to push the dropdown too far left so it gets cut off.
+            // Offset the modal left.
+            // TODO: not working properly
+            dropdownBody.style.left = (-(bounds.right - window.innerWidth)).toString() + "px";
+        } else {
+            dropdownBody.style.left = "";
+        }
     }
     dropdownButton.addEventListener("click", dropdownClick);
 
