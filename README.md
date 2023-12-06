@@ -110,7 +110,7 @@ a rich text editor for javascript
 - [x] ctrl-click on links
 - [x] fix dragging in color picker on mobile
 - [x] LI nodes that contain another list should not display marker (perform this change action on block style)
-- [ ] make modals always show up on screen
+- [x] make modals always show up on screen
 - [x] lists
 - [ ] images
 - [x] format indent up
