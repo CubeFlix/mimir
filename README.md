@@ -116,6 +116,7 @@ a rich text editor for javascript
 - [x] format indent up
 - [x] format indent down
 - [ ] change list style
+- [ ] code block
 - [x] `sup`
 - [x] `pre`
 - [x] handle tab button
