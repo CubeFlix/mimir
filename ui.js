@@ -292,8 +292,15 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
     // Update color on primary canvas.
     function primaryUpdateColor(e) {
-        primaryX = Math.min(e.offsetX, primaryWidth - 1);
-        primaryY = Math.max(Math.min(e.offsetY, height - 1), 0);
+        if (e.touches) {
+            // Touch event.
+            primaryX = Math.min(e.touches[0].offsetX, primaryWidth - 1);
+            primaryY = Math.max(Math.min(e.touches[0].offsetY, height - 1), 0);
+        } else {
+            // Mouse event.
+            primaryX = Math.min(e.offsetX, primaryWidth - 1);
+            primaryY = Math.max(Math.min(e.offsetY, height - 1), 0);
+        }
         [r, g, b] = primaryCtx.getImageData(primaryX, primaryY, 1, 1).data;        
         primaryThumb.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         primaryThumb.style.transform = `translate(${primaryX - 5}px, ${primaryY - 5}px`;
@@ -319,9 +326,16 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
     // Update color on hue canvas.
     function hueUpdateColor(e) {
-        h = e.offsetY / height * 360;
+        if (e.touches) {
+            // Touch event.
+            h = e.touches[0].offsetY / height * 360;
+            hueSlider.style.transform = `translate(0, ${e.touches[0].offsetY}px`;
+        } else {
+            // Mouse event.
+            h = e.offsetY / height * 360;
+            hueSlider.style.transform = `translate(0, ${e.offsetY}px`;
+        }
         renderPrimaryCanvas();
-        hueSlider.style.transform = `translate(0, ${e.offsetY}px`;
     }
 
     // Mouse events for hue canvas.
@@ -350,6 +364,13 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         hue.addEventListener("mousedown", mouseDownHue, false);
         hue.addEventListener("mousemove", mouseMoveHue, false);
         hue.addEventListener("mouseup", mouseUpHue, false);
+
+        primary.addEventListener("touchstart", mouseDownPrimary, false);
+        primary.addEventListener("touchmove", mouseMovePrimary, false);
+        primary.addEventListener("touchup", mouseUpPrimary, false);
+        hue.addEventListener("touchstart", mouseDownHue, false);
+        hue.addEventListener("touchmove", mouseMoveHue, false);
+        hue.addEventListener("touchup", mouseUpHue, false);
     }
 
     // Input dropdown close.
@@ -361,6 +382,13 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         hue.removeEventListener("mousedown", mouseDownHue);
         hue.removeEventListener("mousemove", mouseMoveHue);
         hue.removeEventListener("mouseup", mouseUpHue);
+
+        primary.removeEventListener("touchstart", mouseDownPrimary);
+        primary.removeEventListener("touchmove", mouseMovePrimary);
+        primary.removeEventListener("touchup", mouseUpPrimary);
+        hue.removeEventListener("touchstart", mouseDownHue);
+        hue.removeEventListener("touchmove", mouseMoveHue);
+        hue.removeEventListener("touchup", mouseUpHue);
     }
 
     // Bind events.

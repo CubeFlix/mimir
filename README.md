@@ -108,7 +108,7 @@ a rich text editor for javascript
 - [ ] block styling options
 - [ ] sanitize url for links
 - [x] ctrl-click on links
-- [ ] fix dragging in color picker on mobile
+- [x] fix dragging in color picker on mobile
 - [x] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [ ] make modals always show up on screen
 - [x] lists
