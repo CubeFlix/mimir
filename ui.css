@@ -6,7 +6,7 @@
 }
 
 .editor-dropdown-body {
-    position: fixed;
+    position: absolute;
     background-color: white;
     border: 1px solid silver;
     border-radius: 2px;
