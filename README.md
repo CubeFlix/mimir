@@ -148,3 +148,12 @@ a rich text editor for javascript
     - otherwise for getTextNodesInRange it should make a new text node
 - [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole (possibilities of fixing this: have tne end node always escape?)
 - [ ] perhaps remove extraneous divs during paste
+
+## good editors
+
+- TinyMCE
+- Quill
+- CKEditor
+- Lexical
+- Froala
+- SyncFusion
