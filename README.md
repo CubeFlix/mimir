@@ -116,12 +116,14 @@ a rich text editor for javascript
 - [x] format indent up
 - [x] format indent down
 - [ ] change list style
-- [ ] code block
+- [ ] code block (possibly)
+- [ ] line spacing (possibly)
+- [ ] equations (possibly)
 - [x] `sup`
 - [x] `pre`
 - [x] handle tab button
-- [ ] accessibility (for, name, aria, etc.) and esc button handling
-- [ ] remove all styling from text, remove all color from text
+- [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
+- [ ] remove all styling from text, remove all color from 
 - [x] a href (add mouse overlay, etc.)
 - [x] change previous history's cursor location if hashes match
 - [ ] disallow pasting HTML option 
