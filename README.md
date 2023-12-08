@@ -119,6 +119,7 @@ a rich text editor for javascript
 - [ ] code block (possibly)
 - [ ] line spacing (possibly)
 - [ ] equations (possibly)
+- [ ] table (possibly)
 - [x] `sup`
 - [x] `pre`
 - [x] handle tab button

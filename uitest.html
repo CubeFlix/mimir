@@ -22,8 +22,11 @@
             button.innerHTML = "Color Input";
             const button2 = document.createElement("button");
             button2.innerHTML = "Link Input";
+            const button3 = document.createElement("button");
+            button3.innerHTML = "Image Input";
             container.append(EditorUI.colorInput(() => {}, button, 200, 40, 200).colorInput);
-            container.append(EditorUI.linkInput(() => {}, button2, 200, 40, 200).linkInput);
+            container.append(EditorUI.linkInput(() => {}, button2).linkInput);
+            container.append(EditorUI.imageInput((i) => {console.log(i)}, button3).imageInput);
         </script>
     </body>
 </html>

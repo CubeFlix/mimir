@@ -30,7 +30,8 @@
 #editor-menubar > button,
 #editor-menubar #editor-menubar-option-fore-color button,
 #editor-menubar #editor-menubar-option-back-color button,
-#editor-menubar #editor-menubar-option-link button {
+#editor-menubar #editor-menubar-option-link button,
+#editor-menubar #editor-menubar-option-image button {
     min-width: 30px;
     min-height: 30px;
     background: none;
@@ -45,7 +46,9 @@
 #editor-menubar #editor-menubar-option-back-color button:hover,
 #editor-menubar #editor-menubar-option-back-color button:focus,
 #editor-menubar #editor-menubar-option-link button:hover,
-#editor-menubar #editor-menubar-option-link button:focus {
+#editor-menubar #editor-menubar-option-link button:focus,
+#editor-menubar #editor-menubar-option-image button:hover,
+#editor-menubar #editor-menubar-option-image button:focus {
     background: #e0e0e0;
 }
 

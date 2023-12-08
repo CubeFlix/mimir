@@ -22,7 +22,8 @@ class Editor {
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor", "link"];
-    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link"];
+    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage"];
+    insertCommands = ["insertImage"];
 
     /* 
     Create the editor. 
@@ -31,7 +32,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent", "insertImage"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -283,6 +284,15 @@ class Editor {
                     this.menubarOptions.outdent.innerHTML = "<";
                     this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
                     this.menubar.append(this.menubarOptions.outdent);
+                    break;
+                case "insertImage":
+                    const imageButton = document.createElement("button");
+                    imageButton.innerHTML = "&#128444;";
+                    imageButton.classList.add("editor-menubar-option-image-button");
+                    const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton);
+                    this.menubarOptions.insertImage = imageInput;
+                    imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
+                    this.menubar.append(imageInput.imageInput);
                     break;
             }
         }
@@ -3950,6 +3960,24 @@ class Editor {
     }
 
     /*
+    Insert an image.
+    */
+    inlineInsertImage(style, range) {
+        this.saveHistory();
+
+        // Delete everything in the range.
+        range.deleteContents();
+
+        // Create a new image.
+        const imgNode = document.createElement("img");
+        imgNode.setAttribute("src", style.url);
+        if (style.alt) imgNode.setAttribute("alt", style.alt);
+
+        // Insert the image.
+        range.insertNode(imgNode);
+    }
+
+    /*
     Perform a style command.
     */
     performStyleCommand(style) {
@@ -4058,6 +4086,12 @@ class Editor {
                     break;
                 case "outdent":
                     this.blockOutdent(range);
+                    break;
+            }
+        } else if (this.insertCommands.includes(style.type)) {
+            switch (style.type) {
+                case "insertImage":
+                    this.inlineInsertImage(style, range);
                     break;
             }
         }
@@ -4193,6 +4227,13 @@ class Editor {
     */
     outdent() {
         this.performStyleCommand({type: "outdent"});
+    }
+
+    /*
+    Insert image.
+    */
+    insertImage(url, alt) {
+        this.performStyleCommand({type: "insertImage", url: url, alt: alt});
     }
 
     /*

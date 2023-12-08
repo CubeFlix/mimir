@@ -414,7 +414,7 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 Create a link input.
 */
 EditorUI.linkInput = (callback, button) => {
-    // Create the body of the color picker.
+    // Create the body of the link input.
     const body = document.createElement("div");
     body.classList.add("editor-link-input-body");
     
@@ -450,4 +450,40 @@ EditorUI.linkInput = (callback, button) => {
     body.append(saveButton, removeButton);
 
     return {linkInput: dropdown, dropdown: dropdownObj, getValue: getValue};
+}
+
+/*
+Create a image input.
+*/
+EditorUI.imageInput = (callback, button) => {
+    // Create the body of the image input.
+    const body = document.createElement("div");
+    body.classList.add("editor-image-input-body");
+    
+    const title = document.createElement("p");
+    title.innerHTML = "Insert Image";
+    title.classList.add("editor-image-input-label");
+    const imageInput = document.createElement("input")
+    imageInput.classList.add("editor-image-input-input");
+    imageInput.setAttribute("type", "file");
+    imageInput.setAttribute("accept", "image/jpeg, image/png, image/gif, image/bmp, image/webp, image/tiff");
+    const altInput = document.createElement("input")
+    altInput.classList.add("editor-image-alt-input");
+    altInput.setAttribute("placeholder", "Alt Text");
+    body.append(title, imageInput, altInput);
+
+    // Create the dropdown.
+    button.classList.add("editor-image-input-button");
+    const dropdownObj = EditorUI.dropdown(button, body);
+    const dropdown = dropdownObj.dropdown;
+    const closeFunc = dropdownObj.close;
+
+    // Save and remove buttons.
+    const saveButton = document.createElement("button");
+    saveButton.classList.add("editor-image-input-save-button");
+    saveButton.innerHTML = "Save";
+    saveButton.addEventListener("click", () => {callback(URL.createObjectURL(imageInput.files[0]), altInput.value); closeFunc();});
+    body.append(saveButton);
+
+    return {imageInput: dropdown, dropdown: dropdownObj};
 }
