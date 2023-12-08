@@ -4412,6 +4412,30 @@ class Editor {
         }
     }
 
+    /*
+    New document.
+    */
+    new() {
+        // Initialize history.
+        this.history = [];
+        this.redoHistory = [];
+        this.shouldTakeSnapshotOnNextChange = false;
+
+        // Initialize the global range cache variable.
+        this.rangeCache = null;
+
+        // Clear the editor.
+        this.editor.innerHTML = "";
+
+        this.saveHistory();
+
+        // Clear the image object URL list and release the URLs.
+        while (this.imageObjectURLs.length != 0) {
+            const url = this.imageObjectURLs.pop();
+            URL.revokeObjectURL(url);
+        }
+    }
+
     /* 
     Initialize the editor. Must be called before using the editor. 
     */
