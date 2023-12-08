@@ -113,6 +113,8 @@ a rich text editor for javascript
 - [x] make modals always show up on screen
 - [x] lists
 - [ ] images
+- [ ] link command cannot create cursor (it needs text to be selected)
+- [ ] new document function
 - [x] format indent up
 - [x] format indent down
 - [ ] change list style
@@ -120,6 +122,7 @@ a rich text editor for javascript
 - [ ] line spacing (possibly)
 - [ ] equations (possibly)
 - [ ] table (possibly)
+- [ ] special characters
 - [x] `sup`
 - [x] `pre`
 - [x] handle tab button

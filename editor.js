@@ -289,7 +289,7 @@ class Editor {
                     const imageButton = document.createElement("button");
                     imageButton.innerHTML = "&#128444;";
                     imageButton.classList.add("editor-menubar-option-image-button");
-                    const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton);
+                    const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
                     this.menubarOptions.insertImage = imageInput;
                     imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
                     this.menubar.append(imageInput.imageInput);
@@ -4420,6 +4420,9 @@ class Editor {
         this.history = [];
         this.redoHistory = [];
         this.shouldTakeSnapshotOnNextChange = false;
+
+        // Initialize the image object URL list.
+        this.imageObjectURLs = [];
 
         // Initialize the global range cache variable.
         this.rangeCache = null;

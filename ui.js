@@ -442,7 +442,7 @@ EditorUI.linkInput = (callback, button) => {
     const saveButton = document.createElement("button");
     saveButton.classList.add("editor-link-input-save-button");
     saveButton.innerHTML = "Save";
-    saveButton.addEventListener("click", () => {callback(urlInput.value); value = urlInput.value; closeFunc();});
+    saveButton.addEventListener("click", () => {callback(urlInput.value); value = urlInput.value; closeFunc(); urlInput.value = "";});
     const removeButton = document.createElement("button");
     removeButton.classList.add("editor-link-input-remove-button");
     removeButton.innerHTML = "Remove";
@@ -455,7 +455,7 @@ EditorUI.linkInput = (callback, button) => {
 /*
 Create a image input.
 */
-EditorUI.imageInput = (callback, button) => {
+EditorUI.imageInput = (callback, button, objectURLList) => {
     // Create the body of the image input.
     const body = document.createElement("div");
     body.classList.add("editor-image-input-body");
@@ -467,10 +467,13 @@ EditorUI.imageInput = (callback, button) => {
     imageInput.classList.add("editor-image-input-input");
     imageInput.setAttribute("type", "file");
     imageInput.setAttribute("accept", "image/jpeg, image/png, image/gif, image/bmp, image/webp, image/tiff");
+    const urlInput = document.createElement("input");
+    urlInput.classList.add("editor-image-url-input");
+    urlInput.setAttribute("placeholder", "URL");
     const altInput = document.createElement("input")
     altInput.classList.add("editor-image-alt-input");
     altInput.setAttribute("placeholder", "Alt Text");
-    body.append(title, imageInput, altInput);
+    body.append(title, imageInput, urlInput, altInput);
 
     // Create the dropdown.
     button.classList.add("editor-image-input-button");
@@ -478,11 +481,22 @@ EditorUI.imageInput = (callback, button) => {
     const dropdown = dropdownObj.dropdown;
     const closeFunc = dropdownObj.close;
 
-    // Save and remove buttons.
+    // Save button.
     const saveButton = document.createElement("button");
     saveButton.classList.add("editor-image-input-save-button");
     saveButton.innerHTML = "Save";
-    saveButton.addEventListener("click", () => {callback(URL.createObjectURL(imageInput.files[0]), altInput.value); closeFunc();});
+    saveButton.addEventListener("click", () => {
+        if (imageInput.files.length != 0) {
+            const url = URL.createObjectURL(imageInput.files[0]);
+            callback(url, altInput.value);
+            objectURLList.push(url);
+        } else if (urlInput.value) {
+            callback(urlInput.value, altInput.value);
+        }
+        imageInput.value = null;
+        urlInput.value = "";
+        closeFunc();
+    });
     body.append(saveButton);
 
     return {imageInput: dropdown, dropdown: dropdownObj};
