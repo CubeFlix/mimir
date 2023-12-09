@@ -113,7 +113,7 @@ a rich text editor for javascript
 - [x] make modals always show up on screen
 - [x] lists
 - [ ] images
-- [ ] link command cannot create cursor (it needs text to be selected)
+- [x] link command cannot create cursor (it needs text to be selected)
 - [x] new document function
 - [x] format indent up
 - [x] format indent down

@@ -23,6 +23,7 @@ class Editor {
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor", "link"];
     noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage"];
+    cannotCreateCursorCommands = ["link"]; // These commands cannot create a cursor; entire text must be selected.
     insertCommands = ["insertImage"];
 
     /* 
@@ -1872,6 +1873,12 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
+            if (this.cannotCreateCursorCommands.includes(style.type) && range.toString() == "") {
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                return;
+            }
+            
             this.saveHistory();
             this.shouldTakeSnapshotOnNextChange = true;
 
@@ -1948,6 +1955,10 @@ class Editor {
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 0) {
             if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
+
+            if (this.cannotCreateCursorCommands.includes(style.type)) {
                 return;
             }
 
@@ -2655,6 +2666,12 @@ class Editor {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
         } else if (nodes.length == 1) {
+            if (this.cannotCreateCursorCommands.includes(style.type) && range.toString() == "") {
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                return;
+            }
+
             this.saveHistory();
             this.shouldTakeSnapshotOnNextChange = true;
 
@@ -2706,6 +2723,10 @@ class Editor {
         } else if (nodes.length == 0) {
             // Create a new node at the current range.
             if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
+
+            if (this.cannotCreateCursorCommands.includes(style.type)) {
                 return;
             }
 
