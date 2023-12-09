@@ -152,3 +152,12 @@
     -moz-appearance: textfield;
     background-color: #f7f7f7;
 }
+
+/* Image editing UI. */
+#editor-image-editing-ui > .resize-box {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #408cff;
+    display: none;
+}

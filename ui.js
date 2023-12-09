@@ -501,3 +501,65 @@ EditorUI.imageInput = (callback, button, objectURLList) => {
 
     return {imageInput: dropdown, dropdown: dropdownObj};
 }
+
+/*
+Bind events and UI for moving, selecting, resizing, and deleting images.
+*/
+EditorUI.bindImageEditing = (editor) => {
+    // Create editing UI. The UI is absolute positioned and placed after the editor.
+    const ui = document.createElement("div");
+    ui.setAttribute("id", "editor-image-editing-ui");
+    editor.after(ui);
+    
+    // Image corner resize boxes.
+    const resizeBoxTopRight = document.createElement("div");
+    const resizeBoxTopLeft = document.createElement("div");
+    const resizeBoxBottomRight = document.createElement("div");
+    const resizeBoxBottomLeft = document.createElement("div");
+    resizeBoxTopRight.classList.add("resize-box");
+    resizeBoxTopLeft.classList.add("resize-box");
+    resizeBoxBottomRight.classList.add("resize-box");
+    resizeBoxBottomLeft.classList.add("resize-box");
+    ui.append(resizeBoxTopRight, resizeBoxTopLeft, resizeBoxBottomRight, resizeBoxBottomLeft);
+
+    // Side bars.
+    // TODO
+    
+    // State management.
+    var selectedImage = null;
+
+    // Select an image.
+    function selectImage(elem) {
+        selectedImage = elem;
+        resizeBoxTopRight.style.display = "block";
+        resizeBoxTopLeft.style.display = "block";
+        resizeBoxBottomRight.style.display = "block";
+        resizeBoxBottomLeft.style.display = "block";
+        updateUI();
+    }
+
+    // Update the UI.
+    function updateUI() {
+        if (!selectedImage) {return;}
+
+        const rect = selectedImage.getBoundingClientRect();
+        resizeBoxTopLeft.style.left = rect.left - 5 + "px";
+        resizeBoxTopLeft.style.top = rect.top - 5 + "px";
+        resizeBoxTopRight.style.left = rect.left + rect.width - 5 + "px";
+        resizeBoxTopRight.style.top = rect.top - 5 + "px";
+        resizeBoxBottomLeft.style.left = rect.left - 5 + "px";
+        resizeBoxBottomLeft.style.top = rect.bottom - 5 + "px";
+        resizeBoxBottomRight.style.left = rect.left + rect.width - 5 + "px";
+        resizeBoxBottomRight.style.top = rect.bottom - 5 + "px";
+        console.log(rect);
+    }
+
+    // Bind image selection.
+    editor.addEventListener("mousedown", (e) => {
+        if (e.target.tagName == "IMG") {
+            selectImage(e.target);
+        }
+    });
+
+    return {getSelected: () => {return selectedImage;}};
+}
