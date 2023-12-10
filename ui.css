@@ -161,3 +161,17 @@
     background-color: #408cff;
     display: none;
 }
+
+#editor-image-editing-ui > .resize-bar {
+    position: absolute;
+    background-color: #70a9ff;
+    display: none;
+}
+
+#editor-image-editing-ui > .resize-bar-horizontal {
+    height: 2px;
+}
+
+#editor-image-editing-ui > .resize-bar-vertical {
+    width: 2px;
+}

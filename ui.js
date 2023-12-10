@@ -510,6 +510,21 @@ EditorUI.bindImageEditing = (editor) => {
     const ui = document.createElement("div");
     ui.setAttribute("id", "editor-image-editing-ui");
     editor.after(ui);
+
+    // Side bars.
+    const resizeBarTop = document.createElement("div");
+    const resizeBarBottom = document.createElement("div");
+    const resizeBarLeft = document.createElement("div");
+    const resizeBarRight = document.createElement("div");
+    resizeBarTop.classList.add("resize-bar");
+    resizeBarBottom.classList.add("resize-bar");
+    resizeBarLeft.classList.add("resize-bar");
+    resizeBarRight.classList.add("resize-bar");
+    resizeBarTop.classList.add("resize-bar-horizontal");
+    resizeBarBottom.classList.add("resize-bar-horizontal");
+    resizeBarLeft.classList.add("resize-bar-vertical");
+    resizeBarRight.classList.add("resize-bar-vertical");
+    ui.append(resizeBarTop, resizeBarBottom, resizeBarLeft, resizeBarRight);
     
     // Image corner resize boxes.
     const resizeBoxTopRight = document.createElement("div");
@@ -521,9 +536,6 @@ EditorUI.bindImageEditing = (editor) => {
     resizeBoxBottomRight.classList.add("resize-box");
     resizeBoxBottomLeft.classList.add("resize-box");
     ui.append(resizeBoxTopRight, resizeBoxTopLeft, resizeBoxBottomRight, resizeBoxBottomLeft);
-
-    // Side bars.
-    // TODO
     
     // State management.
     var selectedImage = null;
@@ -535,7 +547,30 @@ EditorUI.bindImageEditing = (editor) => {
         resizeBoxTopLeft.style.display = "block";
         resizeBoxBottomRight.style.display = "block";
         resizeBoxBottomLeft.style.display = "block";
+        resizeBarTop.style.display = "block";
+        resizeBarBottom.style.display = "block";
+        resizeBarLeft.style.display = "block";
+        resizeBarRight.style.display = "block";
         updateUI();
+
+        // Bind events.
+        window.addEventListener("resize", updateUI);
+    }
+
+    // Deselect an image.
+    function deselectImage() {
+        selectedImage = null;
+        resizeBoxTopRight.style.display = "none";
+        resizeBoxTopLeft.style.display = "none";
+        resizeBoxBottomRight.style.display = "none";
+        resizeBoxBottomLeft.style.display = "none";
+        resizeBarTop.style.display = "none";
+        resizeBarBottom.style.display = "none";
+        resizeBarLeft.style.display = "none";
+        resizeBarRight.style.display = "none";
+
+        // Unbind events.
+        window.removeEventListener("resize", updateUI);
     }
 
     // Update the UI.
@@ -543,19 +578,61 @@ EditorUI.bindImageEditing = (editor) => {
         if (!selectedImage) {return;}
 
         const rect = selectedImage.getBoundingClientRect();
+        const scrollTop = document.documentElement.scrollTop;
+
         resizeBoxTopLeft.style.left = rect.left - 5 + "px";
-        resizeBoxTopLeft.style.top = rect.top - 5 + "px";
+        resizeBoxTopLeft.style.top = (rect.top + scrollTop) - 5  + "px";
         resizeBoxTopRight.style.left = rect.left + rect.width - 5 + "px";
-        resizeBoxTopRight.style.top = rect.top - 5 + "px";
+        resizeBoxTopRight.style.top = (rect.top + scrollTop) - 5 + "px";
         resizeBoxBottomLeft.style.left = rect.left - 5 + "px";
-        resizeBoxBottomLeft.style.top = rect.bottom - 5 + "px";
+        resizeBoxBottomLeft.style.top = (rect.bottom + scrollTop) - 5 + "px";
         resizeBoxBottomRight.style.left = rect.left + rect.width - 5 + "px";
-        resizeBoxBottomRight.style.top = rect.bottom - 5 + "px";
-        console.log(rect);
+        resizeBoxBottomRight.style.top = (rect.bottom + scrollTop) - 5 + "px";
+
+        resizeBarTop.style.left = rect.left + "px";
+        resizeBarTop.style.top = (rect.top + scrollTop) + "px";
+        resizeBarTop.style.width = rect.width + "px";
+        resizeBarBottom.style.left = rect.left + "px";
+        resizeBarBottom.style.top = (rect.bottom + scrollTop) + "px";
+        resizeBarBottom.style.width = rect.width + "px";
+        resizeBarLeft.style.left = rect.left + "px";
+        resizeBarLeft.style.top = (rect.top + scrollTop) + "px";
+        resizeBarLeft.style.height = rect.height + "px";
+        resizeBarRight.style.left = rect.left + rect.width + "px";
+        resizeBarRight.style.top = (rect.top + scrollTop) + "px";
+        resizeBarRight.style.height = rect.height + "px";
     }
+
+    function dragCorner(e) {
+        if (selectedImage) {return;}
+
+        if (e.touches) {
+            e = e.touches[0];
+        }
+
+        if (e.target == resizeBoxTopRight) {
+            console.log(e.offsetX, e.offsetY);
+        }
+    }
+
+    resizeBoxTopRight.addEventListener("mousemove", dragCorner);
+
+    // TODO: history
 
     // Bind image selection.
     editor.addEventListener("mousedown", (e) => {
+        if (e.target == selectedImage) {
+            return;
+        }
+        if (ui.contains(e.target)) {
+            return;
+        }
+
+        if (e.target != selectedImage && selectedImage) {
+            // Deselect the image.
+            deselectImage();
+        }
+
         if (e.target.tagName == "IMG") {
             selectImage(e.target);
         }
