@@ -539,6 +539,8 @@ EditorUI.bindImageEditing = (editor) => {
     
     // State management.
     var selectedImage = null;
+    var draggedCorner = null;
+    var lastX, lastY = 0;
 
     // Select an image.
     function selectImage(elem) {
@@ -603,19 +605,63 @@ EditorUI.bindImageEditing = (editor) => {
         resizeBarRight.style.height = rect.height + "px";
     }
 
+    function startDragCorner(e) {
+        draggedCorner = e.target;
+        lastX = e.clientX;
+        lastY = e.clientY;
+    }
+
     function dragCorner(e) {
-        if (selectedImage) {return;}
+        if (!selectedImage) {return;}
+        if (!draggedCorner) {return;}
 
         if (e.touches) {
             e = e.touches[0];
         }
 
-        if (e.target == resizeBoxTopRight) {
-            console.log(e.offsetX, e.offsetY);
+        const offsetX = e.clientX - lastX;
+        const offsetY = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        console.log(offsetX, offsetY, e.clientX, e.clientY, lastX, lastY)
+        const computedStyle = getComputedStyle(selectedImage);
+        const originalWidth = parseInt(computedStyle.width.slice(0, -2));
+        const originalHeight = parseInt(computedStyle.height.slice(0, -2));
+        switch (draggedCorner) {
+            case resizeBoxTopLeft:
+                // var newWidth = 
+                selectedImage.style.width = originalWidth - offsetX + "px";
+                selectedImage.style.height = originalHeight - offsetY + "px";
+                break;
+            case resizeBoxTopRight:
+                selectedImage.style.width = originalWidth + offsetX + "px";
+                selectedImage.style.height = originalHeight - offsetY + "px";
+                break;
+            case resizeBoxBottomLeft:
+                selectedImage.style.width = originalWidth - offsetX + "px";
+                selectedImage.style.height = originalHeight + offsetY + "px";
+                break;
+            case resizeBoxBottomRight:
+                selectedImage.style.width = originalWidth + offsetX + "px";
+                selectedImage.style.height = originalHeight + offsetY + "px";
+                break;
         }
+        updateUI();
     }
 
-    resizeBoxTopRight.addEventListener("mousemove", dragCorner);
+    function endDragCorner(e) {
+        draggedCorner = null;
+    }
+
+    function bindListenersToResizeBox(b) {
+        b.addEventListener("mousedown", startDragCorner);
+    }
+    bindListenersToResizeBox(resizeBoxTopRight);
+    bindListenersToResizeBox(resizeBoxTopLeft);
+    bindListenersToResizeBox(resizeBoxBottomRight);
+    bindListenersToResizeBox(resizeBoxBottomLeft);
+    document.addEventListener("mousemove", dragCorner);
+    document.addEventListener("mouseup", endDragCorner);
 
     // TODO: history
 

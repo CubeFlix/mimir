@@ -113,8 +113,9 @@ a rich text editor for javascript
 - [x] make modals always show up on screen
 - [x] lists
 - [ ] images
-- [ ] image copy and paste
+- [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
 - [ ] image selection
+- [ ] when pasting stuff with newlines, replace with spaces!
 - [x] link command cannot create cursor (it needs text to be selected)
 - [x] new document function
 - [x] format indent up
