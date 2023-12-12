@@ -189,12 +189,21 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         colorLabel.classList.add("editor-color-picker-rgb-form-input-label");
         const input = document.createElement("input");
         input.setAttribute("type", "number");
-        input.setAttribute("min", 0);
-        input.setAttribute("max", 255);
+        input.setAttribute("min", "0");
+        input.setAttribute("max", "255");
         input.addEventListener("change", () => {
             r = rgbFormInputR.value;
             g = rgbFormInputG.value;
             b = rgbFormInputB.value;
+
+            // Clamp the value (because for some reason input doesn't do that).
+            r = Math.min(Math.max(parseInt(r), 0), 255);
+            g = Math.min(Math.max(parseInt(g), 0), 255);
+            b = Math.min(Math.max(parseInt(b), 0), 255);
+            rgbFormInputR.value = r;
+            rgbFormInputG.value = g;
+            rgbFormInputB.value = b;
+
             var [newH, newS, newV] = EditorUI.rgbToHsv(r, g, b);
             h = newH;
             primaryX = newS / 100 * primaryWidth;
