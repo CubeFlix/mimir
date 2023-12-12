@@ -631,7 +631,8 @@ class Editor {
                 }
 
                 if (removeExtraneousWhitespace) {
-                    if (child.nodeType == Node.TEXT_NODE) child.textContent = child.textContent.split("\n").join("").split("\r").join("");
+                    // See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace.
+                    if (child.nodeType == Node.TEXT_NODE) child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
 
                     // Reconstruct the styling.
                     child = this.addStylingToNode(child, styling);
@@ -754,7 +755,7 @@ class Editor {
         const withoutWhitespace = [];
         for (const node of reconstructed) {
             if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
-                if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("") == "") {
+                if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("").split(" ").join("") == "") {
                     continue;
                 }
             }
