@@ -557,6 +557,10 @@ EditorUI.bindImageEditing = (editor) => {
     resizeBoxTopLeft.classList.add("resize-box");
     resizeBoxBottomRight.classList.add("resize-box");
     resizeBoxBottomLeft.classList.add("resize-box");
+    resizeBoxTopRight.setAttribute("unselectable", "true");
+    resizeBoxTopLeft.setAttribute("unselectable", "true");
+    resizeBoxBottomRight.setAttribute("unselectable", "true");
+    resizeBoxBottomLeft.setAttribute("unselectable", "true");
     ui.append(resizeBoxTopRight, resizeBoxTopLeft, resizeBoxBottomRight, resizeBoxBottomLeft);
     
     // State management.
@@ -631,6 +635,7 @@ EditorUI.bindImageEditing = (editor) => {
         draggedCorner = e.target;
         lastX = e.clientX;
         lastY = e.clientY;
+        e.preventDefault();
     }
 
     function dragCorner(e) {
@@ -640,6 +645,8 @@ EditorUI.bindImageEditing = (editor) => {
         if (e.touches) {
             e = e.touches[0];
         }
+
+        e.preventDefault();
 
         const offsetX = e.clientX - lastX;
         const offsetY = e.clientY - lastY;
@@ -672,6 +679,7 @@ EditorUI.bindImageEditing = (editor) => {
     }
 
     function endDragCorner(e) {
+        console.log("enddragcorner")
         draggedCorner = null;
     }
 

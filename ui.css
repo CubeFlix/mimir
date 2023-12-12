@@ -164,6 +164,7 @@
     height: 10px;
     background-color: #408cff;
     display: none;
+    z-index: 5;
 }
 
 #editor-image-editing-ui > .resize-bar {
