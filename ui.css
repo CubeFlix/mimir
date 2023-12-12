@@ -82,6 +82,10 @@
     user-select: none;
 }
 
+.editor-color-picker-primary-canvas {
+    user-select: none;
+}
+
 .editor-color-picker-primary-thumb {
     position: absolute;
     width: 10px;

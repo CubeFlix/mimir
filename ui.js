@@ -3,6 +3,11 @@
 const EditorUI = {};
 
 /*
+Is touch input.
+*/
+EditorUI.isTouchInput = ("ontouchstart" in window || window.DocumentTouch && document instanceof DocumentTouch);
+
+/*
 Create a dropdown menu.
 */
 EditorUI.dropdown = (button, content) => {
@@ -302,8 +307,9 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     function primaryUpdateColor(e) {
         if (e.touches) {
             // Touch event.
-            primaryX = Math.min(e.touches[0].offsetX, primaryWidth - 1);
-            primaryY = Math.max(Math.min(e.touches[0].offsetY, height - 1), 0);
+            const rect = primary.getBoundingClientRect();
+            primaryX = Math.min(e.touches[0].clientX - rect.x, primaryWidth - 1);
+            primaryY = Math.max(Math.min(e.touches[0].clientY - rect.y, height - 1), 0);
         } else {
             // Mouse event.
             primaryX = Math.min(e.offsetX, primaryWidth - 1);
@@ -323,21 +329,25 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         dragPrimary = true;
         primaryUpdateColor(e);
         document.addEventListener("mouseup", mouseUpPrimary);
+        document.addEventListener("touchend", mouseUpPrimary);
     }
     function mouseMovePrimary(e) {
+        e.preventDefault();
         if (dragPrimary) primaryUpdateColor(e);
     }
     function mouseUpPrimary(e) {
         dragPrimary = false;
         document.removeEventListener("mouseup", mouseUpPrimary);
+        document.removeEventListener("touchend", mouseUpPrimary);
     }
 
     // Update color on hue canvas.
     function hueUpdateColor(e) {
         if (e.touches) {
             // Touch event.
-            h = e.touches[0].offsetY / height * 360;
-            hueSlider.style.transform = `translate(0, ${e.touches[0].offsetY}px`;
+            const rect = hue.getBoundingClientRect();
+            h = (e.touches[0].clientY - rect.y) / height * 360;
+            hueSlider.style.transform = `translate(0, ${e.touches[0].clientY - rect.y}px`;
         } else {
             // Mouse event.
             h = e.offsetY / height * 360;
@@ -351,13 +361,16 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         dragHue = true;
         hueUpdateColor(e);
         document.addEventListener("mouseup", mouseUpHue);
+        document.addEventListener("touchend", mouseUpHue);
     }
     function mouseMoveHue(e) {
+        e.preventDefault();
         if (dragHue) hueUpdateColor(e);
     }
     function mouseUpHue(e) {
         dragHue = false;
         document.removeEventListener("mouseup", mouseUpHue);
+        document.removeEventListener("touchend", mouseUpHue);
     }
 
     // Input dropdown open.
@@ -375,10 +388,10 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
         primary.addEventListener("touchstart", mouseDownPrimary, false);
         primary.addEventListener("touchmove", mouseMovePrimary, false);
-        primary.addEventListener("touchup", mouseUpPrimary, false);
+        primary.addEventListener("touchend", mouseUpPrimary, false);
         hue.addEventListener("touchstart", mouseDownHue, false);
         hue.addEventListener("touchmove", mouseMoveHue, false);
-        hue.addEventListener("touchup", mouseUpHue, false);
+        hue.addEventListener("touchend", mouseUpHue, false);
     }
 
     // Input dropdown close.
@@ -393,10 +406,10 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
         primary.removeEventListener("touchstart", mouseDownPrimary);
         primary.removeEventListener("touchmove", mouseMovePrimary);
-        primary.removeEventListener("touchup", mouseUpPrimary);
+        primary.removeEventListener("touchend", mouseUpPrimary);
         hue.removeEventListener("touchstart", mouseDownHue);
         hue.removeEventListener("touchmove", mouseMoveHue);
-        hue.removeEventListener("touchup", mouseUpHue);
+        hue.removeEventListener("touchend", mouseUpHue);
     }
 
     // Bind events.

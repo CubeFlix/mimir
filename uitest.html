@@ -10,12 +10,18 @@
                 display: flex;
                 justify-content: center;
             }
+
+            body {
+                user-select: none;
+            }
         </style>
     </head>
     <body>
         <div id="container">
         </div>
         <div contenteditable></div>
+        <div style="width: 500px; height: 500px; background-color: blue;" id="touch"></div>
+        <div id="log"></div>
         <script>
             const container = document.getElementById("container");
             const button = document.createElement("button");
@@ -27,6 +33,14 @@
             container.append(EditorUI.colorInput(() => {}, button, 200, 40, 200).colorInput);
             container.append(EditorUI.linkInput(() => {}, button2).linkInput);
             container.append(EditorUI.imageInput((i) => {console.log(i)}, button3).imageInput);
+
+            // Touch test.
+            const touchBox = document.getElementById("touch");
+            const log = document.getElementById("log");
+            const events = "mousedown mouseup mousemove drag touchstart touchmove touchend".split(" ");
+            events.forEach((e) => {
+                touchBox.addEventListener(e, () => {log.innerHTML += `${e}\n`;});
+            });
         </script>
     </body>
 </html>

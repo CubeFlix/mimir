@@ -112,6 +112,7 @@ a rich text editor for javascript
 - [x] LI nodes that contain another list should not display marker (perform this change action on block style)
 - [x] make modals always show up on screen
 - [x] lists
+- [x] webkit dragging doesn't work (color picker)
 - [ ] images
 - [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
 - [ ] image selection
