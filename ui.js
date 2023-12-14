@@ -553,10 +553,10 @@ EditorUI.bindImageEditing = (editor) => {
     const resizeBoxTopLeft = document.createElement("div");
     const resizeBoxBottomRight = document.createElement("div");
     const resizeBoxBottomLeft = document.createElement("div");
-    resizeBoxTopRight.classList.add("resize-box");
-    resizeBoxTopLeft.classList.add("resize-box");
-    resizeBoxBottomRight.classList.add("resize-box");
-    resizeBoxBottomLeft.classList.add("resize-box");
+    resizeBoxTopRight.classList.add("resize-box", "resize-box-top-right");
+    resizeBoxTopLeft.classList.add("resize-box", "resize-box-top-left");
+    resizeBoxBottomRight.classList.add("resize-box", "resize-box-bottom-right");
+    resizeBoxBottomLeft.classList.add("resize-box", "resize-box-bottom-left");
     resizeBoxTopRight.setAttribute("unselectable", "true");
     resizeBoxTopLeft.setAttribute("unselectable", "true");
     resizeBoxBottomRight.setAttribute("unselectable", "true");
@@ -567,6 +567,7 @@ EditorUI.bindImageEditing = (editor) => {
     var selectedImage = null;
     var draggedCorner = null;
     var lastX, lastY = 0;
+    var currentWidth, currentHeight = 0;
 
     // Select an image.
     function selectImage(elem) {
@@ -580,6 +581,12 @@ EditorUI.bindImageEditing = (editor) => {
         resizeBarLeft.style.display = "block";
         resizeBarRight.style.display = "block";
         updateUI();
+
+        const computedStyle = getComputedStyle(selectedImage);
+        const originalWidth = parseInt(computedStyle.width.slice(0, -2));
+        const originalHeight = parseInt(computedStyle.height.slice(0, -2));
+        currentWidth = originalWidth;
+        currentHeight = originalHeight;
 
         // Bind events.
         window.addEventListener("resize", updateUI);
@@ -648,38 +655,71 @@ EditorUI.bindImageEditing = (editor) => {
 
         e.preventDefault();
 
+        // We want to ensure the image always maintains its original 
+        // proportions. We first calculate two ratios (imgSin, imgCos), 
+        // representing the ratio of the height to the hypotenuse and the
+        // width to the hypotenuse, respectively. We then allow the image to
+        // be scaled via the drag event, then calculate the new width and 
+        // height. Using this, we can determine a new hypotenuse and match the
+        // width and height to this value using the ratios calculated from 
+        // before.
         const offsetX = e.clientX - lastX;
         const offsetY = e.clientY - lastY;
         lastX = e.clientX;
         lastY = e.clientY;
-        console.log(offsetX, offsetY, e.clientX, e.clientY, lastX, lastY)
-        const computedStyle = getComputedStyle(selectedImage);
-        const originalWidth = parseInt(computedStyle.width.slice(0, -2));
-        const originalHeight = parseInt(computedStyle.height.slice(0, -2));
+
+        // Find the old hypotenuse and calculate the two ratios.
+        const hypot = Math.sqrt(currentWidth * currentWidth + currentHeight * currentHeight);
+        const imgSin = currentWidth / hypot;
+        const imgCos = currentHeight / hypot;
+        
         switch (draggedCorner) {
             case resizeBoxTopLeft:
-                // var newWidth = 
-                selectedImage.style.width = originalWidth - offsetX + "px";
-                selectedImage.style.height = originalHeight - offsetY + "px";
+                // Calculate the new width and height.
+                currentWidth = currentWidth - offsetX;
+                currentHeight = currentHeight - offsetY;
+                
+                // Calculate the new hypotenuse.
+                var newHypot = Math.sqrt(currentWidth * currentWidth + currentHeight * currentHeight);
+                
+                // Scale the image according to the new hypotenuse and the old ratios.
+                currentWidth = imgSin * newHypot;
+                currentHeight = imgCos * newHypot;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
                 break;
             case resizeBoxTopRight:
-                selectedImage.style.width = originalWidth + offsetX + "px";
-                selectedImage.style.height = originalHeight - offsetY + "px";
+                currentWidth = currentWidth + offsetX;
+                currentHeight = currentHeight - offsetY;
+                var newHypot = Math.sqrt(currentWidth * currentWidth + currentHeight * currentHeight);
+                currentWidth = imgSin * newHypot;
+                currentHeight = imgCos * newHypot;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
                 break;
             case resizeBoxBottomLeft:
-                selectedImage.style.width = originalWidth - offsetX + "px";
-                selectedImage.style.height = originalHeight + offsetY + "px";
+                currentWidth = currentWidth - offsetX;
+                currentHeight = currentHeight + offsetY;
+                var newHypot = Math.sqrt(currentWidth * currentWidth + currentHeight * currentHeight);
+                currentWidth = imgSin * newHypot;
+                currentHeight = imgCos * newHypot;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
                 break;
             case resizeBoxBottomRight:
-                selectedImage.style.width = originalWidth + offsetX + "px";
-                selectedImage.style.height = originalHeight + offsetY + "px";
+                currentWidth = currentWidth + offsetX;
+                currentHeight = currentHeight + offsetY;
+                var newHypot = Math.sqrt(currentWidth * currentWidth + currentHeight * currentHeight);
+                currentWidth = imgSin * newHypot;
+                currentHeight = imgCos * newHypot;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
                 break;
         }
         updateUI();
     }
 
     function endDragCorner(e) {
-        console.log("enddragcorner")
         draggedCorner = null;
     }
 

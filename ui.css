@@ -167,6 +167,22 @@
     z-index: 5;
 }
 
+#editor-image-editing-ui > .resize-box-top-right {
+    cursor: nesw-resize;
+}
+
+#editor-image-editing-ui > .resize-box-top-left {
+    cursor: nwse-resize;
+}
+
+#editor-image-editing-ui > .resize-box-bottom-right {
+    cursor: nwse-resize;
+}
+
+#editor-image-editing-ui > .resize-box-bottom-left {
+    cursor: nesw-resize;
+}
+
 #editor-image-editing-ui > .resize-bar {
     position: absolute;
     background-color: #70a9ff;
