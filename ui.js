@@ -538,14 +538,10 @@ EditorUI.bindImageEditing = (editor) => {
     const resizeBarBottom = document.createElement("div");
     const resizeBarLeft = document.createElement("div");
     const resizeBarRight = document.createElement("div");
-    resizeBarTop.classList.add("resize-bar");
-    resizeBarBottom.classList.add("resize-bar");
-    resizeBarLeft.classList.add("resize-bar");
-    resizeBarRight.classList.add("resize-bar");
-    resizeBarTop.classList.add("resize-bar-horizontal");
-    resizeBarBottom.classList.add("resize-bar-horizontal");
-    resizeBarLeft.classList.add("resize-bar-vertical");
-    resizeBarRight.classList.add("resize-bar-vertical");
+    resizeBarTop.classList.add("resize-bar", "resize-bar-horizontal", "resize-bar-top");
+    resizeBarBottom.classList.add("resize-bar", "resize-bar-horizontal", "resize-bar-bottom");
+    resizeBarLeft.classList.add("resize-bar", "resize-bar-vertical", "resize-bar-left");
+    resizeBarRight.classList.add("resize-bar", "resize-bar-vertical", "resize-bar-right");
     ui.append(resizeBarTop, resizeBarBottom, resizeBarLeft, resizeBarRight);
     
     // Image corner resize boxes.
@@ -725,6 +721,7 @@ EditorUI.bindImageEditing = (editor) => {
 
     function bindListenersToResizeBox(b) {
         b.addEventListener("mousedown", startDragCorner);
+        b.addEventListener("touchstart", startDragCorner);
     }
     bindListenersToResizeBox(resizeBoxTopRight);
     bindListenersToResizeBox(resizeBoxTopLeft);
@@ -732,6 +729,73 @@ EditorUI.bindImageEditing = (editor) => {
     bindListenersToResizeBox(resizeBoxBottomLeft);
     document.addEventListener("mousemove", dragCorner);
     document.addEventListener("mouseup", endDragCorner);
+    document.addEventListener("touchmove", dragCorner);
+    document.addEventListener("touchend", endDragCorner);
+
+    function startDragSide(e) {
+        draggedSide = e.target;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        e.preventDefault();
+    }
+
+    function dragSide(e) {
+        if (!selectedImage) {return;}
+        if (!draggedSide) {return;}
+
+        if (e.touches) {
+            e = e.touches[0];
+        }
+
+        e.preventDefault();
+
+        const offsetX = e.clientX - lastX;
+        const offsetY = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        switch (draggedSide) {
+            case resizeBarLeft:
+                // Calculate the new width and height.
+                currentWidth = currentWidth - offsetX;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
+                break;
+            case resizeBarRight:
+                currentWidth = currentWidth + offsetX;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
+                break;
+            case resizeBarTop:
+                currentHeight = currentHeight + offsetY;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
+                break;
+            case resizeBarBottom:
+                currentHeight = currentHeight + offsetY;
+                selectedImage.style.width = currentWidth + "px";
+                selectedImage.style.height = currentHeight + "px";
+                break;
+        }
+        updateUI();
+    }
+
+    function endDragSide(e) {
+        draggedSide = null;
+    }
+
+    function bindListenersToResizeSide(b) {
+        b.addEventListener("mousedown", startDragSide);
+        b.addEventListener("touchstart", startDragSide);
+    }
+    bindListenersToResizeSide(resizeBarTop);
+    bindListenersToResizeSide(resizeBarLeft);
+    bindListenersToResizeSide(resizeBarRight);
+    bindListenersToResizeSide(resizeBarBottom);
+    document.addEventListener("mousemove", dragSide);
+    document.addEventListener("mouseup", endDragSide);
+    document.addEventListener("touchmove", dragSide);
+    document.addEventListener("touchend", endDragSide);
 
     // TODO: history
 
@@ -753,6 +817,11 @@ EditorUI.bindImageEditing = (editor) => {
             selectImage(e.target);
         }
     });
+    window.addEventListener("mousedown", (e) => {
+        if (!editor.contains(e.target)) {
+            deselectImage();
+        }
+    })
 
     return {getSelected: () => {return selectedImage;}};
 }

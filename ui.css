@@ -190,9 +190,25 @@
 }
 
 #editor-image-editing-ui > .resize-bar-horizontal {
-    height: 2px;
+    height: 3px;
 }
 
 #editor-image-editing-ui > .resize-bar-vertical {
-    width: 2px;
+    width: 3px;
+}
+
+#editor-image-editing-ui > .resize-bar-top {
+    cursor: ns-resize;
+}
+
+#editor-image-editing-ui > .resize-bar-bottom {
+    cursor: ns-resize;
+}
+
+#editor-image-editing-ui > .resize-bar-right {
+    cursor: ew-resize;
+}
+
+#editor-image-editing-ui > .resize-bar-left {
+    cursor: ew-resize;
 }

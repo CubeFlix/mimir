@@ -4521,6 +4521,6 @@ class Editor {
         this.bindSaveHistoryInterval();
 
         // Bind events for image editing.
-        EditorUI.bindImageEditing(this.editor);
+        this.imageModule = EditorUI.bindImageEditing(this.editor);
     }
 }
