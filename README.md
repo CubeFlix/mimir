@@ -113,15 +113,20 @@ a rich text editor for javascript
 - [x] make modals always show up on screen
 - [x] lists
 - [x] webkit dragging doesn't work (color picker)
+- [ ] bug with pasting from google docs
+- [ ] really slow with large documents (detectStyling, etc.)
+- [ ] modals on iPad not showing up properly on screen
 - [ ] images
 - [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
 - [ ] image selection
+- [ ] bug with modals not showing up on ipad
 - [x] when pasting stuff with newlines, replace with spaces!
 - [x] link command cannot create cursor (it needs text to be selected)
 - [x] new document function
 - [x] format indent up
 - [x] format indent down
 - [ ] change list style
+- [ ] release 1.0
 - [ ] code block (possibly)
 - [ ] line spacing (possibly)
 - [ ] equations (possibly)

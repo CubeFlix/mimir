@@ -527,7 +527,7 @@ EditorUI.imageInput = (callback, button, objectURLList) => {
 /*
 Bind events and UI for moving, selecting, resizing, and deleting images.
 */
-EditorUI.bindImageEditing = (editor) => {
+EditorUI.bindImageEditing = (editor, onEdit) => {
     // Create editing UI. The UI is absolute positioned and placed after the editor.
     const ui = document.createElement("div");
     ui.setAttribute("id", "editor-image-editing-ui");
@@ -716,7 +716,11 @@ EditorUI.bindImageEditing = (editor) => {
     }
 
     function endDragCorner(e) {
+        if (!selectedImage) {return;}
+        if (!draggedCorner) {return;}
+
         draggedCorner = null;
+        onEdit();
     }
 
     function bindListenersToResizeBox(b) {
@@ -781,7 +785,11 @@ EditorUI.bindImageEditing = (editor) => {
     }
 
     function endDragSide(e) {
+        if (!selectedImage) {return;}
+        if (!draggedSide) {return;}
+
         draggedSide = null;
+        onEdit();
     }
 
     function bindListenersToResizeSide(b) {
@@ -796,8 +804,6 @@ EditorUI.bindImageEditing = (editor) => {
     document.addEventListener("mouseup", endDragSide);
     document.addEventListener("touchmove", dragSide);
     document.addEventListener("touchend", endDragSide);
-
-    // TODO: history
 
     // Bind image selection.
     editor.addEventListener("mousedown", (e) => {
