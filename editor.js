@@ -1458,7 +1458,7 @@ class Editor {
         var haveTraversedLastNode = false;
         while (this.inEditor(currentNode)) {
             // If we've finished traversing the last node or we've reached the bound of the last node, quit.
-            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || !range.isPointInRange(currentNode,0))) {
+            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || !range.isPointInRange(currentNode, 0))) {
                 break;
             }
 
@@ -1472,7 +1472,7 @@ class Editor {
                 haveTraversedLastNode = true;
             }
 
-            if (currentNode.childNodes.length != 0) {
+            if (currentNode.firstChild) {
                 // If there are children of this node, enter the node.
                 currentNode = currentNode.firstChild;
             } else if (!currentNode.nextSibling) {
