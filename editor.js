@@ -39,6 +39,7 @@ class Editor {
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
         this.defaultSize = 16 || settings.defaultSize;
+        this.spellcheck = settings.spellcheck == undefined ? true : settings.spellcheck;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -4482,6 +4483,7 @@ class Editor {
         this.editor = document.createElement("div");
         this.editor.setAttribute("id", "editor-body");
         this.editor.setAttribute("contenteditable", "true");
+        this.editor.setAttribute("spellcheck", !!this.spellcheck);
         this.container.append(this.editor);
 
         this.saveHistory();
