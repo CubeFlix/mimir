@@ -113,7 +113,7 @@ a rich text editor for javascript
 - [x] make modals always show up on screen
 - [x] lists
 - [x] webkit dragging doesn't work (color picker)
-- [ ] bug with pasting from google docs
+- [ ] bug with pasting from google docs (certain color values are throwing it off (background: transparent))
 - [x] really slow with large documents (detectStyling, etc.)
 - [ ] slow with ctrl-a for some reason?
 - [ ] modals on iPad not showing up properly on screen
