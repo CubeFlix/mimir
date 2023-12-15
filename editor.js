@@ -1458,12 +1458,12 @@ class Editor {
         var haveTraversedLastNode = false;
         while (this.inEditor(currentNode)) {
             // If we've finished traversing the last node or we've reached the bound of the last node, quit.
-            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || (Array.from(range.endContainer.childNodes).indexOf(currentNode) >= range.endOffset))) {
+            if (haveTraversedLastNode && (!range.endContainer.contains(currentNode) || !range.isPointInRange(currentNode,0))) {
                 break;
             }
-        
+
             // Append the node.
-            if (this.inEditor(currentNode) && (currentNode.nodeType == Node.TEXT_NODE || currentNode.tagName == "BR")) {
+            if ((currentNode.nodeType == Node.TEXT_NODE || this.childlessTags.includes(currentNode.tagName))) {
                 nodes.push(currentNode);
             }
         
@@ -1471,7 +1471,7 @@ class Editor {
             if (range.endContainer.contains(currentNode)) {
                 haveTraversedLastNode = true;
             }
-        
+
             if (currentNode.childNodes.length != 0) {
                 // If there are children of this node, enter the node.
                 currentNode = currentNode.firstChild;
