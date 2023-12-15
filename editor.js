@@ -1318,8 +1318,7 @@ class Editor {
     Bind event listeners for select event.
     */
     bindSelectEvents() {
-        // Bind the onChangeSelect function with setTimeout so that it runs after the event bubbles.
-        const onChangeSelect = setTimeout.bind(window, this.onChangeSelect.bind(this), 0);
+        const onChangeSelect = this.onChangeSelect.bind(this);
 
         this.editor.addEventListener("focus", function (e) {
             onChangeSelect();
@@ -1405,7 +1404,7 @@ class Editor {
         
         // Something is selected.
         const range = selection.getRangeAt(0);
-        if (selection.containsNode(this.editor, true) || this.editor.contains(range.commonAncestorContainer)) {
+        if (this.editor.contains(range.commonAncestorContainer)) {
             return range;
         } else if (this.rangeCache) {
             return this.rangeCache;
