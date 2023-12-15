@@ -1330,7 +1330,7 @@ class Editor {
             const selection = document.getSelection();
             if (selection.rangeCount != 0) {
                 const range = selection.getRangeAt(0);
-                if (selection.containsNode(this.editor, true) || this.editor.contains(range.commonAncestorContainer)) {
+                if (this.editor.contains(range.commonAncestorContainer)) {
                     this.rangeCache = range;
                 }
             }
@@ -1358,7 +1358,7 @@ class Editor {
             const selection = document.getSelection();
             if (selection.rangeCount != 0) {
                 const range = selection.getRangeAt(0);
-                if (selection.containsNode(this.editor, true) || this.editor.contains(range.commonAncestorContainer)) {
+                if (this.editor.contains(range.commonAncestorContainer)) {
                     this.rangeCache = range;
                 }
             }
