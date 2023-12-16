@@ -330,6 +330,12 @@ class Editor {
                 e.preventDefault();
                 this.redo();
                 return;
+            } else if (e.key.toLowerCase() == "a" && (e.ctrlKey || e.metaKey)) {
+                // Select all. For some reason, Chrome is really slow with 
+                // Ctrl-A, and I've found that a way to speed it up is to reset
+                // innerHTML. Just need to remember to invalidate rangeCache.
+                this.editor.innerHTML = this.editor.innerHTML;
+                this.rangeCache = null;
             }
 
             if (e.key == "Enter") {
