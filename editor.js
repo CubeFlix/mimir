@@ -1671,7 +1671,7 @@ class Editor {
             if (!styling.some(s => s.type == "foreColor")) styling.push({type: "foreColor", color: node.style.color});
         }
         if (node.style.backgroundColor) {
-            if (!styling.some(s => s.type == "backColor")) styling.push({type: "backColor", color: node.style.color});
+            if (!styling.some(s => s.type == "backColor")) styling.push({type: "backColor", color: node.style.backgroundColor});
         }
         if (node.style.textAlign) {
             var direction = node.style.textAlign.toLowerCase();
