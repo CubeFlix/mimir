@@ -336,6 +336,7 @@ class Editor {
                 // innerHTML. Just need to remember to invalidate rangeCache.
                 this.editor.innerHTML = this.editor.innerHTML;
                 this.rangeCache = null;
+                return;
             }
 
             if (e.key == "Enter") {

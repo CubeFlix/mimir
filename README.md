@@ -127,6 +127,10 @@ a rich text editor for javascript
 - [x] new document function
 - [x] format indent up
 - [x] format indent down
+- [ ] disallow pasting HTML option 
+- [ ] overhaul UI (undo redo buttons, etc.)
+- [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
+- [ ] remove all styling from text, remove all color from 
 - [ ] change list style
 - [ ] release 1.0
 - [ ] code block (possibly)
@@ -137,12 +141,8 @@ a rich text editor for javascript
 - [x] `sup`
 - [x] `pre`
 - [x] handle tab button
-- [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
-- [ ] remove all styling from text, remove all color from 
 - [x] a href (add mouse overlay, etc.)
 - [x] change previous history's cursor location if hashes match
-- [ ] disallow pasting HTML option 
-- [ ] overhaul UI (undo redo buttons, etc.)
 
 ## future todo
 
