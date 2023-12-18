@@ -134,6 +134,8 @@ a rich text editor for javascript
 - [ ] remove all styling from text, remove all color from 
 - [ ] change list style (possibly)
 - [ ] find and replace
+- [ ] more history (calculate)
+- [ ] menubar should stay at top of editor
 - [ ] format paint (possibly)
 - [ ] release 1.0
 - [ ] code block (possibly)
