@@ -765,8 +765,6 @@ class Editor {
             }
         }
 
-        reconstructed.forEach((e) => {if (e.nodeType == Node.TEXT_NODE) {console.log(e.textContent.charCodeAt(0).toString())}})
-
         return reconstructed;
     }
 
@@ -785,10 +783,9 @@ class Editor {
         // Remove trailing and leading whitespace nodes.
         const withoutWhitespace = [];
         for (const node of reconstructed) {
-            if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
-                if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("").split(" ").join("") == "") {
-                    continue;
-                }
+            // If the whitespace should be left intact, it must have been in a surrounding element. Thus, we can remove it.
+            if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("").split(" ").join("") == "") {
+                continue;
             }
             withoutWhitespace.push(node);
         }
