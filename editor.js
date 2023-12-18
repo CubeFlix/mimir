@@ -22,7 +22,7 @@ class Editor {
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor", "link"];
-    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage", "undo", "redo"];
+    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage", "undo", "redo", "remove"];
     cannotCreateCursorCommands = ["link"]; // These commands cannot create a cursor; entire text must be selected.
     insertCommands = ["insertImage"];
 
@@ -309,6 +309,13 @@ class Editor {
                     this.menubarOptions.redo.innerHTML = "&#8631;";
                     this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
                     this.menubar.append(this.menubarOptions.redo);
+                    break;
+                case "remove":
+                    this.menubarOptions.remove = document.createElement("button");
+                    this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
+                    this.menubarOptions.remove.innerHTML = "X";
+                    this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
+                    this.menubar.append(this.menubarOptions.remove);
                     break;
             }
         }
@@ -757,6 +764,8 @@ class Editor {
                 reconstructed.push(newNode);
             }
         }
+
+        reconstructed.forEach((e) => {if (e.nodeType == Node.TEXT_NODE) {console.log(e.textContent.charCodeAt(0).toString())}})
 
         return reconstructed;
     }
@@ -4277,6 +4286,15 @@ class Editor {
     */
     insertImage(url, alt) {
         this.performStyleCommand({type: "insertImage", url: url, alt: alt});
+    }
+
+    /*
+    Remove styling.
+    */
+    remove() {
+        for (const type of this.inlineStylingCommands) {
+            this.removeStyle({type: type}, this.getRange());
+        }
     }
 
     /*

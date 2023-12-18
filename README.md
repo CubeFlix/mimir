@@ -116,6 +116,7 @@ a rich text editor for javascript
 - [x] bug with pasting from google docs (certain color values are throwing it off (background: transparent))
 - [x] really slow with large documents (detectStyling, etc.)
 - [x] slow with ctrl-a for some reason?
+- [ ] bug with pasting (not removing newlines between nodes)
 - [ ] optimize onChangeSelect (possibly) (for mobile users)
 - [ ] modals on iPad not showing up properly on screen
 - [ ] images
@@ -128,9 +129,12 @@ a rich text editor for javascript
 - [x] format indent down
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
+- [ ] copy paste buttons
 - [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
 - [ ] remove all styling from text, remove all color from 
-- [ ] change list style
+- [ ] change list style (possibly)
+- [ ] find and replace
+- [ ] format paint (possibly)
 - [ ] release 1.0
 - [ ] code block (possibly)
 - [ ] line spacing (possibly)
