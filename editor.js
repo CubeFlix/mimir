@@ -22,7 +22,7 @@ class Editor {
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor", "link"];
-    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage"];
+    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage", "undo", "redo"];
     cannotCreateCursorCommands = ["link"]; // These commands cannot create a cursor; entire text must be selected.
     insertCommands = ["insertImage"];
 
@@ -33,7 +33,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent", "insertImage"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent", "insertImage", "undo", "redo"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -295,6 +295,20 @@ class Editor {
                     this.menubarOptions.insertImage = imageInput;
                     imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
                     this.menubar.append(imageInput.imageInput);
+                    break;
+                case "undo":
+                    this.menubarOptions.undo = document.createElement("button");
+                    this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
+                    this.menubarOptions.undo.innerHTML = "&#8630;";
+                    this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
+                    this.menubar.append(this.menubarOptions.undo);
+                    break;
+                case "redo":
+                    this.menubarOptions.redo = document.createElement("button");
+                    this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
+                    this.menubarOptions.redo.innerHTML = "&#8631;";
+                    this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
+                    this.menubar.append(this.menubarOptions.redo);
                     break;
             }
         }
