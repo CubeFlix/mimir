@@ -116,9 +116,9 @@ a rich text editor for javascript
 - [x] bug with pasting from google docs (certain color values are throwing it off (background: transparent))
 - [x] really slow with large documents (detectStyling, etc.)
 - [x] slow with ctrl-a for some reason?
-- [ ] bug with pasting (not removing newlines between nodes)
-- [ ] optimize onChangeSelect (possibly) (for mobile users)
-- [ ] modals on iPad not showing up properly on screen
+- [x] bug with pasting (not removing newlines between nodes)
+- [x] optimize onChangeSelect (possibly) (for mobile users)
+- [x] modals on iPad not showing up properly on screen
 - [ ] images
 - [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
 - [ ] image selection
