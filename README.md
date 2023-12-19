@@ -120,7 +120,8 @@ a rich text editor for javascript
 - [x] optimize onChangeSelect (possibly) (for mobile users)
 - [x] modals on iPad not showing up properly on screen
 - [x] images
-- [ ] dragging images
+- [x] dragging images
+- [ ] images mobile
 - [x] default size
 - [x] make pre default to monospace
 - [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)

@@ -834,5 +834,5 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
 
     return {getSelected: () => {return selectedImage;}, select: (img) => {
         selectImage(img);
-    }};
+    }, deselect: () => {deselectImage()}};
 }

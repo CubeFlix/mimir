@@ -692,7 +692,7 @@ class Editor {
                         // Source attribute. If needed, convert data URLs into object URLs.
                         if (oldChild.getAttribute("src")) {
                             var src = oldChild.getAttribute("src");
-                            if (src.toLowerCase().startsWith("http")) {
+                            if (src.toLowerCase().startsWith("http") || src.toLowerCase().startsWith("blob")) {
                                 child.setAttribute("src", src);
                             } else if (src.toLowerCase().startsWith("data")) {
                                 var mime = src.split(',')[0].split(':')[1].split(';')[0];
@@ -1132,6 +1132,7 @@ class Editor {
     bindPasteEvents() {
         this.editor.addEventListener("paste", function(e) {
             this.saveHistory();
+            this.imageModule.deselect();
 
             // Paste HTML data.
             if (e.clipboardData.getData("text/html")) {
@@ -1189,6 +1190,7 @@ class Editor {
 
         this.editor.addEventListener("drop", function(e) {
             this.saveHistory();
+            this.imageModule.deselect();
 
             // Insert HTML data.
             if (e.dataTransfer.getData("text/html")) {
