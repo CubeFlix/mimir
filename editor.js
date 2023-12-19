@@ -707,7 +707,19 @@ class Editor {
 
                 if (removeExtraneousWhitespace) {
                     // See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace.
-                    if (child.nodeType == Node.TEXT_NODE) child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
+                    if (child.nodeType == Node.TEXT_NODE) {
+                        // Collapse whitespace down into single spaces.
+                        child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
+                        if ((child.textContent.split(" ").join("") == "")) {
+                            // Only trim whitespace on the edges if the node is just whitespace.
+                            if (child.textContent[0] == " ") {
+                                child.textContent = child.textContent.slice(1, child.textContent.length);
+                            }
+                            if (child.textContent[child.textContent.length - 1] == " ") {
+                                child.textContent = child.textContent.slice(0, child.textContent.length - 1);
+                            }
+                        }
+                    }
 
                     // Reconstruct the styling.
                     child = this.addStylingToNode(child, styling);
