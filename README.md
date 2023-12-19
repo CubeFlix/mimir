@@ -121,7 +121,8 @@ a rich text editor for javascript
 - [x] modals on iPad not showing up properly on screen
 - [x] images
 - [x] dragging images
-- [ ] images mobile
+- [x] images mobile
+- [ ] little issue with image outline not updating on mobile
 - [x] default size
 - [x] make pre default to monospace
 - [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)

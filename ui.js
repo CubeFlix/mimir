@@ -638,21 +638,28 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
     }
 
     function startDragCorner(e) {
+        if (!selectedImage) {return;}
+
+        e.preventDefault();
+
+        if (e.touches) {
+            e = e.touches[0];
+        }
+
         draggedCorner = e.target;
         lastX = e.clientX;
         lastY = e.clientY;
-        e.preventDefault();
     }
 
     function dragCorner(e) {
         if (!selectedImage) {return;}
         if (!draggedCorner) {return;}
 
+        e.preventDefault();
+
         if (e.touches) {
             e = e.touches[0];
         }
-
-        e.preventDefault();
 
         // We want to ensure the image always maintains its original 
         // proportions. We first calculate two ratios (imgSin, imgCos), 
@@ -740,21 +747,28 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
     document.addEventListener("touchend", endDragCorner);
 
     function startDragSide(e) {
+        if (!selectedImage) {return;}
+
+        e.preventDefault();
+
+        if (e.touches) {
+            e = e.touches[0];
+        }
+
         draggedSide = e.target;
         lastX = e.clientX;
         lastY = e.clientY;
-        e.preventDefault();
     }
 
     function dragSide(e) {
         if (!selectedImage) {return;}
         if (!draggedSide) {return;}
 
+        e.preventDefault();
+
         if (e.touches) {
             e = e.touches[0];
         }
-
-        e.preventDefault();
 
         const offsetX = e.clientX - lastX;
         const offsetY = e.clientY - lastY;
