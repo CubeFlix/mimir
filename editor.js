@@ -709,16 +709,18 @@ class Editor {
                     // See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace.
                     if (child.nodeType == Node.TEXT_NODE) {
                         // Collapse whitespace down into single spaces.
-                        child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
-                        if ((child.textContent.split(" ").join("") == "")) {
-                            // Only trim whitespace on the edges if the node is just whitespace.
-                            if (child.textContent[0] == " ") {
-                                child.textContent = child.textContent.slice(1, child.textContent.length);
-                            }
-                            if (child.textContent[child.textContent.length - 1] == " ") {
-                                child.textContent = child.textContent.slice(0, child.textContent.length - 1);
-                            }
-                        }
+                        // child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
+                        // if ((child.textContent.split(" ").join("") == "")) {
+                        //     // Only trim whitespace on the edges if the node is just whitespace.
+                        //     console.log(child.cloneNode());
+                        //     if (child.textContent[0] == " ") {
+                        //         child.textContent = child.textContent.slice(1, child.textContent.length);
+                        //     }
+                        //     if (child.textContent[child.textContent.length - 1] == " ") {
+                        //         child.textContent = child.textContent.slice(0, child.textContent.length - 1);
+                        //     }
+                        //     console.log(child.cloneNode());
+                        // }
                     }
 
                     // Reconstruct the styling.
@@ -837,9 +839,11 @@ class Editor {
         // Remove trailing and leading whitespace nodes.
         const withoutWhitespace = [];
         for (const node of reconstructed) {
-            // If the whitespace should be left intact, it must have been in a surrounding element. Thus, we can remove it.
-            if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("").split(" ").join("") == "") {
-                continue;
+            // Remove beginning and trailing whitespace.
+            if (reconstructed.indexOf(node) == 0 || reconstructed.indexOf(node) == reconstructed.length - 1) {
+                if (node.nodeType == Node.TEXT_NODE && node.textContent.split("\n").join("").split("\r").join("").split(" ").join("") == "") {
+                    continue;
+                }
             }
             withoutWhitespace.push(node);
         }
