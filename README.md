@@ -122,7 +122,7 @@ a rich text editor for javascript
 - [x] images
 - [ ] dragging images
 - [x] default size
-- [ ] make pre default to monospace
+- [x] make pre default to monospace
 - [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
 - [x] image selection
 - [ ] horizontal rule

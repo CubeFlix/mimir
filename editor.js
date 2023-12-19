@@ -1765,6 +1765,11 @@ class Editor {
             if (!styling.some(s => s.type == "align")) styling.push({type: "align", direction: direction});
         }
 
+        // Add PRE font styling. Add this afterwards so that font styling takes precedence.
+        if (node.tagName == "PRE") {
+            if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: "monospace"});
+        }
+
         return styling;
     }
 
