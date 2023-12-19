@@ -125,7 +125,8 @@ a rich text editor for javascript
 - [ ] little issue with image outline not updating on mobile
 - [x] default size
 - [x] make pre default to monospace
-- [ ] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
+- [x] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
+- [ ] possibly copy image data values?
 - [x] image selection
 - [ ] horizontal rule
 - [x] when pasting stuff with newlines, replace with spaces!
