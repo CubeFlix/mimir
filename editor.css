@@ -1,6 +1,6 @@
 /* Editor. */
 #editor-body {
-    white-space: normal;
+    white-space: pre-wrap;
     word-wrap: break-word;
 }
 

@@ -626,6 +626,30 @@ class Editor {
     }
 
     /*
+    Left sibling of node.
+    */
+    leftSibling(node) {
+        var currentNode = node;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (currentNode.previousSibling) {return currentNode.previousSibling};
+            currentNode = currentNode.parentNode;
+        }
+        return null;
+    }
+
+    /*
+    Right sibling of node.
+    */
+    rightSibling(node) {
+        var currentNode = node;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            if (currentNode.nextSibling) {return currentNode.nextSibling};
+            currentNode = currentNode.parentNode;
+        }
+        return null;
+    }
+
+    /*
     Reconstruct a node's children.
     */
     reconstructNodeContents(node, parent, cachedInlineBlockStyles, removeExtraneousWhitespace = true) {
@@ -709,22 +733,31 @@ class Editor {
                     // See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace.
                     if (child.nodeType == Node.TEXT_NODE) {
                         // Collapse whitespace down into single spaces.
-                        // child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
-                        // if ((child.textContent.split(" ").join("") == "")) {
-                        //     // Only trim whitespace on the edges if the node is just whitespace.
-                        //     console.log(child.cloneNode());
-                        //     if (child.textContent[0] == " ") {
-                        //         child.textContent = child.textContent.slice(1, child.textContent.length);
-                        //     }
-                        //     if (child.textContent[child.textContent.length - 1] == " ") {
-                        //         child.textContent = child.textContent.slice(0, child.textContent.length - 1);
-                        //     }
-                        //     console.log(child.cloneNode());
+                        child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
+
+                        if ((child.textContent.split(" ").join("") == "")) {
+                            // Only trim whitespace on the edges if the node is just whitespace.
+                            if (child.textContent[0] == " ") {
+                                child.textContent = child.textContent.slice(1, child.textContent.length);
+                            }
+                            if (child.textContent[child.textContent.length - 1] == " ") {
+                                child.textContent = child.textContent.slice(0, child.textContent.length - 1);
+                            }
+                        }
+
+                        // Trim whitespace on left. Only trim if the node on the left ends with a space.
+                        // const leftSibling = this.leftSibling(child);
+                        // const rightSibling = this.rightSibling(child);
+                        // if (child.textContent[0] == " " && leftSibling && leftSibling.textContent.endsWith(" ")) {
+                        //     child.textContent = child.textContent.slice(1, child.textContent.length);
+                        // }
+                        // if (child.textContent[child.textContent.length - 1] == " " && rightSibling && rightSibling.textContent.startsWith(" ")) {
+                        //     child.textContent = child.textContent.slice(0, child.textContent.length - 1);
                         // }
                     }
 
                     // Reconstruct the styling.
-                    child = this.addStylingToNode(child, styling);
+                    child = this.addStylingToNode(child.cloneNode(), styling);
 
                     // Append the newly reconstructed node.
                     reconstructed.push(child);
