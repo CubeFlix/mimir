@@ -1420,6 +1420,12 @@ class Editor {
     Get the current range.
     */
     getRange() {
+        if (this.imageModule && this.imageModule.getSelected()) {
+            const newRange = new Range();
+            newRange.selectNode(this.imageModule.getSelected());
+            return newRange;
+        }
+
         const selection = window.getSelection();
         
         // Nothing selected.
@@ -4024,6 +4030,7 @@ class Editor {
 
         // Insert the image.
         range.insertNode(imgNode);
+        document.getSelection().removeAllRanges();
     }
 
     /*

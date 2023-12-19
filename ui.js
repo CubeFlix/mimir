@@ -562,6 +562,7 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
     // State management.
     var selectedImage = null;
     var draggedCorner = null;
+    var draggedSide = null;
     var lastX, lastY = 0;
     var currentWidth, currentHeight = 0;
 
@@ -586,6 +587,8 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
 
         // Bind events.
         window.addEventListener("resize", updateUI);
+
+        document.getSelection().removeAllRanges();
     }
 
     // Deselect an image.
@@ -824,10 +827,12 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         }
     });
     window.addEventListener("mousedown", (e) => {
-        if (!editor.contains(e.target)) {
+        if (!editor.contains(e.target) && !ui.contains(e.target)) {
             deselectImage();
         }
     })
 
-    return {getSelected: () => {return selectedImage;}};
+    return {getSelected: () => {return selectedImage;}, select: (img) => {
+        selectImage(img);
+    }};
 }
