@@ -1804,8 +1804,8 @@ class Editor {
             if (!styling.some(s => s.type == "align")) styling.push({type: "align", direction: direction});
         }
 
-        // Add PRE font styling. Add this afterwards so that font styling takes precedence.
-        if (node.tagName == "PRE") {
+        // Add PRE and CODE font styling. Add this afterwards so that font styling takes precedence.
+        if (node.tagName == "PRE" || node.tagName == "CODE") {
             if (!styling.some(s => s.type == "font")) styling.push({type: "font", family: "monospace"});
         }
 

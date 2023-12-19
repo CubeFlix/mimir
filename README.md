@@ -145,6 +145,7 @@ a rich text editor for javascript
 - [ ] release 1.0
 - [ ] code block (possibly)
 - [ ] line spacing (possibly)
+- [ ] text indent (possibly)
 - [ ] equations (possibly)
 - [ ] table (possibly)
 - [ ] special characters
