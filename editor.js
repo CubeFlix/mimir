@@ -4081,6 +4081,7 @@ class Editor {
         const imgNode = document.createElement("img");
         imgNode.setAttribute("src", style.url);
         if (style.alt) imgNode.setAttribute("alt", style.alt);
+        imgNode.style.width = this.defaultImageWidth;
 
         // Insert the image.
         range.insertNode(imgNode);
