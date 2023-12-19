@@ -510,10 +510,10 @@ EditorUI.imageInput = (callback, button, objectURLList) => {
     saveButton.addEventListener("click", () => {
         if (imageInput.files.length != 0) {
             const url = URL.createObjectURL(imageInput.files[0]);
-            callback(url, altInput.value);
+            callback(url, altInput.value ? altInput.value : imageInput.files[0].name);
             objectURLList.push(url);
         } else if (urlInput.value) {
-            callback(urlInput.value, altInput.value);
+            callback(urlInput.value, altInput.value ? altInput.value : urlInput.value.split('/').pop());
         }
         imageInput.value = null;
         urlInput.value = "";
