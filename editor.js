@@ -40,6 +40,7 @@ class Editor {
         this.defaultFont = "Arial" || settings.defaultFont;
         this.defaultSize = 16 || settings.defaultSize;
         this.spellcheck = settings.spellcheck == undefined ? true : settings.spellcheck;
+        this.defaultImageWidth = "300px" || settings.defaultImageWidth;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -659,6 +660,51 @@ class Editor {
                     currentNode = currentNode.parentNode;
                 }
 
+                // Set attributes.
+                if (child.nodeType == Node.ELEMENT_NODE) {
+                    var oldChild = child;
+                    child = document.createElement(oldChild.tagName);
+                    if (oldChild.tagName == "IMG") {
+                        // Source attribute. If needed, convert data URLs into object URLs.
+                        if (oldChild.getAttribute("src")) {
+                            var src = oldChild.getAttribute("src");
+                            if (src.toLowerCase().startsWith("http")) {
+                                child.setAttribute("src", src);
+                            } else if (src.toLowerCase().startsWith("data")) {
+                                var mime = src.split(',')[0].split(':')[1].split(';')[0];
+                                var binary = atob(src.split(',')[1]);
+                                var array = [];
+                                for (var i = 0; i < binary.length; i++) {
+                                    array.push(binary.charCodeAt(i));
+                                }
+                                const blob = new Blob([new Uint8Array(array)], {type: mime});
+                                src = URL.createObjectURL(blob);
+                                child.setAttribute("src", src);
+                                this.imageObjectURLs.push(src);
+                            }
+                        }
+
+                        // Alt text.
+                        if (oldChild.getAttribute("alt")) {
+                            child.setAttribute("alt", oldChild.getAttribute("alt"));
+                        }
+
+                        // Width/height.
+                        if (oldChild.getAttribute("width")) {
+                            child.style.width = oldChild.getAttribute("width") + "px";
+                        } else if (oldChild.style.width) {
+                            child.style.width = oldChild.style.width;
+                        } else {
+                            child.style.width = this.defaultImageWidth;
+                        }
+                        if (oldChild.getAttribute("height")) {
+                            child.style.height = oldChild.getAttribute("height") + "px";
+                        } else if (oldChild.style.height) {
+                            child.style.height = oldChild.style.height;
+                        }
+                    }
+                }
+
                 if (removeExtraneousWhitespace) {
                     // See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace.
                     if (child.nodeType == Node.TEXT_NODE) child.textContent = child.textContent.replace(/[\t\n\r ]+/g, " ");
@@ -738,14 +784,10 @@ class Editor {
                 }
 
                 // Add any important attributes.
-                if (child.getAttribute("href")) {
+                if (child.tagName == "A" && child.getAttribute("href")) {
                     if (child.getAttribute("href").trim().substring(0, 11).toLowerCase() !== "javascript:") {
                         newNode.setAttribute("href", child.getAttribute("href"));
                     }
-                } else if (child.getAttribute("src")) {
-                    newNode.setAttribute("src", child.getAttribute("src"));
-                } else if (child.getAttribute("alt")) {
-                    newNode.setAttribute("alt", child.getAttribute("alt"));
                 }
 
                 // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
