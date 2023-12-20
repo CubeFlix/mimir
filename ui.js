@@ -588,11 +588,19 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         // Bind events.
         window.addEventListener("resize", updateUI);
 
+        // Disable user selection on the image.
+        selectedImage.classList.add("editor-hide-selection");
+
         document.getSelection().removeAllRanges();
     }
 
     // Deselect an image.
     function deselectImage() {
+        if (!selectedImage) {return;}
+
+        // Re-enable user selection on the image.
+        selectedImage.classList.remove("editor-hide-selection");
+
         selectedImage = null;
         resizeBoxTopRight.style.display = "none";
         resizeBoxTopLeft.style.display = "none";

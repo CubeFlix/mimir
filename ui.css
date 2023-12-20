@@ -212,3 +212,11 @@
 #editor-image-editing-ui > .resize-bar-left {
     cursor: ew-resize;
 }
+
+#editor-body img.editor-hide-selection::selection {
+    background: none;
+}
+
+#editor-body img.editor-hide-selection::-moz-selection {
+    background: none;
+}
