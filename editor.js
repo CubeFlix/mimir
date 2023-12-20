@@ -449,6 +449,7 @@ class Editor {
 
                         // Delete the node.
                         range.commonAncestorContainer.textContent = "";
+                        if (this.imageModule.getSelected()) this.imageModule.deselect();
 
                         // Insert the node at the current range and place the caret inside the cursor.
                         if (range.startContainer.nodeType == Node.TEXT_NODE) {
@@ -960,6 +961,7 @@ class Editor {
             return;
         }
         range.deleteContents();
+        if (this.imageModule.getSelected()) this.imageModule.deselect();
         const tabNode = document.createTextNode("\t");
         range.insertNode(tabNode);
 
@@ -1157,6 +1159,7 @@ class Editor {
                 }
 
                 range.deleteContents();
+                if (this.imageModule.getSelected()) this.imageModule.deselect();
 
                 // Split the start container at the start offset.
                 const emptyTextNode = document.createTextNode("");
@@ -1333,6 +1336,7 @@ class Editor {
                         return;
                     }
                     newRangeToRemove.deleteContents();
+                    if (this.imageModule.getSelected()) this.imageModule.deselect();
                 } else {
                     // Split the start container at the start offset.
                     if (range.startContainer.nodeType == Node.TEXT_NODE) {
@@ -4133,6 +4137,7 @@ class Editor {
 
         // Delete everything in the range.
         range.deleteContents();
+        if (this.imageModule.getSelected()) this.imageModule.deselect();
 
         // Create a new image.
         const imgNode = document.createElement("img");

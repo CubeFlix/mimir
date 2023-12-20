@@ -846,6 +846,15 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         }
     });
 
+    document.addEventListener("keydown", (e) => {
+        if (!selectedImage) {return;}
+        
+        if (e.key == "Delete" || e.key == "Backspace") {
+            selectedImage.remove();
+            deselectImage();
+        }
+    });
+
     return {getSelected: () => {return selectedImage;}, select: (img) => {
         selectImage(img);
     }, deselect: () => {deselectImage()}};

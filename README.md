@@ -123,7 +123,7 @@ a rich text editor for javascript
 - [x] dragging images
 - [x] images mobile
 - [ ] little issue with image outline not updating on mobile
-- [ ] image deletion (button and key)
+- [x] image deletion (button and key)
 - [ ] disable image selection
 - [x] default size
 - [x] make pre default to monospace
