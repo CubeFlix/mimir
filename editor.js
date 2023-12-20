@@ -357,9 +357,20 @@ class Editor {
                 // Ctrl-A, and I've found that a way to speed it up is to reset
                 // innerHTML. Just need to remember to invalidate rangeCache and 
                 // currentCursor.
-                this.editor.innerHTML = this.editor.innerHTML;
                 this.rangeCache = null;
-                this.currentCursor = null;
+                if (this.currentCursor) {
+                    // Traverse up the tree until we find the highest empty node and remove the cursor.
+                    var currentNode = this.currentCursor;
+                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
+                        currentNode = currentNode.parentNode;
+                    }
+
+                    // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
+                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode)) currentNode.before(document.createElement("BR"));
+                    currentNode.remove();
+                    this.currentCursor = null;
+                }
+                this.editor.innerHTML = this.editor.innerHTML;
                 return;
             }
 
@@ -384,7 +395,7 @@ class Editor {
                 if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
                     // Traverse up the tree until we find the highest empty node and remove the cursor.
                     var currentNode = this.currentCursor;
-                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingCommands.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
+                    while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
                         currentNode = currentNode.parentNode;
                     }
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
@@ -2129,7 +2140,7 @@ class Editor {
     */
     isEmpty(node) {
         var currentNode = node;
-        while (node.contains(currentNode) && currentNode != this.editor) {
+        while (node.contains(currentNode) && this.inEditor(currentNode)) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.contentTags.includes(currentNode.tagName)) {
                 return false;
             }
