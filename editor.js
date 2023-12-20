@@ -355,9 +355,11 @@ class Editor {
             } else if (e.key.toLowerCase() == "a" && (e.ctrlKey || e.metaKey)) {
                 // Select all. For some reason, Chrome is really slow with 
                 // Ctrl-A, and I've found that a way to speed it up is to reset
-                // innerHTML. Just need to remember to invalidate rangeCache.
+                // innerHTML. Just need to remember to invalidate rangeCache and 
+                // currentCursor.
                 this.editor.innerHTML = this.editor.innerHTML;
                 this.rangeCache = null;
+                this.currentCursor = null;
                 return;
             }
 
@@ -1513,7 +1515,7 @@ class Editor {
     Get the current range.
     */
     getRange() {
-        if (this.imageModule && this.imageModule.getSelected()) {
+        if (this.imageModule && this.imageModule.getSelected() && this.inEditor(this.imageModule.getSelected())) {
             const newRange = new Range();
             newRange.selectNode(this.imageModule.getSelected());
             return newRange;

@@ -844,7 +844,7 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         if (!editor.contains(e.target) && !ui.contains(e.target)) {
             deselectImage();
         }
-    })
+    });
 
     return {getSelected: () => {return selectedImage;}, select: (img) => {
         selectImage(img);
