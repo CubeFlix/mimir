@@ -10,12 +10,12 @@ class Editor {
     ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     invisible = "&#xFEFF;"; // Insert this into spans so that the cursor will latch to it.
 
-    contentTags = ["IMG", "BR"];
+    contentTags = ["IMG", "BR", "HR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
     inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB"];
-    basicAllowedTags = ["DIV", "BR", "P", "IMG", "LI", "UL", "OL", "BLOCKQUOTE"];
-    blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
-    childlessTags = ["BR", "IMG"];
+    basicAllowedTags = ["DIV", "BR", "P", "IMG", "LI", "UL", "OL", "BLOCKQUOTE", "HR"];
+    blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "HR"];
+    childlessTags = ["BR", "IMG", "HR"];
 
     inlineStylingCommands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link"];
     blockStylingCommands = ["quote", "header", "align", "list", "indent", "outdent"];
@@ -406,7 +406,7 @@ class Editor {
                         currentNode = currentNode.parentNode;
                     }
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
-                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode)) currentNode.before(document.createElement("BR"));
+                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
                     currentNode.remove();
                     this.currentCursor = null;
                     this.updateMenubarOptions();
@@ -2040,8 +2040,8 @@ class Editor {
 
             const node = nodes[0];
 
-            // Handle BR and IMG nodes.
-            if (node.tagName == "BR" || node.tagName == "IMG") {
+            // Handle content nodes.
+            if (this.contentTags.includes(node.tagName)) {
                 const styledNode = this.applyStyleToNode(node, style);
 
                 // Select the new node.
@@ -2581,8 +2581,8 @@ class Editor {
 
             const node = nodes[0];
 
-            // Handle BR and IMG nodes.
-            if (node.tagName == "BR" || node.tagName == "IMG") {
+            // Handle content nodes.
+            if (this.contentTags.includes(node.tagName)) {
                 const styledNode = this.removeStyleOnNode(node, style);
 
                 // Select the new node.
@@ -2833,8 +2833,8 @@ class Editor {
 
             const node = nodes[0];
 
-            // Handle BR and IMG nodes.
-            if (node.tagName == "BR" || node.tagName == "IMG") {
+            // Handle content nodes.
+            if (this.contentTags.includes(node.tagName)) {
                 const styledNode = this.changeStyleOnNode(node, style);
 
                 // Select the new node.
