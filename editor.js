@@ -455,33 +455,41 @@ class Editor {
                         }
 
                         // Delete the node.
-                        range.commonAncestorContainer.textContent = "";
+                        range.startContainer.textContent = "";
                         if (this.imageModule.getSelected()) this.imageModule.deselect();
 
                         // Insert the node at the current range and place the caret inside the cursor.
                         if (range.startContainer.nodeType == Node.TEXT_NODE) {
                             // Split the text node.
-                            var placeBefore = range.startContainer;
-                            if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.inlineStylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
+                            var placeAfter = range.startContainer;
+                            if ((placeAfter.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(placeAfter.tagName) || placeAfter.tagName == "SPAN")) || (this.inlineStylingTags.includes(placeAfter.parentNode.tagName) || placeAfter.parentNode.tagName == "SPAN")) {
                                 // Escape out of any styling nodes.
-                                placeBefore = this.findLastParent(placeBefore, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
+                                placeAfter = this.findLastParent(placeAfter, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
                             }
-                            placeBefore.before(lastNode);
+                            if (e.key == "Backspace") {
+                                placeAfter.after(lastNode);
+                            } else {
+                                placeAfter.before(lastNode);
+                            }
                         } else {
                             // Place the node inside.
                             if (range.startContainer == this.editor) {
                                 range.startContainer.prepend(lastNode);
                             } else {
-                                var placeBefore = range.startContainer;
-                                if ((placeBefore.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(placeBefore.tagName) || placeBefore.tagName == "SPAN")) || (this.inlineStylingTags.includes(placeBefore.parentNode.tagName) || placeBefore.parentNode.tagName == "SPAN")) {
+                                var placeAfter = range.startContainer;
+                                if ((placeAfter.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(placeAfter.tagName) || placeAfter.tagName == "SPAN")) || (this.inlineStylingTags.includes(placeAfter.parentNode.tagName) || placeAfter.parentNode.tagName == "SPAN")) {
                                     // Escape out of any styling nodes.
-                                    placeBefore = this.findLastParent(placeBefore, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
+                                    placeAfter = this.findLastParent(placeAfter, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
                                 }
-                                placeBefore.before(lastNode);
+                                if (e.key == "Backspace") {
+                                    placeAfter.after(lastNode);
+                                } else {
+                                    placeAfter.before(lastNode);
+                                }
                             }
                         }
 
-                        if (placeBefore && this.isEmpty(placeBefore) && placeBefore != this.editor) placeBefore.remove();
+                        if (placeAfter && this.isEmpty(placeAfter) && placeAfter != this.editor) placeAfter.remove();
 
                         const newRange = new Range();
                         newRange.selectNodeContents(cursor);
@@ -1639,7 +1647,11 @@ class Editor {
     
         // If the final node is not a text node, set the end offset.
         if (range.endContainer.nodeType != Node.TEXT_NODE && this.inEditor(range.endContainer) && nodes.slice(-1)[0]) {
-            endOffset = nodes.slice(-1)[0].textContent.length;
+            if (range.startOffset == range.endOffset && range.startContainer == range.endContainer) {
+                endOffset = 0;
+            } else {
+                endOffset = nodes.slice(-1)[0].textContent.length;
+            }
         }
     
         return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
@@ -1935,7 +1947,7 @@ class Editor {
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(currentNode, style)) {
                 // Found the node.
-                return node;
+                return currentNode;
             }
             currentNode = currentNode.parentNode;
         }
@@ -1969,7 +1981,7 @@ class Editor {
         if (this.currentCursor) {
             // If a cursor exists, remove it and perform styling on its parent.
             const newTextNode = document.createTextNode("");
-            this.currentCursor.parentElement.appendChild(newTextNode);
+            this.currentCursor.after(newTextNode);
             nodes = [newTextNode];
             startOffset = 0;
             endOffset = 0;
@@ -1992,7 +2004,7 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset and place the remainder in a new style element.
-            if (firstNode.tagName != "BR") {
+            if (!this.contentTags.includes(firstNode.tagName)) {
                 var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
                 firstNode.textContent = firstNode.textContent.slice(0, startOffset);
                 firstNode.after(newStartNode);
@@ -2005,7 +2017,7 @@ class Editor {
             }
 
             // Split the last node at the end offset and place the remainder in a new style element.
-            if (lastNode.tagName != "BR") {
+            if (!this.contentTags.includes(lastNode.tagName)) {
                 var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
                 lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
                 lastNode.before(newEndNode);
@@ -2516,7 +2528,7 @@ class Editor {
         if (this.currentCursor) {
             // If a cursor exists, remove it and perform styling on its parent.
             const newTextNode = document.createTextNode("");
-            this.currentCursor.parentElement.appendChild(newTextNode);
+            this.currentCursor.after(newTextNode);
             nodes = [newTextNode];
             startOffset = 0;
             endOffset = 0;
@@ -2539,7 +2551,7 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset.
-            if (firstNode.tagName != "BR") {
+            if (!this.contentTags.includes(firstNode.tagName)) {
                 var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
                 firstNode.textContent = firstNode.textContent.slice(0, startOffset);
                 firstNode.after(newStartNode);
@@ -2551,7 +2563,7 @@ class Editor {
             }
 
             // Split the last node at the end offset.
-            if (lastNode.tagName != "BR") {
+            if (!this.contentTags.includes(lastNode.tagName)) {
                 var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
                 lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
                 lastNode.before(newEndNode);
@@ -2762,7 +2774,7 @@ class Editor {
         if (this.currentCursor) {
             // If a cursor exists, remove it and perform styling on its parent.
             const newTextNode = document.createTextNode("");
-            this.currentCursor.parentElement.appendChild(newTextNode);
+            this.currentCursor.after(newTextNode);
             nodes = [newTextNode];
             startOffset = 0;
             endOffset = 0;
@@ -2785,7 +2797,7 @@ class Editor {
             const lastNode = nodes.slice(-1)[0];
 
             // Split the first node at the start offset.
-            if (firstNode.tagName != "BR") {                
+            if (!this.contentTags.includes(firstNode.tagName)) {                
                 var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
                 firstNode.textContent = firstNode.textContent.slice(0, startOffset);
                 firstNode.after(newStartNode);
@@ -2797,7 +2809,7 @@ class Editor {
             }
 
             // Split the last node at the end offset.
-            if (lastNode.tagName != "BR") {
+            if (!this.contentTags.includes(lastNode.tagName)) {
                 var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
                 lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
                 lastNode.before(newEndNode);

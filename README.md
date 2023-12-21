@@ -137,8 +137,12 @@ a rich text editor for javascript
 - [x] new document function
 - [x] format indent up
 - [x] format indent down
-- [ ] deleting right after an image in a bold block is buggy
-- [x] cursor after an image 
+- [x] deleting right after an image in a bold block is buggy
+- [x] bug with pressing bold right after an image (when the cursor is large)
+- [x] bug with bolding an image
+- [x] deleting span of text after image removes image as well (investigate)
+- [x] cursor after an image
+- [x] double bolding in a span multiple times results in cursor moving out 
 - [x] HR should be treated like a content tag
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
