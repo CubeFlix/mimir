@@ -1647,7 +1647,7 @@ class Editor {
     
         // If the final node is not a text node, set the end offset.
         if (range.endContainer.nodeType != Node.TEXT_NODE && this.inEditor(range.endContainer) && nodes.slice(-1)[0]) {
-            if (range.startOffset == range.endOffset && range.startContainer == range.endContainer) {
+            if (!range.isPointInRange(nodes.slice(-1)[0], 0)) {
                 endOffset = 0;
             } else {
                 endOffset = nodes.slice(-1)[0].textContent.length;
@@ -3171,30 +3171,6 @@ class Editor {
 
         return nodes;
     }
-
-    /*
-    -- NOTES -- 
-    RULES:
-    - H1-H6 are mutually exclusive
-    - UL and OL are mutually exclusive
-    - UL, OL, and BLOCKQUOTE join
-    - Order of nodes (outermost to innermost): BLOCKQUOTE/LISTS (any order) -> H1-H6 -> styling nodes -> text nodes
-    - when applying block styles, don't needlessly exit parent node
-    - when applying block styles that need to escape, always move up the DOM and find nodes the need to be escaped. if necessary, split them.
-    - when applying block styles that need to go inside, always move down the DOM and apply to children.
-    - when removing block styles, move up the parent as much as possible
-    - when removing block styles, remove all styles within and move up the DOM, splitting and removing ALL parent nodes
-    PASTING:
-    - Track current styles on each node, and only allow one of each type of style to be added
-    - Only apply inline styles
-    - apply inline styles to all text nodes, BRs, and images
-    - track certain block styles (text align, header, etc.) and apply them in afterwards
-    TODO:
-    - place certain nodes inside, certain nodes outside
-    - when applying styles, don't needlessly place nodes around the current selection.
-    - certain styles (blockquote, a href), etc. should activate if ANY of the children have that style applied (maybe)
-    - removing styles
-    */
 
     /*
     Adjust the start and end points of a range to be relative to inline nodes.
