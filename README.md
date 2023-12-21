@@ -129,6 +129,7 @@ a rich text editor for javascript
 - [x] make pre default to monospace
 - [x] image copy and paste (copy width/height/data value) (paste data value -> object url, paste width/height)
 - [ ] possibly copy image data values?
+- [x] pasting is broken
 - [x] image selection
 - [ ] horizontal rule
 - [x] when pasting stuff with newlines, replace with spaces!

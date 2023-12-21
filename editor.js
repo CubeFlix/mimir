@@ -2144,7 +2144,7 @@ class Editor {
     */
     isEmpty(node) {
         var currentNode = node;
-        while (node.contains(currentNode) && this.inEditor(currentNode)) {
+        while (node.contains(currentNode) && currentNode != null) {
             if (currentNode.nodeType == Node.ELEMENT_NODE && this.contentTags.includes(currentNode.tagName)) {
                 return false;
             }
