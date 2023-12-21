@@ -2040,8 +2040,8 @@ class Editor {
 
             const node = nodes[0];
 
-            // Handle BR nodes.
-            if (node.tagName == "BR") {
+            // Handle BR and IMG nodes.
+            if (node.tagName == "BR" || node.tagName == "IMG") {
                 const styledNode = this.applyStyleToNode(node, style);
 
                 // Select the new node.
@@ -2581,8 +2581,8 @@ class Editor {
 
             const node = nodes[0];
 
-            // Handle BR nodes.
-            if (node.tagName == "BR") {
+            // Handle BR and IMG nodes.
+            if (node.tagName == "BR" || node.tagName == "IMG") {
                 const styledNode = this.removeStyleOnNode(node, style);
 
                 // Select the new node.
@@ -2832,6 +2832,19 @@ class Editor {
             this.shouldTakeSnapshotOnNextChange = true;
 
             const node = nodes[0];
+
+            // Handle BR and IMG nodes.
+            if (node.tagName == "BR" || node.tagName == "IMG") {
+                const styledNode = this.changeStyleOnNode(node, style);
+
+                // Select the new node.
+                const newRange = new Range();
+                newRange.selectNodeContents(styledNode);
+                newRange.collapse();
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
 
             // Split the node at the start and end offsets.
             var styledNode = document.createTextNode(node.textContent.slice(startOffset, endOffset));

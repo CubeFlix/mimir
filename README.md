@@ -137,6 +137,9 @@ a rich text editor for javascript
 - [x] new document function
 - [x] format indent up
 - [x] format indent down
+- [x] deleting right after an image in a bold block is buggy
+- [x] cursor after an image 
+- [ ] HR should be treated like a content tag
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
 - [ ] copy paste buttons
