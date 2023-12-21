@@ -131,7 +131,7 @@ a rich text editor for javascript
 - [ ] possibly copy image data values?
 - [x] pasting is broken
 - [x] image selection
-- [ ] horizontal rule
+- [x] horizontal rule
 - [x] when pasting stuff with newlines, replace with spaces!
 - [x] link command cannot create cursor (it needs text to be selected)
 - [x] new document function

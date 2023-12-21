@@ -22,9 +22,9 @@ class Editor {
     inlineBlockStylingCommands = ["header", "align"];
     requireSingleNodeToActivateStylingCommands = ["quote", "list"]; // These styles need only one node in the range to activate.
     multipleValueStylingCommands = ["font", "size", "foreColor", "backColor", "link"];
-    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage", "undo", "redo", "remove"];
+    noUIUpdateStylingCommands = ["foreColor", "backColor", "indent", "outdent", "link", "insertImage", "undo", "redo", "remove", "insertHorizontalRule"];
     cannotCreateCursorCommands = ["link"]; // These commands cannot create a cursor; entire text must be selected.
-    insertCommands = ["insertImage"];
+    insertCommands = ["insertImage", "insertHorizontalRule"];
 
     /* 
     Create the editor. 
@@ -33,7 +33,7 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent", "insertImage", "undo", "redo"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent", "insertImage", "insertHorizontalRule", "undo", "redo"] || settings.commands;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -296,6 +296,13 @@ class Editor {
                     this.menubarOptions.insertImage = imageInput;
                     imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
                     this.menubar.append(imageInput.imageInput);
+                    break;
+                case "insertHorizontalRule":
+                    this.menubarOptions.hr = document.createElement("button");
+                    this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
+                    this.menubarOptions.hr.innerHTML = "&#9135;";
+                    this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
+                    this.menubar.append(this.menubarOptions.hr);
                     break;
                 case "undo":
                     this.menubarOptions.undo = document.createElement("button");
@@ -4151,6 +4158,56 @@ class Editor {
     }
 
     /*
+    Insert a horizontal rule.
+    */
+    blockInsertHR(style, range) {
+        this.saveHistory();
+
+        // Delete everything in the range.
+        range.deleteContents();
+        if (this.imageModule.getSelected()) this.imageModule.deselect();
+
+        // Calculate the insertion point.
+        var insertionPoint;
+        if (range.startContainer.nodeType == Node.TEXT_NODE) {
+            // Split the text node.
+            insertionPoint = range.startContainer;
+            const after = document.createTextNode(insertionPoint.textContent.slice(range.startOffset, insertionPoint.textContent.length));
+            insertionPoint.textContent = insertionPoint.textContent.slice(0, range.startOffset);
+            insertionPoint.after(after);
+        } else {
+            if (this.childlessTags.includes(range.startContainer)) {
+                insertionPoint = range.startContainer;
+            } else {
+                if (range.startOffset == 0) {
+                    // Prepend an empty text node.
+                    const emptyTextNode = document.createTextNode("");
+                    insertionPoint = emptyTextNode;
+                    range.startContainer.prepend(insertionPoint);
+                } else {
+                    insertionPoint = range.startContainer.childNodes[range.startOffset - 1];
+                }
+            }
+        }
+
+        // Find the uppermost inline block and split out of it. Then, insert the HR.
+        const uppermostInlineBlock = this.findLastParent(insertionPoint, (n) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(n.tagName) || (n.style && n.style.textAlign)));
+        if (uppermostInlineBlock) {
+            const after = this.splitNodeAtChild(uppermostInlineBlock, insertionPoint);
+            uppermostInlineBlock.after(after, document.createElement("hr"));
+        } else {
+            insertionPoint.after(document.createElement("hr"));
+        }
+
+        // Put the range at the insertion point.
+        const newRange = new Range();
+        newRange.selectNode(insertionPoint);
+        newRange.collapse(false);
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
+    }
+
+    /*
     Perform a style command.
     */
     performStyleCommand(style) {
@@ -4265,6 +4322,9 @@ class Editor {
             switch (style.type) {
                 case "insertImage":
                     this.inlineInsertImage(style, range);
+                    break;
+                case "insertHorizontalRule":
+                    this.blockInsertHR(style, range);
                     break;
             }
         }
@@ -4407,6 +4467,13 @@ class Editor {
     */
     insertImage(url, alt) {
         this.performStyleCommand({type: "insertImage", url: url, alt: alt});
+    }
+
+    /*
+    Insert horizontal rule.
+    */
+    insertHR() {
+        this.performStyleCommand({type: "insertHorizontalRule"});
     }
 
     /*
