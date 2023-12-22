@@ -2981,21 +2981,21 @@ class Editor {
     Remove all styles on a node.
     */
     removeAllStylesOnNode(node, style) {
-        // TODO: what does this do?
-        // TODO: not handling spans?
         if (node.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(node, style)) {
             // No need to do any splitting or reconstruction, just remove the style from the node and replace it.
-            const marker = document.createTextNode("");
-            node.after(marker);
-            const newNode = this.removeStyleFromElement(node, style);
-            marker.after(newNode);
-            marker.remove();
-            if (newNode != node) node.remove();
-            return newNode;
+            const childElems = node.querySelectorAll((this.inlineStylingTags + ["SPAN"]).join(", "));
+            if (this.inlineStylingTags.includes(node.tagName) || node.tagName == "SPAN") {
+                childElems.push(node);
+            }
+            for (const childElem of childElems) {
+                childElem.after(...childElem.childNodes);
+                chileElem.remove();
+            }
         }
 
         // Traverse upwards and find the topmost style node.
         var topmostStyleNode = null;
+        var currentNode = node;
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             currentNode = currentNode.parentNode;
             if (currentNode.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
@@ -3010,10 +3010,10 @@ class Editor {
 
         // Split the parent at the current node.
         const splitAfterNode = this.splitNodeAtChild(topmostStyleNode, node);
-        if (!this.isEmpty(splitAfterNode)) parent.after(splitAfterNode);
+        if (!this.isEmpty(splitAfterNode)) topmostStyleNode.after(splitAfterNode);
 
         // Place in the reconstructed node and the reconstructed after node.
-        parent.after(node);
+        topmostStyleNode.after(node);
 
         // Remove empty nodes.
         if (this.isEmpty(topmostStyleNode)) topmostStyleNode.remove();
@@ -4277,9 +4277,6 @@ class Editor {
                 // lastOutdented = this.joinAdjacentNestedListsLeft()
                 // TODO: fix <ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol> (joining)
                 // TODO: fix <ol><li><ol><li>asdasd</li><li><div>asdasd</div></li></ol></li></ol> (splitting)
-                // place nested lists on their own LI node
-                // TODO: list hiding giving error with simple indenting and list (this.updateHideNestedLists(lastIndented.parentNode.parentNode);
-                // TODO: updateHideNestedLists needs to be done after everything has been cleaned up
             } else if (nearestOutdentableParent.nodeType == Node.ELEMENT_NODE && nearestOutdentableParent.style.marginLeft.toLowerCase() == "40px") {
                 // Simple indent.
                 if (nearestOutdentableParent == node) {
@@ -4465,7 +4462,9 @@ class Editor {
         const currentStyling = this.detectStyling(range);
 
         // Set the style.
-        if (this.multipleValueStylingCommands.includes(style.type)) {
+        if (style.type == "remove") {
+            this.removeAllStyles(style, range);
+        } else if (this.multipleValueStylingCommands.includes(style.type)) {
             if (((style.type == "foreColor" || style.type == "backColor") && style.color == null) || (style.type == "link" && style.url == null)) {
                 // Remove the styling.
                 this.removeStyle(style, range);
@@ -4726,9 +4725,7 @@ class Editor {
     Remove styling.
     */
     remove() {
-        for (const type of this.inlineStylingCommands) {
-            this.removeStyle({type: type}, this.getRange());
-        }
+        this.performStyleCommand({type: "remove"});
     }
 
     /*

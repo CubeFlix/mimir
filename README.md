@@ -148,7 +148,7 @@ a rich text editor for javascript
 - [ ] overhaul UI
 - [ ] copy paste buttons
 - [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
-- [ ] remove all styling from text, remove all color from 
+- [x] remove all styling from text, remove all color from 
 - [ ] change list style (possibly)
 - [ ] find and replace
 - [ ] more history (calculate)
