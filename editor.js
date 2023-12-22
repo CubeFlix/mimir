@@ -39,7 +39,7 @@ class Editor {
                         "outdent", "insertImage", "insertHorizontalRule", 
                         "undo", "redo"] || settings.commands;
         this.menubarSettings = [
-            ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link"],
+            ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "remove"],
             ["quote", "header", "align", "list", "indent", "outdent"],
             ["insertImage", "insertHorizontalRule"],
             ["undo", "redo"]
@@ -2955,6 +2955,220 @@ class Editor {
             
             // Style the node.
             const styledNode = this.changeStyleOnNode(node, style);
+
+            // Place the cursor in the node.
+            const cursor = this.createCursor();
+            var furthestInsideNode = styledNode;
+            while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                furthestInsideNode = furthestInsideNode.childNodes[0];
+            }
+            if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                furthestInsideNode.after(cursor);
+            } else {
+                furthestInsideNode.append(cursor);
+            }
+
+            // Select the cursor.
+            const newRange = new Range();
+            newRange.selectNodeContents(cursor);
+            newRange.collapse();
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        }
+    }
+
+    /*
+    Remove all styles on a node.
+    */
+    removeAllStylesOnNode(node, style) {
+        // TODO: what does this do?
+        // TODO: not handling spans?
+        if (node.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(node, style)) {
+            // No need to do any splitting or reconstruction, just remove the style from the node and replace it.
+            const marker = document.createTextNode("");
+            node.after(marker);
+            const newNode = this.removeStyleFromElement(node, style);
+            marker.after(newNode);
+            marker.remove();
+            if (newNode != node) node.remove();
+            return newNode;
+        }
+
+        // Traverse upwards and find the topmost style node.
+        var topmostStyleNode = null;
+        while (this.inEditor(currentNode) && currentNode != this.editor) {
+            currentNode = currentNode.parentNode;
+            if (currentNode.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
+                // Found the node.
+                topmostStyleNode = currentNode;
+            } else {
+                break;
+            }
+        }
+
+        if (!topmostStyleNode) {return;}
+
+        // Split the parent at the current node.
+        const splitAfterNode = this.splitNodeAtChild(topmostStyleNode, node);
+        if (!this.isEmpty(splitAfterNode)) parent.after(splitAfterNode);
+
+        // Place in the reconstructed node and the reconstructed after node.
+        parent.after(node);
+
+        // Remove empty nodes.
+        if (this.isEmpty(topmostStyleNode)) topmostStyleNode.remove();
+
+        return node;
+    }
+
+    /* 
+    Remove all styles from a range.
+    */
+    removeAllStyles(style, range) {
+        var nodes, startOffset, endOffset;
+        if (this.currentCursor) {
+            // If a cursor exists, remove it and perform styling on its parent.
+            const newTextNode = document.createTextNode("");
+            this.currentCursor.after(newTextNode);
+            nodes = [newTextNode];
+            startOffset = 0;
+            endOffset = 0;
+            this.currentCursor.remove();
+            this.currentCursor = null;
+        } else {
+            // Get the text nodes within the range.
+            const output = this.getTextNodesInRange(range);
+            if (!output) {
+                return;
+            }
+            [{nodes, startOffset, endOffset} = output];
+        }
+
+        if (nodes.length >= 2) {
+            this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
+
+            const firstNode = nodes[0];
+            const lastNode = nodes.slice(-1)[0];
+
+            // Split the first node at the start offset.
+            if (!this.contentTags.includes(firstNode.tagName)) {
+                var newStartNode = document.createTextNode(firstNode.textContent.slice(startOffset, firstNode.textContent.length));
+                firstNode.textContent = firstNode.textContent.slice(0, startOffset);
+                firstNode.after(newStartNode);
+                if (firstNode.textContent == "") {
+                    firstNode.remove();
+                }
+            } else {
+                var newStartNode = firstNode;
+            }
+
+            // Split the last node at the end offset.
+            if (!this.contentTags.includes(lastNode.tagName)) {
+                var newEndNode = document.createTextNode(lastNode.textContent.slice(0, endOffset));
+                lastNode.textContent = lastNode.textContent.slice(endOffset, lastNode.textContent.length);
+                lastNode.before(newEndNode);
+                if (lastNode.textContent == "") {
+                    lastNode.remove();
+                }
+            } else {
+                var newEndNode = lastNode;
+            }
+
+            // Remove the styling for each node.
+            newEndNode = this.removeAllStylesOnNode(newEndNode, style);
+            for (const node of nodes.slice(1, nodes.length - 1).reverse()) {
+                this.removeAllStylesOnNode(node, style);
+            }
+            newStartNode = this.removeAllStylesOnNode(newStartNode, style);
+
+            // Select the new nodes.
+            const newRange = new Range();
+            newRange.setStartBefore(newStartNode);
+            newRange.setEndAfter(newEndNode);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        } else if (nodes.length == 1) {
+            this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
+
+            const node = nodes[0];
+
+            // Handle content nodes.
+            if (this.contentTags.includes(node.tagName)) {
+                const styledNode = this.removeAllStylesOnNode(node, style);
+
+                // Select the new node.
+                const newRange = new Range();
+                newRange.selectNodeContents(styledNode);
+                newRange.collapse();
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
+
+            // Split the node at the start and end offsets.
+            var styledNode = document.createTextNode(node.textContent.slice(startOffset, endOffset));
+            var endNode = document.createTextNode(node.textContent.slice(endOffset, node.textContent.length));
+            node.textContent = node.textContent.slice(0, startOffset);
+            node.after(styledNode, endNode);
+
+            // Remove the styling on the middle node.
+            styledNode = this.removeAllStylesOnNode(styledNode, style);
+
+            if (node.textContent == "") {
+                node.remove();
+            }
+            if (endNode.textContent == "") {
+                endNode.remove();
+            }
+
+            if (styledNode.textContent == "") {
+                // If the node is empty, create a cursor to bind the caret to.
+                const cursor = this.createCursor();
+                var furthestInsideNode = styledNode;
+                while (furthestInsideNode.childNodes && furthestInsideNode.childNodes.length != 0) {
+                    furthestInsideNode = furthestInsideNode.childNodes[0];
+                }
+                if (furthestInsideNode.nodeType == Node.TEXT_NODE) {
+                    furthestInsideNode.after(cursor);
+                } else {
+                    furthestInsideNode.append(cursor);
+                }
+
+                // Select the cursor.
+                const newRange = new Range();
+                newRange.selectNodeContents(cursor);
+                newRange.collapse();
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
+
+            // Select the new node.
+            const newRange = new Range();
+            newRange.selectNodeContents(styledNode);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+        } else if (nodes.length == 0) {
+            if (!this.inEditor(range.commonAncestorContainer)) {
+                return;
+            }
+
+            this.saveHistory();
+            this.shouldTakeSnapshotOnNextChange = true;
+
+            // Create a new node at the current range.
+            const node = document.createTextNode("");
+            const siblings = range.commonAncestorContainer.childNodes;
+            if (siblings.length == 0) {
+                range.commonAncestorContainer.append(node);
+            } else {
+                siblings[range.startOffset].after(node);
+            }
+            
+            // Style the node.
+            const styledNode = this.removeAllStylesOnNode(node, style);
 
             // Place the cursor in the node.
             const cursor = this.createCursor();
