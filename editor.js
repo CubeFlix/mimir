@@ -33,7 +33,17 @@ class Editor {
         this.container = element;
         this.settings = settings;
 
-        this.commands = ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "quote", "header", "align", "list", "indent", "outdent", "insertImage", "insertHorizontalRule", "undo", "redo"] || settings.commands;
+        this.commands = ["bold", "italic", "underline", "strikethrough", 
+                        "font", "size", "foreColor", "backColor", "sup", "sub", 
+                        "link", "quote", "header", "align", "list", "indent", 
+                        "outdent", "insertImage", "insertHorizontalRule", 
+                        "undo", "redo"] || settings.commands;
+        this.menubarSettings = [
+            ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link"],
+            ["quote", "header", "align", "list", "indent", "outdent"],
+            ["insertImage", "insertHorizontalRule"],
+            ["undo", "redo"]
+        ] || settings.menubar;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
@@ -122,210 +132,231 @@ class Editor {
 
         // Add the options.
         this.menubarOptions = {};
-        for (const command of this.commands) {
-            switch (command) {
-                case "bold":
-                    this.menubarOptions.bold = document.createElement("button");
-                    this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
-                    this.menubarOptions.bold.innerHTML = "B";
-                    this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
-                    this.menubar.append(this.menubarOptions.bold);
-                    break;
-                case "italic":
-                    this.menubarOptions.italic = document.createElement("button");
-                    this.menubarOptions.italic.setAttribute("id", "editor-menubar-option-italic");
-                    this.menubarOptions.italic.innerHTML = "I";
-                    this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
-                    this.menubar.append(this.menubarOptions.italic);
-                    break;
-		        case "underline":
-                    this.menubarOptions.underline = document.createElement("button");
-                    this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-underline");
-                    this.menubarOptions.underline.innerHTML = "U";
-                    this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
-                    this.menubar.append(this.menubarOptions.underline);
-                    break;
-                case "strikethrough":
-                    this.menubarOptions.strikethrough = document.createElement("button");
-                    this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
-                    this.menubarOptions.strikethrough.innerHTML = "S";
-                    this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
-                    this.menubar.append(this.menubarOptions.strikethrough);
-                    break;
-                case "font":
-                    this.menubarOptions.font = document.createElement("select");
-                    this.menubarOptions.font.setAttribute("id", "editor-menubar-option-font");
-                    for (const font of this.supportedFonts) {
-                        const newFontOption = document.createElement("option");
-                        newFontOption.innerHTML = font;
-                        newFontOption.style.fontFamily = font;
-                        newFontOption.setAttribute("value", font);
-                        this.menubarOptions.font.append(newFontOption);
-                    }
-                    this.menubarOptions.font.value = this.defaultFont;
-                    this.menubarOptions.font.addEventListener("change", this.font.bind(this));
-                    this.menubar.append(this.menubarOptions.font);
-                    break;
-                case "size":
-                    const { numberInput, input, plus, minus } = EditorUI.numberInput(1, 200);
-                    this.menubarOptions.size = input;
-                    numberInput.setAttribute("id", "editor-menubar-option-size");
-                    this.menubarOptions.size.value = this.defaultSize;
-                    this.menubarOptions.size.addEventListener("change", this.size.bind(this));
-                    this.menubar.append(numberInput);
-                    break;
-                case "foreColor":
-                    const foreColorButton = document.createElement("button");
-                    foreColorButton.innerHTML = "A";
-                    foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
-                    foreColorButton.classList.add("editor-menubar-option-fore-color-button");
-                    foreColorButton.addEventListener("click", function() {this.foreColor(foreColorInput.getValue());}.bind(this));
-                    const foreColorOpenButton = document.createElement("button");
-                    foreColorOpenButton.innerHTML = "&#9660";
-                    var foreColorInput = EditorUI.colorInput(this.foreColor.bind(this), foreColorOpenButton, 200, 40, 200);
-                    this.menubarOptions.foreColor = foreColorInput;
-                    foreColorInput.colorInput.setAttribute("id", "editor-menubar-option-fore-color");
-                    const foreColorButtonContainer = document.createElement("div");
-                    foreColorButtonContainer.classList.add("editor-menubar-option-fore-color-button-container");
-                    foreColorButtonContainer.append(foreColorButton, foreColorInput.dropdown.button);
-                    foreColorInput.colorInput.prepend(foreColorButtonContainer);
-                    this.menubar.append(foreColorInput.colorInput);
-                    break;
-                case "backColor":
-                    const backColorButton = document.createElement("button");
-                    backColorButton.innerHTML = "&#9639;";
-                    backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
-                    backColorButton.classList.add("editor-menubar-option-back-color-button");
-                    backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
-                    const backColorOpenButton = document.createElement("button");
-                    backColorOpenButton.innerHTML = "&#9660";
-                    const backColorInput = EditorUI.colorInput(this.backColor.bind(this), backColorOpenButton, 200, 40, 200);
-                    this.menubarOptions.backColor = backColorInput;
-                    backColorInput.colorInput.setAttribute("id", "editor-menubar-option-back-color");
-                    const backColorButtonContainer = document.createElement("div");
-                    backColorButtonContainer.classList.add("editor-menubar-option-back-color-button-container");
-                    backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
-                    backColorInput.colorInput.prepend(backColorButtonContainer);
-                    this.menubar.append(backColorInput.colorInput);
-                    break;
-                case "sup":
-                    this.menubarOptions.sup = document.createElement("button");
-                    this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
-                    this.menubarOptions.sup.innerHTML = "x<sup>2</sup>";
-                    this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
-                    this.menubar.append(this.menubarOptions.sup);
-                    break;
-                case "sub":
-                    this.menubarOptions.sub = document.createElement("button");
-                    this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
-                    this.menubarOptions.sub.innerHTML = "x<sub>2</sub>";
-                    this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
-                    this.menubar.append(this.menubarOptions.sub);
-                    break;
-                case "link":
-                    const linkButton = document.createElement("button");
-                    linkButton.innerHTML = "&#128279;";
-                    linkButton.classList.add("editor-menubar-option-link-button");
-                    const linkInput = EditorUI.linkInput(this.link.bind(this), linkButton);
-                    this.menubarOptions.link = linkInput;
-                    linkInput.linkInput.setAttribute("id", "editor-menubar-option-link");
-                    this.menubar.append(linkInput.linkInput);
-                    break;
-                case "quote":
-                    this.menubarOptions.quote = document.createElement("button");
-                    this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
-                    this.menubarOptions.quote.innerHTML = "\"";
-                    this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
-                    this.menubar.append(this.menubarOptions.quote);
-                    break;
-                case "header":
-                    this.menubarOptions.header = document.createElement("select");
-                    this.menubarOptions.header.setAttribute("id", "editor-menubar-option-header");
-                    for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
-                        const newHeaderOption = document.createElement("option");
-                        newHeaderOption.innerHTML = level;
-                        newHeaderOption.setAttribute("value", level);
-                        this.menubarOptions.header.append(newHeaderOption);
-                    }
-                    this.menubarOptions.header.addEventListener("change", this.header.bind(this));
-                    this.menubar.append(this.menubarOptions.header);
-                    break;
-                case "align":
-                    this.menubarOptions.align = document.createElement("select");
-                    this.menubarOptions.align.setAttribute("id", "editor-menubar-option-align");
-                    for (const direction of ["Left", "Right", "Center", "Justify"]) {
-                        const newAlignOption = document.createElement("option");
-                        newAlignOption.innerHTML = direction;
-                        newAlignOption.setAttribute("value", direction.toLowerCase());
-                        this.menubarOptions.align.append(newAlignOption);
-                    }
-                    this.menubarOptions.align.addEventListener("change", this.align.bind(this));
-                    this.menubar.append(this.menubarOptions.align);
-                    break;
-                case "list":
-                    this.menubarOptions.listOrdered = document.createElement("button");
-                    this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
-                    this.menubarOptions.listOrdered.innerHTML = "OL";
-                    this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
-                    this.menubar.append(this.menubarOptions.listOrdered);
-                    this.menubarOptions.listUnordered = document.createElement("button");
-                    this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
-                    this.menubarOptions.listUnordered.innerHTML = "UL";
-                    this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
-                    this.menubar.append(this.menubarOptions.listUnordered);
-                    break;
-                case "indent":
-                    this.menubarOptions.indent = document.createElement("button");
-                    this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
-                    this.menubarOptions.indent.innerHTML = ">";
-                    this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
-                    this.menubar.append(this.menubarOptions.indent);
-                    break;
-                case "outdent":
-                    this.menubarOptions.outdent = document.createElement("button");
-                    this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
-                    this.menubarOptions.outdent.innerHTML = "<";
-                    this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
-                    this.menubar.append(this.menubarOptions.outdent);
-                    break;
-                case "insertImage":
-                    const imageButton = document.createElement("button");
-                    imageButton.innerHTML = "&#128444;";
-                    imageButton.classList.add("editor-menubar-option-image-button");
-                    const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
-                    this.menubarOptions.insertImage = imageInput;
-                    imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
-                    this.menubar.append(imageInput.imageInput);
-                    break;
-                case "insertHorizontalRule":
-                    this.menubarOptions.hr = document.createElement("button");
-                    this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
-                    this.menubarOptions.hr.innerHTML = "&#9135;";
-                    this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
-                    this.menubar.append(this.menubarOptions.hr);
-                    break;
-                case "undo":
-                    this.menubarOptions.undo = document.createElement("button");
-                    this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
-                    this.menubarOptions.undo.innerHTML = "&#8630;";
-                    this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
-                    this.menubar.append(this.menubarOptions.undo);
-                    break;
-                case "redo":
-                    this.menubarOptions.redo = document.createElement("button");
-                    this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
-                    this.menubarOptions.redo.innerHTML = "&#8631;";
-                    this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
-                    this.menubar.append(this.menubarOptions.redo);
-                    break;
-                case "remove":
-                    this.menubarOptions.remove = document.createElement("button");
-                    this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
-                    this.menubarOptions.remove.innerHTML = "X";
-                    this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
-                    this.menubar.append(this.menubarOptions.remove);
-                    break;
+        for (const group of this.menubarSettings) {
+            for (const command of group) {
+                switch (command) {
+                    case "bold":
+                        this.menubarOptions.bold = document.createElement("button");
+                        this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
+                        this.menubarOptions.bold.innerHTML = "B";
+                        this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
+                        this.menubar.append(this.menubarOptions.bold);
+                        break;
+                    case "italic":
+                        this.menubarOptions.italic = document.createElement("button");
+                        this.menubarOptions.italic.setAttribute("id", "editor-menubar-option-italic");
+                        this.menubarOptions.italic.innerHTML = "I";
+                        this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
+                        this.menubar.append(this.menubarOptions.italic);
+                        break;
+                    case "underline":
+                        this.menubarOptions.underline = document.createElement("button");
+                        this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-underline");
+                        this.menubarOptions.underline.innerHTML = "U";
+                        this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
+                        this.menubar.append(this.menubarOptions.underline);
+                        break;
+                    case "strikethrough":
+                        this.menubarOptions.strikethrough = document.createElement("button");
+                        this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
+                        this.menubarOptions.strikethrough.innerHTML = "S";
+                        this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
+                        this.menubar.append(this.menubarOptions.strikethrough);
+                        break;
+                    case "font":
+                        this.menubarOptions.font = document.createElement("select");
+                        this.menubarOptions.font.setAttribute("id", "editor-menubar-option-font");
+                        for (const font of this.supportedFonts) {
+                            const newFontOption = document.createElement("option");
+                            newFontOption.innerHTML = font;
+                            newFontOption.style.fontFamily = font;
+                            newFontOption.setAttribute("value", font);
+                            this.menubarOptions.font.append(newFontOption);
+                        }
+                        this.menubarOptions.font.value = this.defaultFont;
+                        this.menubarOptions.font.addEventListener("change", this.font.bind(this));
+                        this.menubar.append(this.menubarOptions.font);
+                        break;
+                    case "size":
+                        const { numberInput, input, plus, minus } = EditorUI.numberInput(1, 200);
+                        this.menubarOptions.size = input;
+                        numberInput.setAttribute("id", "editor-menubar-option-size");
+                        this.menubarOptions.size.value = this.defaultSize;
+                        this.menubarOptions.size.addEventListener("change", this.size.bind(this));
+                        this.menubar.append(numberInput);
+                        break;
+                    case "foreColor":
+                        const foreColorButton = document.createElement("button");
+                        foreColorButton.innerHTML = "A";
+                        foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                        foreColorButton.classList.add("editor-menubar-option-fore-color-button");
+                        foreColorButton.addEventListener("click", function() {this.foreColor(foreColorInput.getValue());}.bind(this));
+                        const foreColorOpenButton = document.createElement("button");
+                        foreColorOpenButton.innerHTML = "&#9660";
+                        var foreColorInput = EditorUI.colorInput(this.foreColor.bind(this), foreColorOpenButton, 200, 40, 200);
+                        this.menubarOptions.foreColor = foreColorInput;
+                        foreColorInput.colorInput.setAttribute("id", "editor-menubar-option-fore-color");
+                        const foreColorButtonContainer = document.createElement("div");
+                        foreColorButtonContainer.classList.add("editor-menubar-option-fore-color-button-container");
+                        foreColorButtonContainer.append(foreColorButton, foreColorInput.dropdown.button);
+                        foreColorInput.colorInput.prepend(foreColorButtonContainer);
+                        this.menubar.append(foreColorInput.colorInput);
+                        break;
+                    case "backColor":
+                        const backColorButton = document.createElement("button");
+                        backColorButton.innerHTML = "&#9639;";
+                        backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                        backColorButton.classList.add("editor-menubar-option-back-color-button");
+                        backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
+                        const backColorOpenButton = document.createElement("button");
+                        backColorOpenButton.innerHTML = "&#9660";
+                        const backColorInput = EditorUI.colorInput(this.backColor.bind(this), backColorOpenButton, 200, 40, 200);
+                        this.menubarOptions.backColor = backColorInput;
+                        backColorInput.colorInput.setAttribute("id", "editor-menubar-option-back-color");
+                        const backColorButtonContainer = document.createElement("div");
+                        backColorButtonContainer.classList.add("editor-menubar-option-back-color-button-container");
+                        backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
+                        backColorInput.colorInput.prepend(backColorButtonContainer);
+                        this.menubar.append(backColorInput.colorInput);
+                        break;
+                    case "sup":
+                        this.menubarOptions.sup = document.createElement("button");
+                        this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
+                        this.menubarOptions.sup.innerHTML = "x<sup>2</sup>";
+                        this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
+                        this.menubar.append(this.menubarOptions.sup);
+                        break;
+                    case "sub":
+                        this.menubarOptions.sub = document.createElement("button");
+                        this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
+                        this.menubarOptions.sub.innerHTML = "x<sub>2</sub>";
+                        this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
+                        this.menubar.append(this.menubarOptions.sub);
+                        break;
+                    case "link":
+                        const linkButton = document.createElement("button");
+                        linkButton.innerHTML = "&#128279;";
+                        linkButton.classList.add("editor-menubar-option-link-button");
+                        const linkInput = EditorUI.linkInput(this.link.bind(this), linkButton);
+                        this.menubarOptions.link = linkInput;
+                        linkInput.linkInput.setAttribute("id", "editor-menubar-option-link");
+                        this.menubar.append(linkInput.linkInput);
+                        break;
+                    case "quote":
+                        this.menubarOptions.quote = document.createElement("button");
+                        this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
+                        this.menubarOptions.quote.innerHTML = "\"";
+                        this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
+                        this.menubar.append(this.menubarOptions.quote);
+                        break;
+                    case "header":
+                        this.menubarOptions.header = document.createElement("select");
+                        this.menubarOptions.header.setAttribute("id", "editor-menubar-option-header");
+                        for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
+                            const newHeaderOption = document.createElement("option");
+                            newHeaderOption.innerHTML = level;
+                            newHeaderOption.setAttribute("value", level);
+                            this.menubarOptions.header.append(newHeaderOption);
+                        }
+                        this.menubarOptions.header.addEventListener("change", this.header.bind(this));
+                        this.menubar.append(this.menubarOptions.header);
+                        break;
+                    case "align":
+                        this.menubarOptions.align = document.createElement("select");
+                        this.menubarOptions.align.setAttribute("id", "editor-menubar-option-align");
+                        for (const direction of ["Left", "Right", "Center", "Justify"]) {
+                            const newAlignOption = document.createElement("option");
+                            newAlignOption.innerHTML = direction;
+                            newAlignOption.setAttribute("value", direction.toLowerCase());
+                            this.menubarOptions.align.append(newAlignOption);
+                        }
+                        this.menubarOptions.align.addEventListener("change", this.align.bind(this));
+                        this.menubar.append(this.menubarOptions.align);
+                        break;
+                    case "list":
+                        this.menubarOptions.listOrdered = document.createElement("button");
+                        this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
+                        this.menubarOptions.listOrdered.innerHTML = "OL";
+                        this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
+                        this.menubar.append(this.menubarOptions.listOrdered);
+                        this.menubarOptions.listUnordered = document.createElement("button");
+                        this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
+                        this.menubarOptions.listUnordered.innerHTML = "UL";
+                        this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
+                        this.menubar.append(this.menubarOptions.listUnordered);
+                        break;
+                    case "indent":
+                        this.menubarOptions.indent = document.createElement("button");
+                        this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
+                        this.menubarOptions.indent.innerHTML = ">";
+                        this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
+                        this.menubar.append(this.menubarOptions.indent);
+                        break;
+                    case "outdent":
+                        this.menubarOptions.outdent = document.createElement("button");
+                        this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
+                        this.menubarOptions.outdent.innerHTML = "<";
+                        this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
+                        this.menubar.append(this.menubarOptions.outdent);
+                        break;
+                    case "insertImage":
+                        const imageButton = document.createElement("button");
+                        imageButton.innerHTML = "&#128444;";
+                        imageButton.classList.add("editor-menubar-option-image-button");
+                        const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
+                        this.menubarOptions.insertImage = imageInput;
+                        imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
+                        this.menubar.append(imageInput.imageInput);
+                        break;
+                    case "insertHorizontalRule":
+                        this.menubarOptions.hr = document.createElement("button");
+                        this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
+                        this.menubarOptions.hr.innerHTML = "&#9135;";
+                        this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
+                        this.menubar.append(this.menubarOptions.hr);
+                        break;
+                    case "undo":
+                        this.menubarOptions.undo = document.createElement("button");
+                        this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
+                        this.menubarOptions.undo.innerHTML = "&#8630;";
+                        this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
+                        this.menubar.append(this.menubarOptions.undo);
+                        break;
+                    case "redo":
+                        this.menubarOptions.redo = document.createElement("button");
+                        this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
+                        this.menubarOptions.redo.innerHTML = "&#8631;";
+                        this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
+                        this.menubar.append(this.menubarOptions.redo);
+                        break;
+                    case "remove":
+                        this.menubarOptions.remove = document.createElement("button");
+                        this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
+                        this.menubarOptions.remove.innerHTML = "X";
+                        this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
+                        this.menubar.append(this.menubarOptions.remove);
+                        break;
+                    case "paste":
+                        this.menubarOptions.paste = document.createElement("button");
+                        this.menubarOptions.paste.setAttribute("id", "editor-menubar-option-paste");
+                        this.menubarOptions.paste.innerHTML = "&#x2398;";
+                        this.menubarOptions.paste.addEventListener("click", this.paste.bind(this));
+                        this.menubar.append(this.menubarOptions.paste);
+                        break;
+                    case "pastePlaintext":
+                        this.menubarOptions.pastePlaintext = document.createElement("button");
+                        this.menubarOptions.pastePlaintext.setAttribute("id", "editor-menubar-option-paste-plaintext");
+                        this.menubarOptions.pastePlaintext.innerHTML = "&#x2398;A";
+                        this.menubarOptions.pastePlaintext.addEventListener("click", this.pastePlaintext.bind(this));
+                        this.menubar.append(this.menubarOptions.pastePlaintext);
+                        break;
+                }
             }
+            // Add a spacer.
+            if (this.menubarSettings.indexOf(group) == this.menubarSettings.length) {continue;}
+            const spacer = document.createElement("div");
+            spacer.classList.add("editor-menubar-spacer");
+            this.menubar.append(spacer);
         }
     }
 
@@ -4484,6 +4515,20 @@ class Editor {
         for (const type of this.inlineStylingCommands) {
             this.removeStyle({type: type}, this.getRange());
         }
+    }
+
+    /*
+    Paste.
+    */
+    paste() {
+        // TODO
+    }
+
+    /*
+    Paste as plaintext.
+    */
+    pastePlaintext() {
+        // TODO
     }
 
     /*

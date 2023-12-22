@@ -25,6 +25,14 @@
     gap: 5px;
     padding: 5px;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+#editor-menubar > .editor-menubar-spacer {
+    height: 20px;
+    width: 1px;
+    border-radius: 1px;
+    background-color: #aaaaaa;
 }
 
 #editor-menubar > button,
