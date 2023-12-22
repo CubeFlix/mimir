@@ -42,7 +42,7 @@ class Editor {
             ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "remove"],
             ["quote", "header", "align", "list", "indent", "outdent"],
             ["insertImage", "insertHorizontalRule"],
-            ["undo", "redo"]
+            ["undo", "redo", "openFindAndReplace"]
         ] || settings.menubar;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
         this.historyLimit = 50 || settings.historyLimit;
@@ -349,6 +349,13 @@ class Editor {
                         this.menubarOptions.pastePlaintext.innerHTML = "&#x2398;A";
                         this.menubarOptions.pastePlaintext.addEventListener("click", this.pastePlaintext.bind(this));
                         this.menubar.append(this.menubarOptions.pastePlaintext);
+                        break;
+                    case "openFindAndReplace":
+                        this.menubarOptions.openFindAndReplace = document.createElement("button");
+                        this.menubarOptions.openFindAndReplace.setAttribute("id", "editor-menubar-option-open-find-and-replace");
+                        this.menubarOptions.openFindAndReplace.innerHTML = "&#128270;";
+                        this.menubarOptions.openFindAndReplace.addEventListener("click", this.openFindAndReplace.bind(this));
+                        this.menubar.append(this.menubarOptions.openFindAndReplace);
                         break;
                 }
             }
@@ -4434,17 +4441,18 @@ class Editor {
         }
 
         // Find the uppermost inline block and split out of it. Then, insert the HR.
+        const hr = document.createElement("hr");
         const uppermostInlineBlock = this.findLastParent(insertionPoint, (n) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(n.tagName) || (n.style && n.style.textAlign)));
         if (uppermostInlineBlock) {
             const after = this.splitNodeAtChild(uppermostInlineBlock, insertionPoint);
-            uppermostInlineBlock.after(after, document.createElement("hr"));
+            uppermostInlineBlock.after(after, hr);
         } else {
-            insertionPoint.after(document.createElement("hr"));
+            insertionPoint.after(hr);
         }
 
-        // Put the range at the insertion point.
+        // Put the range after the HR node.
         const newRange = new Range();
-        newRange.selectNode(insertionPoint);
+        newRange.selectNode(hr);
         newRange.collapse(false);
         document.getSelection().removeAllRanges();
         document.getSelection().addRange(newRange);
@@ -4743,6 +4751,13 @@ class Editor {
     }
 
     /*
+    Open find and replace UI.
+    */
+    openFindAndReplace() {
+        this.findAndReplaceModule.open();
+    }
+
+    /*
     Serialize a node's contents to a object.
     */
     serializeContents(node) {
@@ -5007,6 +5022,12 @@ class Editor {
 
         // Bind events for image editing.
         this.imageModule = EditorUI.bindImageEditing(this.editor, function() {
+            this.saveHistory(); 
+            this.shouldTakeSnapshotOnNextChange = true;
+        }.bind(this));
+
+        // Find and replace module.
+        this.findAndReplaceModule = EditorUI.findAndReplace(this.editor, function() {
             this.saveHistory(); 
             this.shouldTakeSnapshotOnNextChange = true;
         }.bind(this));

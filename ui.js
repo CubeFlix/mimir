@@ -867,3 +867,51 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         selectImage(img);
     }, deselect: () => {deselectImage()}};
 }
+
+/*
+Find and replace module.
+*/
+EditorUI.findAndReplace = (editor, onEdit) => {
+    // Find and replace modal UI.
+    const ui = document.createElement("div");
+    ui.setAttribute("id", "editor-find-and-replace-ui");
+    editor.after(ui);
+
+    // Find UI.
+    const findInput = document.createElement("input");
+    findInput.classList.add("editor-find-and-replace-find-input");
+    findInput.setAttribute("placeholder", "Search for");
+    ui.append(findInput);
+    const findButton = document.createElement("button");
+    findButton.classList.add("editor-find-and-replace-find-button");
+    findButton.innerHTML = "Find";
+    ui.append(findButton);
+    const findUpButton = document.createElement("button");
+    findUpButton.classList.add("editor-find-and-replace-find-up-button");
+    findUpButton.innerHTML = "&#9650;";
+    ui.append(findUpButton);
+    const findDownButton = document.createElement("button");
+    findDownButton.classList.add("editor-find-and-replace-find-down-button");
+    findDownButton.innerHTML = "&#9660;";
+    ui.append(findDownButton);
+
+    // Replace UI.
+    const replaceInput = document.createElement("input");
+    replaceInput.classList.add("editor-find-and-replace-replace-input");
+    replaceInput.setAttribute("placeholder", "Replace with");
+    ui.append(replaceInput);
+
+    var opened = false;
+
+    function open() {
+        opened = true;
+        ui.style.display = "block";
+    }
+
+    function close() {
+        opened = false;
+        ui.style.display = "none";
+    }
+
+    return {open: open};
+}
