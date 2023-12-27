@@ -4887,6 +4887,7 @@ class Editor {
 
         const serialized = [];
         for (const child of node.childNodes) {
+            if (this.isEmpty(child)) {continue;}
             if (child.nodeType == Node.TEXT_NODE) {
                 serialized.push(child.textContent);
             } else if (child.nodeType == Node.ELEMENT_NODE) {
