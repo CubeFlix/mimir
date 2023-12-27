@@ -1635,7 +1635,15 @@ class Editor {
 
             if (startOffset == currentNode.childNodes.length) {
                 currentNode = currentNode.childNodes[startOffset - 1];
-                startOffset = currentNode.nodeType == Node.ELEMENT_NODE ? currentNode.childNodes.length : currentNode.textContent.length;
+                if (currentNode.nodeType == Node.ELEMENT_NODE) {
+                    if (this.childlessTags.includes(currentNode.tagName)) {
+                        startOffset = 1;
+                    } else {
+                        startOffset = currentNode.childNodes.length;
+                    }
+                } else {
+                    startOffset = currentNode.textContent.length;
+                }
             } else {
                 currentNode = currentNode.childNodes[startOffset];
                 startOffset = 0;
@@ -1685,10 +1693,16 @@ class Editor {
     
         // If the final node is not a text node, set the end offset.
         if (range.endContainer.nodeType != Node.TEXT_NODE && this.inEditor(range.endContainer) && nodes.slice(-1)[0]) {
-            if (!range.isPointInRange(nodes.slice(-1)[0], 0)) {
+            if (range.comparePoint(nodes.slice(-1)[0], 0) == 1) {
+                // If the final node's endpoint is after the range, set endOffset to 0.
                 endOffset = 0;
             } else {
-                endOffset = nodes.slice(-1)[0].textContent.length;
+                // If the end container is an element, set the end offset to be the end of the node.
+                if (this.childlessTags.includes(nodes.slice(-1)[0].tagName)) {
+                    endOffset = 1;
+                } else {
+                    endOffset = nodes.slice(-1)[0].textContent.length;
+                }
             }
         }
     
@@ -2092,15 +2106,38 @@ class Editor {
 
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
-                const styledNode = this.applyStyleToNode(node, style);
+                // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
+                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                    // Place the cursor before or after the node, depending on the offset.
+                    const marker = document.createTextNode("");
+                    if (startOffset == 0) {
+                        node.before(marker);
+                    } else {
+                        node.after(marker);
+                    }
+                    const styledNode = this.applyStyleToNode(marker, style);
+                    const cursor = this.createCursor();
+                    marker.after(cursor);
+                    marker.remove();
 
-                // Select the new node.
-                const newRange = new Range();
-                newRange.selectNodeContents(styledNode);
-                newRange.collapse();
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(newRange);
-                return;
+                    // Select the cursor.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(cursor);
+                    newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                } else {
+                    const styledNode = this.applyStyleToNode(node, style);
+
+                    // Select the new node.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(styledNode);
+                    if (this.blockTags.includes(node.tagName)) newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                }
             }
 
             // Split the node at the start and end offsets.
@@ -2633,15 +2670,38 @@ class Editor {
 
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
-                const styledNode = this.removeStyleOnNode(node, style);
+                // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
+                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                    // Place the cursor before or after the node, depending on the offset.
+                    const marker = document.createTextNode("");
+                    if (startOffset == 0) {
+                        node.before(marker);
+                    } else {
+                        node.after(marker);
+                    }
+                    const styledNode = this.removeStyleOnNode(marker, style);
+                    const cursor = this.createCursor();
+                    marker.after(cursor);
+                    marker.remove();
 
-                // Select the new node.
-                const newRange = new Range();
-                newRange.selectNodeContents(styledNode);
-                newRange.collapse();
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(newRange);
-                return;
+                    // Select the cursor.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(cursor);
+                    newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                } else {
+                    const styledNode = this.removeStyleOnNode(node, style);
+
+                    // Select the new node.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(styledNode);
+                    if (this.blockTags.includes(node.tagName)) newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                }
             }
 
             // Split the node at the start and end offsets.
@@ -2885,17 +2945,39 @@ class Editor {
 
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
-                const styledNode = this.changeStyleOnNode(node, style);
+                // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
+                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                    // Place the cursor before or after the node, depending on the offset.
+                    const marker = document.createTextNode("");
+                    if (startOffset == 0) {
+                        node.before(marker);
+                    } else {
+                        node.after(marker);
+                    }
+                    const styledNode = this.changeStyleOnNode(marker, style);
+                    const cursor = this.createCursor();
+                    marker.after(cursor);
+                    marker.remove();
 
-                // Select the new node.
-                const newRange = new Range();
-                newRange.selectNodeContents(styledNode);
-                newRange.collapse();
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(newRange);
-                return;
+                    // Select the cursor.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(cursor);
+                    newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                } else {
+                    const styledNode = this.changeStyleOnNode(node, style);
+
+                    // Select the new node.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(styledNode);
+                    if (this.blockTags.includes(node.tagName)) newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                }
             }
-
             // Split the node at the start and end offsets.
             var styledNode = document.createTextNode(node.textContent.slice(startOffset, endOffset));
             var endNode = document.createTextNode(node.textContent.slice(endOffset, node.textContent.length));
@@ -3103,15 +3185,38 @@ class Editor {
 
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
-                const styledNode = this.removeAllStylesOnNode(node, style);
+                // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
+                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                    // Place the cursor before or after the node, depending on the offset.
+                    const marker = document.createTextNode("");
+                    if (startOffset == 0) {
+                        node.before(marker);
+                    } else {
+                        node.after(marker);
+                    }
+                    const styledNode = this.removeAllStyles(marker, style);
+                    const cursor = this.createCursor();
+                    marker.after(cursor);
+                    marker.remove();
 
-                // Select the new node.
-                const newRange = new Range();
-                newRange.selectNodeContents(styledNode);
-                newRange.collapse();
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(newRange);
-                return;
+                    // Select the cursor.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(cursor);
+                    newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                } else {
+                    const styledNode = this.removeAllStyles(node, style);
+
+                    // Select the new node.
+                    const newRange = new Range();
+                    newRange.selectNodeContents(styledNode);
+                    if (this.blockTags.includes(node.tagName)) newRange.collapse();
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(newRange);
+                    return;
+                }
             }
 
             // Split the node at the start and end offsets.

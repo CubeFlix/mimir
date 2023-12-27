@@ -149,6 +149,9 @@ a rich text editor for javascript
 - [ ] copy paste buttons
 - [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
 - [x] remove all styling from text, remove all color from 
+- [x] bolding and unbolding and cursor on single images (test cursor before and after image) 
+- [ ] HR not splitting out of inline nodes
+- [ ] `<strong>abc<img>abc</strong>` backspace on text
 - [ ] change list style (possibly)
 - [ ] find and replace
 - [ ] more history (calculate)
