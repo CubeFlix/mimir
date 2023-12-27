@@ -4871,7 +4871,20 @@ class Editor {
     /*
     Serialize a node's contents to a object.
     */
-    serializeContents(node) {
+    async serializeContents(node) {
+        /*
+        Convert a blob into data URL.
+        */
+        function blobToDataUrl(b) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(reader.result);
+                reader.onerror = e => reject(reader.error);
+                reader.onabort = e => reject(new Error("Failed to read blob"));
+                reader.readAsDataURL(b);
+              });
+        }
+
         const serialized = [];
         for (const child of node.childNodes) {
             if (child.nodeType == Node.TEXT_NODE) {
@@ -4879,7 +4892,13 @@ class Editor {
             } else if (child.nodeType == Node.ELEMENT_NODE) {
                 const attrs = {};
                 for (var i = 0; i < child.attributes.length; i++) {
-                    attrs[child.attributes[i].name] = child.attributes[i].value;
+                    if (child.attributes[i].name.toLowerCase() == "src" && child.tagName == "IMG" && child.attributes[i].value.toLowerCase().startsWith("blob")) {
+                        const blob = await (await fetch(child.attributes[i].value)).blob();
+                        const url = await blobToDataUrl(blob);
+                        attrs["src"] = url;
+                    } else {
+                        attrs[child.attributes[i].name] = child.attributes[i].value;
+                    }
                 }
                 serialized.push({tag: child.tagName, children: this.serializeContents(child), attrs: attrs});
             }
