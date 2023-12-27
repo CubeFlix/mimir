@@ -151,7 +151,7 @@ a rich text editor for javascript
 - [x] remove all styling from text, remove all color from 
 - [x] bolding and unbolding and cursor on single images (test cursor before and after image) 
 - [x] HR not splitting out of inline nodes
-- [ ] `<strong>abc<img>abc</strong>` backspace on text
+- [x] `<strong>abc<img>abc</strong>` backspace on text
 - [ ] change list style (possibly)
 - [ ] find and replace
 - [ ] more history (calculate)

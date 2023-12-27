@@ -504,11 +504,15 @@ class Editor {
                                 // Escape out of any styling nodes.
                                 placeAfter = this.findLastParent(placeAfter, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
                             }
-                            if (e.key == "Backspace") {
-                                placeAfter.after(lastNode);
+                            // Split placeAfter at the startContainer node (if they are not the same node) and place in the cursor in between them.
+                            if (range.startContainer != placeAfter) {
+                                const splitAfterNode = this.splitNodeAtChild(placeAfter, range.startContainer);
+                                placeAfter.after(lastNode, splitAfterNode);
+                                if (this.isEmpty(splitAfterNode) && splitAfterNode != this.editor) {splitAfterNode.remove();}
                             } else {
-                                placeAfter.before(lastNode);
+                                placeAfter.after(lastNode);
                             }
+                            if (placeAfter && this.isEmpty(placeAfter) && placeAfter != this.editor) placeAfter.remove();
                         } else {
                             // Place the node inside.
                             if (range.startContainer == this.editor) {
@@ -519,15 +523,17 @@ class Editor {
                                     // Escape out of any styling nodes.
                                     placeAfter = this.findLastParent(placeAfter, e => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN"));
                                 }
-                                if (e.key == "Backspace") {
-                                    placeAfter.after(lastNode);
+                                // Split placeAfter at the startContainer node (if they are not the same node) and place in the cursor in between them.
+                                if (range.startContainer != placeAfter) {
+                                    const splitAfterNode = this.splitNodeAtChild(placeAfter, range.startContainer);
+                                    placeAfter.after(lastNode, splitAfterNode);
+                                    if (this.isEmpty(splitAfterNode) && splitAfterNode != this.editor) {splitAfterNode.remove();}
                                 } else {
-                                    placeAfter.before(lastNode);
+                                    placeAfter.after(lastNode);
                                 }
+                                if (placeAfter && this.isEmpty(placeAfter) && placeAfter != this.editor) placeAfter.remove();
                             }
                         }
-
-                        if (placeAfter && this.isEmpty(placeAfter) && placeAfter != this.editor) placeAfter.remove();
 
                         const newRange = new Range();
                         newRange.selectNodeContents(cursor);
