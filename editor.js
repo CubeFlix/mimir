@@ -4547,10 +4547,10 @@ class Editor {
 
         // Find the uppermost inline block and split out of it. Then, insert the HR.
         const hr = document.createElement("hr");
-        const uppermostInlineBlock = this.findLastParent(insertionPoint, (n) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(n.tagName) || (n.style && n.style.textAlign)));
+        const uppermostInlineBlock = this.findLastParent(insertionPoint, (n) => (["H1", "H2", "H3", "H4", "H5", "H6"].includes(n.tagName) || (n.style && n.style.textAlign) || this.inlineStylingTags.includes(n.tagName) || n.tagName == "SPAN"));
         if (uppermostInlineBlock) {
             const after = this.splitNodeAtChild(uppermostInlineBlock, insertionPoint);
-            uppermostInlineBlock.after(after, hr);
+            uppermostInlineBlock.after(hr, after);
         } else {
             insertionPoint.after(hr);
         }
