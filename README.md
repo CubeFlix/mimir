@@ -144,6 +144,10 @@ a rich text editor for javascript
 - [x] cursor after an image
 - [x] double bolding in a span multiple times results in cursor moving out 
 - [x] HR should be treated like a content tag
+- [ ] image cut copy and paste with selection
+- [ ] image insert, drop and paste (reselect inserted image)
+- [ ] deserializeContent handle images
+- [ ] undo redo context menu grayed out
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
 - [ ] copy paste buttons
@@ -191,6 +195,7 @@ a rich text editor for javascript
 - [ ] perhaps remove extraneous divs during paste
 - [ ] make single backspace/delete cursor feature work with images (or not)
 - [ ] figure out issue with whitespace trimming
+- [ ] paste plaintext (add cursor support)
 
 ## good editors
 
