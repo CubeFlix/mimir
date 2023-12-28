@@ -2138,7 +2138,7 @@ class Editor {
 
                     // Select the new node.
                     const newRange = new Range();
-                    newRange.selectNodeContents(styledNode);
+                    newRange.selectNode(styledNode);
                     if (this.blockTags.includes(node.tagName)) newRange.collapse();
                     window.getSelection().removeAllRanges();
                     window.getSelection().addRange(newRange);
@@ -2702,7 +2702,7 @@ class Editor {
 
                     // Select the new node.
                     const newRange = new Range();
-                    newRange.selectNodeContents(styledNode);
+                    newRange.selectNode(styledNode);
                     if (this.blockTags.includes(node.tagName)) newRange.collapse();
                     window.getSelection().removeAllRanges();
                     window.getSelection().addRange(newRange);
@@ -2977,7 +2977,7 @@ class Editor {
 
                     // Select the new node.
                     const newRange = new Range();
-                    newRange.selectNodeContents(styledNode);
+                    newRange.selectNode(styledNode);
                     if (this.blockTags.includes(node.tagName)) newRange.collapse();
                     window.getSelection().removeAllRanges();
                     window.getSelection().addRange(newRange);
@@ -3200,20 +3200,20 @@ class Editor {
                     } else {
                         node.after(marker);
                     }
-                    const styledNode = this.removeAllStyles(marker, style);
+                    const styledNode = this.removeAllStylesOnNode(marker, style);
                     const cursor = this.createCursor();
                     marker.after(cursor);
                     marker.remove();
 
                     // Select the cursor.
                     const newRange = new Range();
-                    newRange.selectNodeContents(cursor);
+                    newRange.selectNode(cursor);
                     newRange.collapse();
                     window.getSelection().removeAllRanges();
                     window.getSelection().addRange(newRange);
                     return;
                 } else {
-                    const styledNode = this.removeAllStyles(node, style);
+                    const styledNode = this.removeAllStylesOnNode(node, style);
 
                     // Select the new node.
                     const newRange = new Range();
