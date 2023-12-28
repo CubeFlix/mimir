@@ -12,7 +12,7 @@ class Editor {
 
     contentTags = ["IMG", "BR", "HR"];
     stylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"];
-    inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB"];
+    inlineStylingTags = ["B", "STRONG", "I", "EM", "S", "U", "FONT", "SUP", "SUB", "A"];
     basicAllowedTags = ["DIV", "BR", "P", "IMG", "LI", "UL", "OL", "BLOCKQUOTE", "HR"];
     blockTags = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "HR"];
     childlessTags = ["BR", "IMG", "HR"];
@@ -3076,9 +3076,9 @@ class Editor {
     Remove all styles on a node.
     */
     removeAllStylesOnNode(node, style) {
-        if (node.nodeType == Node.ELEMENT_NODE && this.elementHasStyle(node, style)) {
+        if (node.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(node.tagName) || node.tagName == "SPAN")) {
             // No need to do any splitting or reconstruction, just remove the style from the node and replace it.
-            const childElems = node.querySelectorAll((this.inlineStylingTags + ["SPAN"]).join(", "));
+            const childElems = node.querySelectorAll(((this.inlineStylingTags + ["SPAN"]).filter(t => t != "A")).join(", "));
             if (this.inlineStylingTags.includes(node.tagName) || node.tagName == "SPAN") {
                 childElems.push(node);
             }
@@ -3086,22 +3086,26 @@ class Editor {
                 childElem.after(...childElem.childNodes);
                 chileElem.remove();
             }
+            // TODO: this will result in a bug if `node` itself is removed. I don't know what went on in my head when i wrote this so i don't really care anyways
+            return node;
         }
 
         // Traverse upwards and find the topmost style node.
         var topmostStyleNode = null;
         var currentNode = node;
+        var linkNode = null; // Keep track of link nodes to re-apply.
         while (this.inEditor(currentNode) && currentNode != this.editor) {
             currentNode = currentNode.parentNode;
             if (currentNode.nodeType == Node.ELEMENT_NODE && (this.inlineStylingTags.includes(currentNode.tagName) || currentNode.tagName == "SPAN")) {
                 // Found the node.
                 topmostStyleNode = currentNode;
+                if (currentNode.tagName == "A") {linkNode = currentNode.cloneNode(false);}
             } else {
                 break;
             }
         }
 
-        if (!topmostStyleNode) {return;}
+        if (!topmostStyleNode) {return node;}
 
         // Split the parent at the current node.
         const splitAfterNode = this.splitNodeAtChild(topmostStyleNode, node);
@@ -3112,6 +3116,13 @@ class Editor {
 
         // Remove empty nodes.
         if (this.isEmpty(topmostStyleNode)) topmostStyleNode.remove();
+
+        // Re-apply the link node, if necessary.
+        if (linkNode) {
+            node.after(linkNode);
+            linkNode.append(node);
+            node = linkNode;
+        }
 
         return node;
     }
