@@ -336,20 +336,6 @@ class Editor {
                         this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
                         this.menubar.append(this.menubarOptions.remove);
                         break;
-                    case "paste":
-                        this.menubarOptions.paste = document.createElement("button");
-                        this.menubarOptions.paste.setAttribute("id", "editor-menubar-option-paste");
-                        this.menubarOptions.paste.innerHTML = "&#x2398;";
-                        this.menubarOptions.paste.addEventListener("click", this.paste.bind(this));
-                        this.menubar.append(this.menubarOptions.paste);
-                        break;
-                    case "pastePlaintext":
-                        this.menubarOptions.pastePlaintext = document.createElement("button");
-                        this.menubarOptions.pastePlaintext.setAttribute("id", "editor-menubar-option-paste-plaintext");
-                        this.menubarOptions.pastePlaintext.innerHTML = "&#x2398;A";
-                        this.menubarOptions.pastePlaintext.addEventListener("click", this.pastePlaintext.bind(this));
-                        this.menubar.append(this.menubarOptions.pastePlaintext);
-                        break;
                     case "openFindAndReplace":
                         this.menubarOptions.openFindAndReplace = document.createElement("button");
                         this.menubarOptions.openFindAndReplace.setAttribute("id", "editor-menubar-option-open-find-and-replace");
@@ -1063,10 +1049,16 @@ class Editor {
     /*
     Insert and sanitize HTML data.
     */
-    insertHTML(startNode, data, select = "end") {
-        // Reconstruct the data.
-        var reconstructed = this.sanitize(data);
-        if (reconstructed.length == 0) {
+    insertHTML(startNode, data, select = "end", nodesToInsert = null) {
+        if (data) {
+            // Reconstruct the data.
+            var reconstructed = this.sanitize(data);
+            if (reconstructed.length == 0) {
+                return;
+            }
+        } else if (nodesToInsert) {
+            var reconstructed = nodesToInsert;
+        } else {
             return;
         }
 
@@ -4856,20 +4848,6 @@ class Editor {
     */
     remove() {
         this.performStyleCommand({type: "remove"});
-    }
-
-    /*
-    Paste.
-    */
-    paste() {
-        // TODO
-    }
-
-    /*
-    Paste as plaintext.
-    */
-    pastePlaintext() {
-        // TODO
     }
 
     /*
