@@ -703,7 +703,7 @@ class Editor {
     /*
     Remove the cursor.
     */
-    removeCursor() {
+    removeCursor(insertBrIfNeeded = true) {
         const range = this.getRange();
         if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
             // Traverse up the tree until we find the highest empty node and remove the cursor.
@@ -712,7 +712,7 @@ class Editor {
                 currentNode = currentNode.parentNode;
             }
             // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
-            if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
+            if (insertBrIfNeeded && this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
             currentNode.remove();
             this.currentCursor = null;
             this.updateMenubarOptions();
@@ -1080,6 +1080,21 @@ class Editor {
         if (!range) {
             return;
         }
+
+        if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
+            const tabNode = document.createTextNode("\t");
+            this.currentCursor.after(tabNode);
+            this.currentCursor.remove();
+            this.currentCursor = null;
+
+            const newRange = new Range();
+            newRange.selectNodeContents(tabNode);
+            newRange.collapse(false);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+            return;
+        }
+
         range.deleteContents();
         if (this.imageModule.getSelected()) this.imageModule.deselect();
         const tabNode = document.createTextNode("\t");
@@ -1274,6 +1289,7 @@ class Editor {
         this.editor.addEventListener("paste", function(e) {
             this.saveHistory();
             this.imageModule.deselect();
+            this.removeCursor(false);
 
             // Paste HTML data.
             if (e.clipboardData.getData("text/html")) {
@@ -1333,6 +1349,7 @@ class Editor {
         this.editor.addEventListener("drop", function(e) {
             this.saveHistory();
             this.imageModule.deselect();
+            this.removeCursor(false);
 
             // Insert HTML data.
             if (e.dataTransfer.getData("text/html")) {
@@ -4584,6 +4601,7 @@ class Editor {
         // Delete everything in the range.
         range.deleteContents();
         if (this.imageModule.getSelected()) this.imageModule.deselect();
+        this.removeCursor(false);
 
         // Create a new image.
         const imgNode = document.createElement("img");
@@ -4605,6 +4623,7 @@ class Editor {
         // Delete everything in the range.
         range.deleteContents();
         if (this.imageModule.getSelected()) this.imageModule.deselect();
+        this.removeCursor(false);
 
         // Calculate the insertion point.
         var insertionPoint;
