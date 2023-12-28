@@ -693,9 +693,30 @@ class Editor {
                     range.setStart(container, 0);
                     document.getSelection().removeAllRanges();
                     document.getSelection().addRange(range);
+                } else if ((e.inputType == "insertText" || e.inputType.startsWith("deleteContent")) && !e.key) {
+                    this.removeCursor();
                 }
             }
         }.bind(this));
+    }
+
+    /*
+    Remove the cursor.
+    */
+    removeCursor() {
+        const range = this.getRange();
+        if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
+            // Traverse up the tree until we find the highest empty node and remove the cursor.
+            var currentNode = this.currentCursor;
+            while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
+                currentNode = currentNode.parentNode;
+            }
+            // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
+            if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
+            currentNode.remove();
+            this.currentCursor = null;
+            this.updateMenubarOptions();
+        }
     }
 
     /*
