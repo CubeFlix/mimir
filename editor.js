@@ -447,21 +447,75 @@ class Editor {
                             || (e.key == "Delete" && range.commonAncestorContainer.textContent.length == 1 && range.endOffset == 0)) {
                         e.preventDefault();
 
+                        if (range.startOffset == 0 && range.endOffset >= endLength && !(range.startOffset == range.endOffset && range.startContainer == range.endContainer)) {
+                            // Handle deleting entire regions of text.
+                            
+                            // Get the current styling.
+                            const contents = range.extractContents(); // Extract the contents here so the only styles we track are the ones directly in the range.
+                            if (this.imageModule.getSelected()) this.imageModule.deselect();
+                            const nodes = [];
+                            const walker = document.createTreeWalker(contents, NodeFilter.SHOW_TEXT);
+                            while (walker.nextNode()) {
+                                nodes.push(walker.currentNode);
+                            }
+                            if (nodes.length == 0) {return;}
+                            
+                            // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
+                            const styling = [];
+                            var currentNode = nodes[0];
+
+                            // When calculating styling, we need to respect overrides. If an override is hit (i.e. no bold), later elements cannot apply the style.
+                            var overrides = [];
+                            while (currentNode && currentNode != contents) {
+                                // Only push the styling if it hasn't been added yet.
+                                if (currentNode.nodeType == Node.TEXT_NODE) {
+                                    currentNode = currentNode.parentNode;
+                                    continue;
+                                }
+                                var elementStyling = this.getStylingOfElement(currentNode, true);
+                                elementStyling = elementStyling.filter(s => !styling.some(e => s.type == e.type));
+                                elementStyling = elementStyling.filter(s => !overrides.some(e => s.type == e.target.type));
+                                const elementOverrides = elementStyling.filter(s => s.type == "override");
+                                elementStyling = elementStyling.filter(s => s.type != "override");
+                                elementStyling = elementStyling.filter(s => this.inlineStylingCommands.includes(s.type));
+                                styling.push(...elementStyling);
+                            
+                                // Handle all element overrides.
+                                overrides.push(...elementOverrides);
+                            
+                                currentNode = currentNode.parentNode;
+                            }
+
+                            // Create a cursor.
+                            const cursor = this.createCursor();
+                            
+                            // Reconstruct inline styling.
+                            var lastNode = cursor;
+                            for (const style of styling) {
+                                if (!this.inlineStylingCommands.includes(style.type)) {
+                                    continue;
+                                }
+                                const newElem = this.styleToElement(style);
+                                newElem.append(lastNode);
+                                lastNode = newElem;
+                            }
+
+                            range.insertNode(lastNode);
+
+                            const newRange = new Range();
+                            newRange.selectNodeContents(cursor);
+                            newRange.collapse();
+                            document.getSelection().removeAllRanges();
+                            document.getSelection().addRange(newRange);
+                            this.updateMenubarOptions();
+                            return;
+                        }
+
                         // Get the current styling.
                         const firstNodeRange = new Range();
-                        if (range.startContainer.nodeType == Node.TEXT_NODE) {
-                            firstNodeRange.selectNode(range.startContainer);
-                        } else {
-                            if (range.startContainer.childNodes.length == 0) {
-                                firstNodeRange.selectNode(range.startContainer);
-                            } else {
-                                if (range.startContainer.childNodes.length >= range.startOffset) {
-                                    firstNodeRange.selectNode(range.startContainer);
-                                } else {
-                                    firstNodeRange.selectNode(range.startContainer.childNodes[range.startOffset - 1]);
-                                }
-                            }
-                        }
+                        const {nodes, startOffset, endOffset} = this.getTextNodesInRange(range);
+                        if (nodes.length == 0) {return;}
+                        firstNodeRange.selectNode(nodes[0]);
                         const styling = this.detectStyling(firstNodeRange);
 
                         // Create a cursor.

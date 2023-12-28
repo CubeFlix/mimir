@@ -189,6 +189,7 @@ a rich text editor for javascript
     - otherwise for getTextNodesInRange it should make a new text node
 - [ ] issue with getBlockNodesInRange: if the whole last node is included, include it as a whole (possibilities of fixing this: have tne end node always escape?)
 - [ ] perhaps remove extraneous divs during paste
+- [ ] make single backspace/delete cursor feature work with images (or not)
 
 ## good editors
 
