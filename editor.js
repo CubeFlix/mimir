@@ -2105,7 +2105,7 @@ class Editor {
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
                 // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
-                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                if (node.tagName != "BR" && startOffset == endOffset) {
                     // Place the cursor before or after the node, depending on the offset.
                     const marker = document.createTextNode("");
                     if (startOffset == 0) {
@@ -2669,7 +2669,7 @@ class Editor {
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
                 // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
-                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                if (node.tagName != "BR" && startOffset == endOffset) {
                     // Place the cursor before or after the node, depending on the offset.
                     const marker = document.createTextNode("");
                     if (startOffset == 0) {
@@ -2944,7 +2944,7 @@ class Editor {
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
                 // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
-                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                if (node.tagName != "BR" && startOffset == endOffset) {
                     // Place the cursor before or after the node, depending on the offset.
                     const marker = document.createTextNode("");
                     if (startOffset == 0) {
@@ -3195,7 +3195,7 @@ class Editor {
             // Handle content nodes.
             if (this.contentTags.includes(node.tagName)) {
                 // If the node being selected is an inline node and requires a cursor, it needs to be handled differently.
-                if (!this.blockTags.includes(node.tagName) && startOffset == endOffset) {
+                if (node.tagName != "BR" && startOffset == endOffset) {
                     // Place the cursor before or after the node, depending on the offset.
                     const marker = document.createTextNode("");
                     if (startOffset == 0) {
