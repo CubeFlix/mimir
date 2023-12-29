@@ -459,31 +459,43 @@ class Editor {
                                 nodes.push(walker.currentNode);
                             }
                             if (nodes.length == 0) {return;}
-                            
-                            // If the current node is a text node, calculate the styling of the node and reconstruct its styling.
-                            const styling = [];
-                            var currentNode = nodes[0];
 
-                            // When calculating styling, we need to respect overrides. If an override is hit (i.e. no bold), later elements cannot apply the style.
-                            var overrides = [];
-                            while (currentNode && currentNode != contents) {
-                                // Only push the styling if it hasn't been added yet.
-                                if (currentNode.nodeType == Node.TEXT_NODE) {
-                                    currentNode = currentNode.parentNode;
+                            const styling = [];
+                            var firstNode = true;
+                            for (const node of nodes) {
+                                // If the node is empty, don't count it.
+                                if (node.nodeType == Node.TEXT_NODE && node.textContent == "") {
                                     continue;
                                 }
-                                var elementStyling = this.getStylingOfElement(currentNode, true);
-                                elementStyling = elementStyling.filter(s => !styling.some(e => s.type == e.type));
-                                elementStyling = elementStyling.filter(s => !overrides.some(e => s.type == e.target.type));
-                                const elementOverrides = elementStyling.filter(s => s.type == "override");
-                                elementStyling = elementStyling.filter(s => s.type != "override");
-                                elementStyling = elementStyling.filter(s => this.inlineStylingCommands.includes(s.type));
-                                styling.push(...elementStyling);
-                            
-                                // Handle all element overrides.
-                                overrides.push(...elementOverrides);
-                            
-                                currentNode = currentNode.parentNode;
+                    
+                                // Traverse up the tree and track each style node passed on the way up.
+                                var currentNode = node.parentNode;
+                                var nodeStyling = [];
+                                while (currentNode != contents) {
+                                    nodeStyling.push(...this.getStylingOfElement(currentNode));
+                                    currentNode = currentNode.parentNode;
+                                }
+                                
+                                if (firstNode) {
+                                    // If this is the first node being tracked, add its styles to the styling.
+                                    styling.push(...nodeStyling);
+                    
+                                    firstNode = false;
+                                } else {
+                                    // If this is not, check that each of the current styles is included in this element's styling.
+                                    for (const style of styling.slice(0, styling.length)) {
+                                        if (!nodeStyling.some(s => this.compareStyling(s, style)) && !this.requireSingleNodeToActivateStylingCommands.includes(style.type)) {
+                                            // If the styling is not the same, remove the styling from the list.
+                                            styling.splice(styling.findIndex(s => s.type == style.type), 1);
+                                        }
+                                    }
+                                    for (const style of nodeStyling) {
+                                        if (this.requireSingleNodeToActivateStylingCommands.includes(style.type)) {
+                                            // If the style is not already applied, add it.
+                                            if (!styling.some(s => this.compareStyling(s, style))) styling.push(style);
+                                        }
+                                    }
+                                }
                             }
 
                             // Create a cursor.
