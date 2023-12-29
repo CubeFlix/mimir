@@ -144,6 +144,10 @@ a rich text editor for javascript
 - [x] cursor after an image
 - [x] double bolding in a span multiple times results in cursor moving out 
 - [x] HR should be treated like a content tag
+- [x] header should be inside text align
+- [x] header nodes cannot be inside each other
+- [x] block style cannot be placed inside inline block style
+- [x] for some reason block style are removing block style divs
 - [ ] image cut copy and paste with selection
 - [ ] image insert, drop and paste (reselect inserted image)
 - [ ] deserializeContent handle images

@@ -1029,7 +1029,13 @@ class Editor {
 
             // Fix disallowed children of the node.
             const fixedNodes = [];
-            const disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, [style*=\"text-align\"]";
+            if (style.type == "header") {
+                // For headers, disallowed children are all types of multi-line blocks and header tags as well.
+                var disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, div, p";
+            } else if (this.inlineBlockStylingCommands.includes(style.type)) {
+                // For alignment and other types of inline block styling commands, disallowed children are all types of multi-line blocks, but not headers.
+                var disallowedChildren = "blockquote, ul, ol, li, div, p";
+            }
             function fixDisallowedChildrenOfNode(node) {
                 if (node.nodeType == Node.ELEMENT_NODE && (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren)))) {
                     // Append the children instead.
@@ -1856,6 +1862,8 @@ class Editor {
     Get a list of styling that an element applies. For cases with unsanitized DOM (pasting, etc.), there is an option to track style overrides.
     */
     getStylingOfElement(node, trackOverrides = false) {
+        if (node.nodeType != Node.ELEMENT_NODE) return [];
+
         var styling = [];
         
         // Check if the element itself applies styling.
@@ -2011,6 +2019,8 @@ class Editor {
         if (styling.some(s => s.type == "foreColor") && style.type == "foreColor" && style.color == null) {return true;}
         if (styling.some(s => s.type == "backColor") && style.type == "backColor" && style.color == null) {return true;}
         if (styling.some(s => s.type == "link") && style.type == "link") {return true;}
+        if (styling.some(s => s.type == "header") && style.type == "header" && style.level == null) {return true;}
+        if (styling.some(s => s.type == "align") && style.type == "align" && style.direction == null) {return true;}
         return styling.some(s => this.compareStyling(s, style));
     }
 
@@ -2435,7 +2445,7 @@ class Editor {
             // Remove block styling.
             switch (style.type) {
                 case "align":
-                    if (elem.style.textAlign && elem.style.textAlign.toLowerCase().includes(style.direction)) {
+                    if (elem.style.textAlign && (elem.style.textAlign.toLowerCase().includes(style.direction) || style.direction == null)) {
                         const temp = document.createElement("div");
                         temp.append(...elem.childNodes);
                         temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
@@ -2456,7 +2466,7 @@ class Editor {
                     }
                     break;
                 case "header":
-                    if (elem.tagName == style.level) {
+                    if (elem.tagName == style.level || style.level == null) {
                         const temp = document.createElement("div");
                         temp.append(...elem.childNodes);
                         temp.setAttribute("style", elem.getAttribute("style") ? elem.getAttribute("style") : "");
@@ -3785,7 +3795,16 @@ class Editor {
 
         // Fix disallowed children. Inline block styles need to be applied on a line-by-line basis, so all multi-line blocks (P, DIV, etc.) need to be removed.
         const fixedNodes = [];
-        const disallowedChildren = (this.inlineBlockStylingCommands.includes(style.type)) ? "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, div, p" : null;
+        if (style.type == "header") {
+            // For headers, disallowed children are all types of multi-line blocks and header tags as well.
+            var disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, div, p";
+        } else if (this.inlineBlockStylingCommands.includes(style.type)) {
+            // For alignment and other types of inline block styling commands, disallowed children are all types of multi-line blocks, but not headers.
+            var disallowedChildren = "blockquote, ul, ol, li, div, p";
+        } else {
+            var disallowedChildren = null;
+        }
+        
         function fixDisallowedChildrenOfNode(node) {
             if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren))))) {
                 // Append the children instead.
@@ -3805,7 +3824,7 @@ class Editor {
         // Fix disallowed parents.
         if (style.type == "quote" || style.type == "list") {
             var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign));
-        } else if (style.type == "header") {
+        } else if (this.inlineBlockStylingCommands.includes(style.type)) {
             var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName));
         } else {
             var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN");
@@ -3822,7 +3841,10 @@ class Editor {
                 continue;
             }
 
-            if (node.contains(range.commonAncestorContainer) && node != range.commonAncestorContainer && this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName)) {
+            if (node.contains(range.commonAncestorContainer) && node != range.commonAncestorContainer && this.blockTags.includes(node.tagName) && !this.childlessTags.includes(node.tagName)
+                && !this.inlineBlockStylingCommands.includes(style.type) // Inline block styles cannot be placed inside.
+                && !node.getAttribute("style") && !["H1", "H2", "H3", "H4", "H5", "H6"].includes(node.tagName) // Cannot place node inside header or text align.
+            ) {
                 var inside = true;
             } else {
                 var inside = false;
@@ -3846,7 +3868,7 @@ class Editor {
             } else {
                 lastStyled = styledNode;
             }
-            if (inside && ["DIV", "P"].includes(node.tagName)) {
+            if (inside && ["DIV", "P"].includes(node.tagName) && !node.getAttribute("style")) {
                 // Extraneous node.
                 node.after(...node.childNodes);
                 node.remove();
@@ -3916,6 +3938,11 @@ class Editor {
             // Put the styled node back.
             marker.after(styledNode);
             marker.remove();
+
+            // Remove extraneous parents as well.
+            if (Array.from(styledNode.parentNode.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !styledNode.parentNode.getAttribute("style") && styledNode.parentNode != this.editor && styledNode.parentNode.tagName == "DIV") {
+                extraneousDivsToRemove.push(styledNode.parentNode);
+            }
         }
 
         // Search the parents of the node for any node that matches the style.
@@ -3951,6 +3978,11 @@ class Editor {
             }
             marker.after(styledNode, splitAfterNode);
             marker.remove();
+
+            // Remove extraneous parents as well.
+            if (Array.from(styledNode.parentNode.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !styledNode.parentNode.getAttribute("style") && styledNode.parentNode != this.editor && styledNode.parentNode.tagName == "DIV") {
+                extraneousDivsToRemove.push(styledNode.parentNode);
+            }
             
             if (parentNode != this.editor && this.isEmpty(parentNode)) {
                 // Remove the original node.
@@ -4721,10 +4753,7 @@ class Editor {
                         }
                     } else {
                         // Remove the other header styling first.
-                        const currentHeaderStyle = currentStyling.find(s => s.type == "header");
-                        if (currentHeaderStyle) {
-                            this.removeBlockStyle(currentHeaderStyle, range);
-                        }
+                        this.removeBlockStyle({type: "header", level: null}, range);
                         const newRange = this.getRange();
                         this.applyBlockStyle(style, newRange);
                     }
@@ -4739,10 +4768,7 @@ class Editor {
                         }
                     } else {
                         // Remove the other align styling first.
-                        const currentAlignStyle = currentStyling.find(s => s.type == "align");
-                        if (currentAlignStyle) {
-                            this.removeBlockStyle(currentAlignStyle, range);
-                        }
+                        this.removeBlockStyle({type: "align", direction: null}, range);
                         const newRange = this.getRange();
                         this.applyBlockStyle(style, newRange);
                     }
