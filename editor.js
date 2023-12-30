@@ -1668,18 +1668,7 @@ class Editor {
         }
 
         // Check for a cursor element.
-        if (this.currentCursor) {
-            // If the cursor left the cursor element, remove the cursor.
-            if (!this.currentCursor.contains(range.commonAncestorContainer)) {
-                // Traverse up the tree until we find the highest empty node.
-                var currentNode = this.currentCursor;
-                while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode)) {
-                    currentNode = currentNode.parentNode;
-                }
-                currentNode.remove();
-                this.currentCursor = null;
-            }
-        }
+        this.removeCursor(true);
 
         this.updateMenubarOptions();
     }

@@ -155,7 +155,7 @@ a rich text editor for javascript
 - [x] deserializeContent handle images
 - [x] not joining nodes on paste
 - [x] update list styling when escaping out of a list
-- [ ] backspace cursor is not re-inserting BR
+- [x] backspace cursor is not re-inserting BR
 - [ ] insertParagraph in an empty blockquote should remove the blockquote
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
