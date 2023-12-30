@@ -694,20 +694,26 @@ class Editor {
 
                     if (!["UL", "OL"].includes(container.parentNode.tagName)) {
                         // Don't leave dangling LI nodes.
-                        const newDiv = document.createElement("div");
-                        newDiv.append(...container.childNodes);
-                        container.after(newDiv);
-                        container.remove();
-                        container = newDiv;
+                        if (container.parentNode.tagName == "LI") {
+                            // Split the container into its parent.
+                            const nodesAfterContainer = Array.from(container.parentNode.childNodes).slice(Array.from(container.parentNode.childNodes).indexOf(container) + 1, container.parentNode.childNodes.length);
+                            container.parentNode.after(container, ...nodesAfterContainer);
+                        } else {
+                            const newDiv = document.createElement("div");
+                            newDiv.append(...container.childNodes);
+                            container.after(newDiv);
+                            container.remove();
+                            container = newDiv;
+                        }
                     }
                     
                     const range = new Range();
                     range.setStart(container, 0);
                     document.getSelection().removeAllRanges();
                     document.getSelection().addRange(range);
-                } else if ((e.inputType == "insertText" || e.inputType.startsWith("deleteContent")) && !e.key) {
-                    this.removeCursor();
                 }
+            } else if ((e.inputType == "insertText" || e.inputType.startsWith("deleteContent")) && !e.key) {
+                this.removeCursor();
             }
         }.bind(this));
     }
