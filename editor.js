@@ -968,7 +968,7 @@ class Editor {
                 }
 
                 // Clone the node without any attributes.
-                const newNode = document.createElement(child.tagName);
+                var newNode = document.createElement(child.tagName);
 
                 // Add this node to the list of cached inline block styles.
                 const inlineBlockStyling = this.getStylingOfElement(child).filter(s => this.inlineBlockStylingCommands.includes(s.type));
@@ -983,17 +983,30 @@ class Editor {
                     }
                 }
 
-                // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
-                if (["DIV", "P"].includes(child.tagName) && child.style.marginLeft.toLowerCase() == "40px") {
-                    newNode.style.marginLeft = "40px";
-                }
-                if (["DIV", "P"].includes(child.tagName) && child.style.paddingLeft.toLowerCase() == "40px") {
-                    newNode.style.marginLeft = "40px";
-                }
-
                 // Reconstruct the node's children.
                 const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
                 newNode.append(...reconstructedChildren);
+
+                // If the node was a LI node, apply the node's list style.
+                if (child.tagName == "LI" && child.style.listStyleType) {
+                    newNode.style.listStyleType = child.style.listStyleType;
+                }
+
+                // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
+                if (["DIV", "P"].includes(child.tagName) && (child.style.marginLeft || child.style.paddingLeft)) {
+                    const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
+                    if (value.toLowerCase().endsWith("px")) {
+                        const pixels = parseInt(value.slice(0, -2));
+                        const numIndents = Math.floor(pixels / 40);
+                        // Wrap the element.
+                        for (var i = 0; i < numIndents; i++) {
+                            const newIndent = document.createElement("div");
+                            newIndent.style.marginLeft = "40px";
+                            newIndent.append(newNode);
+                            newNode = newIndent;
+                        }
+                    }
+                }
 
                 // Append the newly reconstructed node.
                 reconstructed.push(newNode);
