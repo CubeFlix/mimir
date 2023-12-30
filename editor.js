@@ -659,63 +659,101 @@ class Editor {
                 this.redo();
                 return;
             } else if (e.inputType == "insertParagraph") {
-                // Handles a specific Chrome bug where inserting a paragraph at the end of a nested list creates a OL/UL element directly within another OL/UL. Note that this does not occur in Mozilla UAs.
-                // This overrides the standard contentEditable insertParagraph only when the user is pressing enter within an empty list element.
-                
-                // Find the topmost block container. We split out of extraneous DIVs.
-                var container = this.getRange()?.commonAncestorContainer;
-                while (!this.blockTags.includes(container.tagName) && this.inEditor(container)) {
-                    container = container.parentNode;
-                }
-                if (container.tagName == "DIV" || container.tagName == "P") {
-                    // See W3 bug 13841.
-                    var outerContainer = container;
-                    while (outerContainer.tagName != "LI" && this.inEditor(outerContainer.parentNode)) {outerContainer = outerContainer.parentNode};
-                    if (outerContainer.tagName == "LI") {container = outerContainer;}
-                }
-
-                // If the outermost container is a LI and it is empty, escape out of it,
-                if (container.tagName == "LI" && (this.isEmptyOrLineBreak(container))) {
-                    e.preventDefault();
-                    // Split out of the parent.
-                    const parentList = container.parentNode;
-                    const nodesAfterCurrentNode = Array.from(parentList.childNodes).slice(Array.from(parentList.childNodes).indexOf(container) + 1, parentList.childNodes.length);
-                    const newList = parentList.cloneNode(false);
-                    newList.append(...nodesAfterCurrentNode);
-                    parentList.after(container, newList);
-
-                    // Remove split lists if empty.
-                    if (this.isEmpty(newList)) {
-                        newList.remove();
-                    }
-                    if (this.isEmpty(parentList)) {
-                        parentList.remove();
-                    }
-
-                    if (!["UL", "OL"].includes(container.parentNode.tagName)) {
-                        // Don't leave dangling LI nodes.
-                        if (container.parentNode.tagName == "LI") {
-                            // Split the container into its parent.
-                            const nodesAfterContainer = Array.from(container.parentNode.childNodes).slice(Array.from(container.parentNode.childNodes).indexOf(container) + 1, container.parentNode.childNodes.length);
-                            container.parentNode.after(container, ...nodesAfterContainer);
-                        } else {
-                            const newDiv = document.createElement("div");
-                            newDiv.append(...container.childNodes);
-                            container.after(newDiv);
-                            container.remove();
-                            container = newDiv;
-                        }
-                    }
-                    
-                    const range = new Range();
-                    range.setStart(container, 0);
-                    document.getSelection().removeAllRanges();
-                    document.getSelection().addRange(range);
-                }
+                this.handleEscapeBlockquote(e);
+                this.handleEscapeLists(e);
             } else if ((e.inputType == "insertText" || e.inputType.startsWith("deleteContent")) && !e.key) {
                 this.removeCursor();
             }
         }.bind(this));
+    }
+
+    /*
+    Handle escaping out of blockquote elements.
+    */
+    handleEscapeBlockquote(e) {
+        // Find the topmost block container. We split out of extraneous DIVs.
+        var container = this.getRange()?.commonAncestorContainer;
+        while (!this.blockTags.includes(container.tagName) && this.inEditor(container)) {
+            container = container.parentNode;
+        }
+        if (container.tagName == "DIV" || container.tagName == "P") {
+            // See W3 bug 13841.
+            var outerContainer = container;
+            while (outerContainer.tagName != "BLOCKQUOTE" && this.inEditor(outerContainer.parentNode)) {outerContainer = outerContainer.parentNode};
+            if (outerContainer.tagName == "BLOCKQUOTE") {container = outerContainer;}
+        }
+
+        // If the outermost container is a BLOCKQUOTE and it is empty, escape out of it,
+        if (container.tagName == "BLOCKQUOTE" && (this.isEmptyOrLineBreak(container))) {
+            e.preventDefault();
+            const newDiv = document.createElement("div");
+            newDiv.append(...container.childNodes);
+            container.after(newDiv);
+            container.remove();
+            container = newDiv;
+            const range = new Range();
+            range.setStart(container, 0);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(range);
+        }
+    }
+
+    /*
+    Handle escaping out of lists.
+    */
+    handleEscapeLists(e) {
+        // Handles a specific Chrome bug where inserting a paragraph at the end of a nested list creates a OL/UL element directly within another OL/UL. Note that this does not occur in Mozilla UAs.
+        // This overrides the standard contentEditable insertParagraph only when the user is pressing enter within an empty list element.
+            
+        // Find the topmost block container. We split out of extraneous DIVs.
+        var container = this.getRange()?.commonAncestorContainer;
+        while (!this.blockTags.includes(container.tagName) && this.inEditor(container)) {
+            container = container.parentNode;
+        }
+        if (container.tagName == "DIV" || container.tagName == "P") {
+            // See W3 bug 13841.
+            var outerContainer = container;
+            while (outerContainer.tagName != "LI" && this.inEditor(outerContainer.parentNode)) {outerContainer = outerContainer.parentNode};
+            if (outerContainer.tagName == "LI") {container = outerContainer;}
+        }
+
+        // If the outermost container is a LI and it is empty, escape out of it,
+        if (container.tagName == "LI" && (this.isEmptyOrLineBreak(container))) {
+            e.preventDefault();
+            // Split out of the parent.
+            const parentList = container.parentNode;
+            const nodesAfterCurrentNode = Array.from(parentList.childNodes).slice(Array.from(parentList.childNodes).indexOf(container) + 1, parentList.childNodes.length);
+            const newList = parentList.cloneNode(false);
+            newList.append(...nodesAfterCurrentNode);
+            parentList.after(container, newList);
+
+            // Remove split lists if empty.
+            if (this.isEmpty(newList)) {
+                newList.remove();
+            }
+            if (this.isEmpty(parentList)) {
+                parentList.remove();
+            }
+            if (!["UL", "OL"].includes(container.parentNode.tagName)) {
+                // Don't leave dangling LI nodes.
+                if (container.parentNode.tagName == "LI") {
+                    // Split the container into its parent.
+                    const nodesAfterContainer = Array.from(container.parentNode.childNodes).slice(Array.from(container.parentNode.childNodes).indexOf(container) + 1, container.parentNode.childNodes.length);
+                    container.parentNode.after(container, ...nodesAfterContainer);
+                } else {
+                    const newDiv = document.createElement("div");
+                    newDiv.append(...container.childNodes);
+                    container.after(newDiv);
+                    container.remove();
+                    container = newDiv;
+                }
+            }
+            
+            const range = new Range();
+            range.setStart(container, 0);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(range);
+        }
     }
 
     /*

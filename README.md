@@ -156,7 +156,7 @@ a rich text editor for javascript
 - [x] not joining nodes on paste
 - [x] update list styling when escaping out of a list
 - [x] backspace cursor is not re-inserting BR
-- [ ] insertParagraph in an empty blockquote should remove the blockquote
+- [x] insertParagraph in an empty blockquote should remove the blockquote
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
 - [ ] disallow pasting HTML option 
