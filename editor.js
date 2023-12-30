@@ -5158,6 +5158,19 @@ class Editor {
                 // Element.
                 const newElem = document.createElement(elem.tag);
                 for (const attr in elem.attrs) {
+                    if (elem.tag.toLowerCase() == "img" && attr.toLowerCase() == "src" && elem.attrs[attr].toLowerCase().startsWith("data")) {
+                        var mime = elem.attrs[attr].split(',')[0].split(':')[1].split(';')[0];
+                        var binary = atob(elem.attrs[attr].split(',')[1]);
+                        var array = [];
+                        for (var i = 0; i < binary.length; i++) {
+                            array.push(binary.charCodeAt(i));
+                        }
+                        const blob = new Blob([new Uint8Array(array)], {type: mime});
+                        var src = URL.createObjectURL(blob);
+                        newElem.setAttribute("src", src);
+                        this.imageObjectURLs.push(src);
+                        continue;
+                    }
                     newElem.setAttribute(attr, elem.attrs[attr]);
                 }
                 this.deserializeContents(elem.children, newElem);

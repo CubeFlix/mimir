@@ -152,7 +152,7 @@ a rich text editor for javascript
 - [x] image insert, drop and paste (reselect inserted image)
 - [x] H1 should be an override for font size
 - [x] image button events (up, down, left, right arrow)
-- [ ] deserializeContent handle images
+- [x] deserializeContent handle images
 - [ ] undo redo context menu grayed out
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
