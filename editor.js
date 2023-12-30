@@ -3848,7 +3848,7 @@ class Editor {
 
         // Fix disallowed parents.
         if (style.type == "quote" || style.type == "list") {
-            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && e.style.textAlign));
+            var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && (e.style.textAlign || e.style.marginLeft)));
         } else if (this.inlineBlockStylingCommands.includes(style.type)) {
             var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName));
         } else {
@@ -4075,7 +4075,7 @@ class Editor {
             const styledNode = this.removeBlockStyleOnNode(node, style, removeAllParents);
 
             // Join.
-            if (shouldJoin && !(styledNode instanceof Array)) {
+            if (shouldJoin && styledNode && !(styledNode instanceof Array)) {
                 lastNode.append(...styledNode.childNodes);
                 styledNode.remove();
             } else {
@@ -4290,7 +4290,7 @@ class Editor {
     Block indent a list of sibling nodes.
     */
     blockIndentSiblingNodes(siblings) {
-        const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px"));
+        const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || (n.style && n.style.marginLeft.toLowerCase() == "40px")));
         var lastIndented = null; // Store the first and last indented nodes so that we can join adjacent lists.
         var firstIndented = null;
         if (siblings[0].tagName == "LI") {
@@ -4402,7 +4402,7 @@ class Editor {
         const fixedNodes = [];
         function getInnerChildren(node) {
             // If the current node is not a OL/UL element but contains a OL/UL, go inside.
-            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("ol, ul")))) {
+            if (node.nodeType == Node.ELEMENT_NODE && (node == this.editor || (!["OL", "UL"].includes(node.tagName) && node.querySelector("blockquote, ul, ol, li, div, p")))) {
                 // Append the children instead.
                 for (const child of node.childNodes) {
                     getInnerChildren(child);
@@ -4446,7 +4446,7 @@ class Editor {
         // var lastOutdented = null;
         for (const node of siblings) {
             // Find the nearest outdent-able node to outdent.
-            const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || n.style.marginLeft.toLowerCase() == "40px");
+            const nearestOutdentableParent = this.findClosestParent(node, (n) => ["OL", "UL"].includes(n.tagName) || (n.style && n.style.marginLeft.toLowerCase() == "40px"));
             if (!nearestOutdentableParent) {
                 // If there isn't an outdent-able parent, we know it won't be any of its children either, since the inner child traversal process gets all the outdent-able children.
                 continue;
@@ -4470,6 +4470,46 @@ class Editor {
                     const outdentableParentParent = nearestOutdentableParent.parentNode;
                     nearestOutdentableParent.remove();
                     this.updateHideNestedLists(outdentableParentParent);
+
+                    // If the nodes we outdented are now inside another list, break them and place them on their own list elements.
+                    if (final[0].parentNode.tagName == "LI") {
+                        // First, split out of the parent LI node.
+                        const parentLi = final[0].parentNode;
+                        const nodesAfterFinal = Array.from(parentLi.childNodes).slice(Array.from(parentLi.childNodes).indexOf(final[final.length - 1]) + 1, parentLi.childNodes.length);
+                        const newLiForSplitNodes = document.createElement("li");
+                        newLiForSplitNodes.append(...nodesAfterFinal);
+                        parentLi.after(newLiForSplitNodes);
+                        if (this.isEmpty(newLiForSplitNodes)) {newLiForSplitNodes.remove()};
+
+                        // Now, place each block in its own LI.
+                        const list = [];
+                        while (final.length != 0) {
+                            const node = final[0];
+                            if (this.blockTags.includes(node.tagName)) {
+                                // Block nodes go in their own LI node.
+                                const newLi = document.createElement("li");
+                                newLi.append(node);
+                                list.push(newLi);
+                                final.shift();
+                            } else {
+                                // Inline nodes get combined.
+                                const newLi = document.createElement("li");
+                                newLi.append(node);
+                                final.shift();
+                                while (final.length != 0 && !this.blockTags.includes(final[0].tagName)) {
+                                    newLi.append(final.shift());
+                                }
+                                list.push(newLi);
+                            }
+                            parentLi.after(...list);
+                        }
+
+                        // Hide nested lists.
+                        list.forEach((l) => this.updateHideNestedLists(l));
+                        this.updateHideNestedLists(parentLi);
+
+                        if (this.isEmpty(parentLi)) {parentLi.remove();}
+                    }
                     continue;
                 }
 
@@ -4499,7 +4539,7 @@ class Editor {
                 }
                 if (final.length == 0) {continue;}
 
-                // If the nodes we outdented are now inside another list, break them place them on their own list elements.
+                // If the nodes we outdented are now inside another list, break them and place them on their own list elements.
                 if (final[0].parentNode.tagName == "LI") {
                     // First, split out of the parent LI node.
                     const parentLi = final[0].parentNode;
