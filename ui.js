@@ -863,6 +863,31 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         }
     });
 
+    editor.addEventListener("keydown", (e) => {
+        if (e.key == "c" && (e.ctrlKey || e.metaKey) && selectedImage && document.getSelection().rangeCount == 0) {
+            // Copy the image. Select the image with the range then re-select the image with the UI.
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+        } else if (e.key == "x" && (e.ctrlKey || e.metaKey) && selectedImage && document.getSelection().rangeCount == 0) {
+            // Cut the image. Select the image with the range then re-select the image with the UI.
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            deselectImage();
+        } else if (e.key == "v" && (e.ctrlKey || e.metaKey) && selectedImage && document.getSelection().rangeCount == 0) {
+            // Paste into the image. Delete the image and allow the paste event to occur.
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            selectedImage.remove();
+            deselectImage();
+        }
+    });
+
     return {getSelected: () => {return selectedImage;}, select: (img) => {
         selectImage(img);
     }, deselect: () => {deselectImage()}};
