@@ -1039,50 +1039,53 @@ class Editor {
                 continue;
             }
 
-            // Fix disallowed children of the node.
-            const fixedNodes = [];
-            if (style.type == "header") {
-                // For headers, disallowed children are all types of multi-line blocks and header tags as well.
-                var disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, div, p";
-            } else if (this.inlineBlockStylingCommands.includes(style.type)) {
-                // For alignment and other types of inline block styling commands, disallowed children are all types of multi-line blocks, but not headers.
-                var disallowedChildren = "blockquote, ul, ol, li, div, p";
-            }
-            function fixDisallowedChildrenOfNode(node) {
-                if (node.nodeType == Node.ELEMENT_NODE && (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren)))) {
-                    // Append the children instead.
-                    for (const child of node.childNodes) {
-                        fixDisallowedChildrenOfNode(child);
-                    }
-                } else {
-                    // Append the node.
-                    fixedNodes.push(node);
+            for (const style of inlineBlockPair.inlineBlockStyling) {
+                // Fix disallowed children of the node.
+                const fixedNodes = [];
+                if (style.type == "header") {
+                    // For headers, disallowed children are all types of multi-line blocks and header tags as well.
+                    var disallowedChildren = "blockquote, ul, ol, li, h1, h2, h3, h4, h5, h6, div, p";
+                } else if (this.inlineBlockStylingCommands.includes(style.type)) {
+                    // For alignment and other types of inline block styling commands, disallowed children are all types of multi-line blocks, but not headers.
+                    var disallowedChildren = "blockquote, ul, ol, li, div, p";
                 }
-            }
-            fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
-            fixDisallowedChildrenOfNode(inlineBlockPair.node);
-
-            for (var node of fixedNodes) {
-                for (const style of inlineBlockPair.inlineBlockStyling) {
-                    const newElem = this.styleToElement(style);
-                    const marker = document.createTextNode("");
-                    node.after(marker);
-                    if (newElem.childNodes.length == 0) {
-                        newElem.appendChild(node);
+                function fixDisallowedChildrenOfNode(node) {
+                    if (node.nodeType == Node.ELEMENT_NODE && (disallowedChildren && (node.matches(disallowedChildren) || node.querySelector(disallowedChildren)))) {
+                        // Append the children instead.
+                        for (const child of node.childNodes) {
+                            fixDisallowedChildrenOfNode(child);
+                        }
                     } else {
-                        newElem.childNodes[0].appendChild(node);
+                        // Append the node.
+                        fixedNodes.push(node);
                     }
-                    marker.replaceWith(newElem);
-                    node = newElem;
                 }
+                fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
+                fixDisallowedChildrenOfNode(inlineBlockPair.node);
 
-                // Join the nodes.
-                if (lastStyled && lastStyle && lastStyled.nextSibling == node && lastStyle === inlineBlockPair.inlineBlockStyling) {
-                    lastStyled.append(...node.childNodes);
-                    node.remove();
-                } else {
-                    lastStyled = node;
-                    lastStyle = inlineBlockPair.inlineBlockStyling;
+                for (var node of fixedNodes) {
+                    // Sort the inline block styling so that the header styling is always on the inside.
+                    for (const style of inlineBlockPair.inlineBlockStyling) {
+                        const newElem = this.styleToElement(style);
+                        const marker = document.createTextNode("");
+                        node.after(marker);
+                        if (newElem.childNodes.length == 0) {
+                            newElem.appendChild(node);
+                        } else {
+                            newElem.childNodes[0].appendChild(node);
+                        }
+                        marker.replaceWith(newElem);
+                        node = newElem;
+                    }
+    
+                    // Join the nodes.
+                    if (lastStyled && lastStyle && lastStyled.nextSibling == node && lastStyle === inlineBlockPair.inlineBlockStyling) {
+                        lastStyled.append(...node.childNodes);
+                        node.remove();
+                    } else {
+                        lastStyled = node;
+                        lastStyle = inlineBlockPair.inlineBlockStyling;
+                    }
                 }
             }
         }
