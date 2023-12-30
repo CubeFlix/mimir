@@ -1187,10 +1187,13 @@ class Editor {
         }
 
         // If the only content node in the HTML is an img, select it.
-
         if (reconstructed.length == 1 && reconstructed[0].textContent == "") {
+            if (reconstructed[0].tagName == "IMG") {
+                select = null;
+                this.onNodeDrawn(reconstructed[0], function() {this.imageModule.select(reconstructed[0])}.bind(this));
+            }
             const contentTagsInReconstructed = reconstructed[0].querySelectorAll(this.contentTags.join(", "));
-            if (contentTagsInReconstructed.length == 1 && contentTagsInReconstructed[0].tagName == "IMG") {
+            if ((contentTagsInReconstructed.length == 1 && contentTagsInReconstructed[0].tagName == "IMG")) {
                 select = null;
                 this.onNodeDrawn(contentTagsInReconstructed[0], function() {this.imageModule.select(contentTagsInReconstructed[0])}.bind(this));
             }
@@ -4706,6 +4709,7 @@ class Editor {
     Bind a callback to when a node is drawn.
     */
     onNodeDrawn(n, callback) {
+        if (!ResizeObserver) {return;}
         new ResizeObserver(function(e, o) {
             if (e[0].contentRect.height == 0) {return;} 
             callback();
@@ -5232,6 +5236,8 @@ class Editor {
         if (this.history.length == 0) {
             this.saveHistory();
         }
+
+        this.imageModule.deselect();
     }
 
     /*
@@ -5261,6 +5267,8 @@ class Editor {
         if (this.editor.getElementsByClassName("editor-temp-cursor").length != 0) {
             this.currentCursor = this.editor.getElementsByClassName("editor-temp-cursor")[0];
         }
+
+        this.imageModule.deselect();
     }
 
     /*
