@@ -943,13 +943,30 @@ class Editor {
 
                 // If this tag is a header tag, replace it with a new DIV node.
                 if (["H1", "H2", "H3", "H4", "H5", "H6"].includes(child.tagName)) {
-                    const newNode = document.createElement("div");
+                    var newNode = document.createElement("div");
 
                     // Reconstruct the node's children.
                     const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
 
                     // Append the newly reconstructed nodes.
                     newNode.append(...reconstructedChildren);
+
+                    // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
+                    if (child.style.marginLeft || child.style.paddingLeft) {
+                        const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
+                        if (value.toLowerCase().endsWith("px")) {
+                            const pixels = parseInt(value.slice(0, -2));
+                            const numIndents = Math.floor(pixels / 40);
+                            // Wrap the element.
+                            for (var i = 0; i < numIndents; i++) {
+                                const newIndent = document.createElement("div");
+                                newIndent.style.marginLeft = "40px";
+                                newIndent.append(newNode);
+                                newNode = newIndent;
+                            }
+                        }
+                    }
+
                     reconstructed.push(newNode);
 
                     // Add this node to the list of cached inline block styles.
@@ -962,8 +979,27 @@ class Editor {
                     // Reconstruct the node's children.
                     const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
 
+                    var newNode = document.createElement("div");
+                    newNode.append(...reconstructedChildren);
+
+                    // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
+                    if (child.style.marginLeft || child.style.paddingLeft) {
+                        const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
+                        if (value.toLowerCase().endsWith("px")) {
+                            const pixels = parseInt(value.slice(0, -2));
+                            const numIndents = Math.floor(pixels / 40);
+                            // Wrap the element.
+                            for (var i = 0; i < numIndents; i++) {
+                                const newIndent = document.createElement("div");
+                                newIndent.style.marginLeft = "40px";
+                                newIndent.append(newNode);
+                                newNode = newIndent;
+                            }
+                        }
+                    }
+
                     // Append the newly reconstructed nodes.
-                    reconstructed.push(...reconstructedChildren);
+                    reconstructed.push(newNode);
                     continue;
                 }
 
@@ -993,7 +1029,7 @@ class Editor {
                 }
 
                 // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
-                if (["DIV", "P"].includes(child.tagName) && (child.style.marginLeft || child.style.paddingLeft)) {
+                if (child.style.marginLeft || child.style.paddingLeft) {
                     const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
                     if (value.toLowerCase().endsWith("px")) {
                         const pixels = parseInt(value.slice(0, -2));
@@ -1075,6 +1111,8 @@ class Editor {
                 }
                 fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
                 fixDisallowedChildrenOfNode(inlineBlockPair.node);
+
+                console.log(fragment.cloneNode(true))
 
                 for (var node of fixedNodes) {
                     // Sort the inline block styling so that the header styling is always on the inside.
