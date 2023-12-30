@@ -148,8 +148,9 @@ a rich text editor for javascript
 - [x] header nodes cannot be inside each other
 - [x] block style cannot be placed inside inline block style
 - [x] for some reason block style are removing block style divs
-- [ ] image cut copy and paste with selection
+- [x] image cut copy and paste with selection
 - [ ] image insert, drop and paste (reselect inserted image)
+- [ ] image button events (up, down, left, right arrow)
 - [ ] deserializeContent handle images
 - [ ] undo redo context menu grayed out
 - [ ] disallow pasting HTML option 

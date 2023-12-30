@@ -1173,6 +1173,16 @@ class Editor {
             return;
         }
 
+        // If the only content node in the HTML is an img, select it.
+
+        if (reconstructed.length == 1 && reconstructed[0].textContent == "") {
+            const contentTagsInReconstructed = reconstructed[0].querySelectorAll(this.contentTags.join(", "));
+            if (contentTagsInReconstructed.length == 1 && contentTagsInReconstructed[0].tagName == "IMG") {
+                select = null;
+                this.onNodeDrawn(contentTagsInReconstructed[0], function() {this.imageModule.select(contentTagsInReconstructed[0])}.bind(this));
+            }
+        }
+
         // Add each node.
         var currentLastNode = startNode;
         var firstNode = null;
@@ -1295,7 +1305,7 @@ class Editor {
             newRange.selectNodeContents(currentLastNode);
             newRange.collapse(false);
             return newRange;
-        } else {
+        } else if (select == "all") {
             const newRange = new Range();
             newRange.setStart(firstNode, 0);
             newRange.setEndAfter(currentLastNode);
@@ -4640,6 +4650,17 @@ class Editor {
     }
 
     /*
+    Bind a callback to when a node is drawn.
+    */
+    onNodeDrawn(n, callback) {
+        new ResizeObserver(function(e, o) {
+            if (e[0].contentRect.height == 0) {return;} 
+            callback();
+            o.disconnect();
+        }.bind(this)).observe(n);
+    }
+
+    /*
     Insert an image.
     */
     inlineInsertImage(style, range) {
@@ -4659,6 +4680,7 @@ class Editor {
         // Insert the image.
         range.insertNode(imgNode);
         document.getSelection().removeAllRanges();
+        this.onNodeDrawn(imgNode, function() {this.imageModule.select(imgNode)}.bind(this));
     }
 
     /*
