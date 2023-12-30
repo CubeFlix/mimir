@@ -885,6 +885,34 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
             document.getSelection().addRange(newRange);
             selectedImage.remove();
             deselectImage();
+        } else if (e.key == "ArrowLeft" && selectedImage && document.getSelection().rangeCount == 0) {
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            newRange.collapse(true);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            deselectImage();
+        } else if (e.key == "ArrowRight" && selectedImage && document.getSelection().rangeCount == 0) {
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            newRange.collapse(false);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            deselectImage();
+        } else if (e.key == "ArrowUp" && selectedImage && document.getSelection().rangeCount == 0) {
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            newRange.collapse(false);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            deselectImage();
+        } else if (e.key == "ArrowDown" && selectedImage && document.getSelection().rangeCount == 0) {
+            const newRange = new Range();
+            newRange.selectNode(selectedImage);
+            newRange.collapse(false);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            deselectImage();
         }
     });
 
