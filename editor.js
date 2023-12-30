@@ -979,11 +979,10 @@ class Editor {
                     // Reconstruct the node's children.
                     const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
 
-                    var newNode = document.createElement("div");
-                    newNode.append(...reconstructedChildren);
-
                     // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
                     if (child.style.marginLeft || child.style.paddingLeft) {
+                        var newNode = document.createElement("div");
+                        newNode.append(...reconstructedChildren);
                         const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
                         if (value.toLowerCase().endsWith("px")) {
                             const pixels = parseInt(value.slice(0, -2));
@@ -996,10 +995,13 @@ class Editor {
                                 newNode = newIndent;
                             }
                         }
+                        // Append the newly reconstructed nodes.
+                        reconstructed.push(newNode);
+                        continue;
                     }
 
                     // Append the newly reconstructed nodes.
-                    reconstructed.push(newNode);
+                    reconstructed.push(...reconstructedChildren);
                     continue;
                 }
 
@@ -1081,14 +1083,14 @@ class Editor {
         fragment.append(...withoutWhitespace);
 
         // Apply each cached inline block style.
-        var lastStyled = null;
-        var lastStyle = null;
         for (const inlineBlockPair of cachedInlineBlockStyles) {
             if (!fragment.contains(inlineBlockPair.node)) {
                 continue;
             }
 
             for (const style of inlineBlockPair.inlineBlockStyling) {
+                var lastStyled = null;
+
                 // Fix disallowed children of the node.
                 const fixedNodes = [];
                 if (style.type == "header") {
@@ -1127,12 +1129,11 @@ class Editor {
                     node = newElem;
     
                     // Join the nodes.
-                    if (lastStyled && lastStyle && lastStyled.nextSibling == node && lastStyle === inlineBlockPair.inlineBlockStyling && !this.blockTags.includes(oldNode.tagName)) {
+                    if (lastStyled && lastStyled.nextSibling == node && !this.blockTags.includes(oldNode.tagName)) {
                         lastStyled.append(...node.childNodes);
                         node.remove();
                     } else {
                         lastStyled = node;
-                        lastStyle = inlineBlockPair.inlineBlockStyling;
                     }
                 }
             }
