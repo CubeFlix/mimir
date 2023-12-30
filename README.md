@@ -150,7 +150,8 @@ a rich text editor for javascript
 - [x] for some reason block style are removing block style divs
 - [x] image cut copy and paste with selection
 - [x] image insert, drop and paste (reselect inserted image)
-- [ ] image button events (up, down, left, right arrow)
+- [x] H1 should be an override for font size
+- [x] image button events (up, down, left, right arrow)
 - [ ] deserializeContent handle images
 - [ ] undo redo context menu grayed out
 - [ ] disallow pasting HTML option 
@@ -184,6 +185,7 @@ a rich text editor for javascript
 - [x] make new block styling nodes go inside (this can be done during the fixDisallowedChildrenOfNode process, by entering block nodes (this could break joining, however))
 - [x] bug: when list styling `<p><p>abc</p></p><p><p>abc</p></p><p><p>abc</p></p>`, where all Ps have margin, uneven list ordering
 - [x] possibly join adjacent lists during indent
+- [ ] focus editor after selecting image
 - [ ] join adjacent lists during outdent
 - [ ] consider joining adjacent list nodes during indent, event at different levels. see `<ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol>`
 - [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css

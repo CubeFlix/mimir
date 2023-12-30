@@ -1112,8 +1112,6 @@ class Editor {
                 fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
                 fixDisallowedChildrenOfNode(inlineBlockPair.node);
 
-                console.log(fragment.cloneNode(true))
-
                 for (var node of fixedNodes) {
                     // Sort the inline block styling so that the header styling is always on the inside.
                     const oldNode = node;
@@ -2014,6 +2012,7 @@ class Editor {
             case "H5":
             case "H6":
                 styling.push({type: "header", level: node.tagName});
+                if (trackOverrides) styling.push({type: "override", target: {type: "size"}});
                 break;
             case "UL":
                 styling.push({type: "list", listType: "unordered"});
