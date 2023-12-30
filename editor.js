@@ -1078,21 +1078,20 @@ class Editor {
 
                 for (var node of fixedNodes) {
                     // Sort the inline block styling so that the header styling is always on the inside.
-                    for (const style of inlineBlockPair.inlineBlockStyling) {
-                        const newElem = this.styleToElement(style);
-                        const marker = document.createTextNode("");
-                        node.after(marker);
-                        if (newElem.childNodes.length == 0) {
-                            newElem.appendChild(node);
-                        } else {
-                            newElem.childNodes[0].appendChild(node);
-                        }
-                        marker.replaceWith(newElem);
-                        node = newElem;
+                    const oldNode = node;
+                    const newElem = this.styleToElement(style);
+                    const marker = document.createTextNode("");
+                    node.after(marker);
+                    if (newElem.childNodes.length == 0) {
+                        newElem.appendChild(node);
+                    } else {
+                        newElem.childNodes[0].appendChild(node);
                     }
+                    marker.replaceWith(newElem);
+                    node = newElem;
     
                     // Join the nodes.
-                    if (lastStyled && lastStyle && lastStyled.nextSibling == node && lastStyle === inlineBlockPair.inlineBlockStyling) {
+                    if (lastStyled && lastStyle && lastStyled.nextSibling == node && lastStyle === inlineBlockPair.inlineBlockStyling && !this.blockTags.includes(oldNode.tagName)) {
                         lastStyled.append(...node.childNodes);
                         node.remove();
                     } else {
