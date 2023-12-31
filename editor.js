@@ -908,8 +908,6 @@ class Editor {
                             child.style.width = oldChild.getAttribute("width") + "px";
                         } else if (oldChild.style.width) {
                             child.style.width = oldChild.style.width;
-                        } else {
-                            child.style.width = this.defaultImageWidth;
                         }
                         if (oldChild.getAttribute("height")) {
                             child.style.height = oldChild.getAttribute("height") + "px";
@@ -1023,12 +1021,15 @@ class Editor {
                     // Reconstruct the node's children.
                     const reconstructedChildren = this.reconstructNodeContents(child, parent, cachedInlineBlockStyles, removeExtraneousWhitespaceOnChildren);
 
+                    const blockTags = "address, article, aside, blockquote, canvas, dd, div, dl, dt, tr, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, p, pre, section, table, tfoot, ul, video".toUpperCase().split(", ");
+
                     // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
-                    if (child.style.marginLeft || child.style.paddingLeft) {
+                    // Also handle block tags.
+                    if (blockTags.includes(child.tagName.toUpperCase())) {
                         var newNode = document.createElement("div");
                         newNode.append(...reconstructedChildren);
                         const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
-                        if (value.toLowerCase().endsWith("px")) {
+                        if (value && value.toLowerCase().endsWith("px")) {
                             const pixels = parseInt(value.slice(0, -2));
                             const numIndents = Math.floor(pixels / 40);
                             // Wrap the element.

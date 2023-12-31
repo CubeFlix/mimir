@@ -966,5 +966,18 @@ EditorUI.findAndReplace = (editor, onEdit) => {
         ui.style.display = "none";
     }
 
-    return {open: open};
+    const closeButton = document.createElement("button");
+    closeButton.innerHTML = "X";
+    closeButton.addEventListener("click", close);
+    ui.append(closeButton);
+
+    function findInEditor(re) {
+        const aggregate = editor.textContent.split("\u00A0").join(" ");
+        const matches = aggregate.matchAll(re);
+        for (const match of matches) {
+            console.log(match);
+        }
+    }
+
+    return {open: open, close: close, find: findInEditor};
 }
