@@ -4372,7 +4372,7 @@ class Editor {
     */
     joinAdjacentNestedListsRight(node) {
         // Join the last list rightwards.
-        if (node && node.nextSibling && ["OL", "UL"].includes(node.tagName) && node.nextSibling.tagName && node.tagName) {
+        if (node && node.nextSibling && ["OL", "UL"].includes(node.tagName) && node.nextSibling.tagName == node.tagName) {
             // Join.
             const nodeSibling = node.nextSibling;
             node.nextSibling.prepend(...node.childNodes);
