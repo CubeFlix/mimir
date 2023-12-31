@@ -180,6 +180,7 @@ a rich text editor for javascript
 - [ ] text indent (possibly)
 - [ ] equations (possibly)
 - [ ] table (possibly)
+- [ ] when converting indent to list, create invisible lists to preserve indent
 - [ ] special characters
 - [x] `sup`
 - [x] `pre`

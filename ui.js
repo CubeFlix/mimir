@@ -981,11 +981,17 @@ EditorUI.findAndReplace = (editor, onEdit) => {
             var currentNode = editor.firstChild;
             var currentOffset = 0;
             const matchNodes = [];
-            // while (!(currentNode.tagName ))
+            while (!(currentNode.nodeType == Node.TEXT_NODE && currentNode.data.length + currentOffset > end)) {
+                if (currentNode.textContent) {};
+
+                if (currentNode.nextNeighbor) {currentNode = currentNode.nextNeighbor};
+
+            }
         }
 
         for (const match of matches) {
             console.log(match);
+            matchGroups.push(findNodesOfOffset(match.start, match.end));
         }
     }
 

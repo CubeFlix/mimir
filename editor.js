@@ -3602,7 +3602,9 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName)) {
+        console.log(endContainer, endOffset)
+
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer)/* && !this.childlessTags.includes(endContainer.tagName)*/) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
@@ -3809,6 +3811,15 @@ class Editor {
             } else {
                 endContainer = endContainer.childNodes[endOffset - 1];
                 endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+                // if (endContainer.nodeType == Node.ELEMENT_NODE) {
+                //     if (this.childlessTags.includes(endContainer.tagName)) {
+                //         endOffset = 1;
+                //     } else {
+                //         endOffset = endContainer.childNodes.length;
+                //     }
+                // } else {
+                //     endOffset = endContainer.textContent.length;
+                // }
             }
         }
 
