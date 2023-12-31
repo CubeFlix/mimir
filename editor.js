@@ -932,6 +932,10 @@ class Editor {
                                 child.textContent = child.textContent.slice(0, child.textContent.length - 1);
                             }
                         }
+                        
+                        if (child.textContent == "") {
+                            continue;
+                        }
 
                         // Trim whitespace on left. Only trim if the node on the left ends with a space.
                         // const leftSibling = this.leftSibling(child);
@@ -955,12 +959,16 @@ class Editor {
                         const lines = child.textContent.split(/\r?\n|\r|\n/g);
 
                         var newTextNode = this.addStylingToNode(document.createTextNode(lines[0]), styling);
-                        reconstructed.push(newTextNode);
+                        if (newTextNode.textContent != "") reconstructed.push(newTextNode);
 
                         for (const line of lines.slice(1)) {
                             const newBrNode = document.createElement("br");
                             newTextNode = this.addStylingToNode(document.createTextNode(line), styling);
-                            reconstructed.push(newBrNode, newTextNode);
+                            if (newTextNode.textContent != "") {
+                                reconstructed.push(newBrNode, newTextNode);
+                            } else {
+                                reconstructed.push(newBrNode);
+                            }
                         }
                     } else {
                         child = this.addStylingToNode(child, styling);
@@ -1192,6 +1200,19 @@ class Editor {
                     }
                 }
             }
+        }
+
+        // Remove extraneous DIV/P nodes.
+        const divs = fragment.querySelectorAll("div, p");
+        const extraneous = [];
+        for (const div of divs) {
+            if (!div.getAttribute("style") && Array.from(div.childNodes).every((n) => (this.blockTags.includes(n.tagName) || n.textContent == ""))) {
+                extraneous.push(div);
+            }
+        }
+        for (const div of extraneous) {
+            div.after(...div.childNodes);
+            div.remove();
         }
 
         return Array.from(fragment.childNodes);
@@ -2826,6 +2847,7 @@ class Editor {
 
         // Remove empty nodes.
         if (this.isEmpty(parent)) parent.remove();
+        marker.remove();
 
         return currentReconstructedNode;
     }
@@ -3582,7 +3604,9 @@ class Editor {
     Check if a boundary point is a valid block end point.
     */
     isValidBlockEndPoint(endContainer, endOffset) {
-        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]) || (endContainer.childNodes[endOffset - 1] && this.isValidBlockNode(endContainer.childNodes[endOffset - 1]))) {
+        var previousSibling = endContainer.childNodes[endOffset]?.previousSibling;
+        while (previousSibling && previousSibling.nodeType == Node.TEXT_NODE && previousSibling.textContent == "") {previousSibling = previousSibling.previousSibling};
+        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]) || (previousSibling && this.isValidBlockNode(previousSibling))) {
             if ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0) {
                 return true;
             } else {
@@ -3602,7 +3626,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer)/* && !this.childlessTags.includes(endContainer.tagName)*/) {
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName)) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
@@ -3781,7 +3805,7 @@ class Editor {
     */
     adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset) {
         // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(startContainer.tagName) && !startContainer.tagName != "SPAN") {
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(startContainer.tagName) && startContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (startContainer.childNodes.length == 0) {
                 break;
@@ -3797,15 +3821,22 @@ class Editor {
         }
 
         // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(endContainer.tagName) && !endContainer.tagName == "SPAN") {
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (endContainer.childNodes.length == 0) {
                 break;
             }
 
             if (endOffset == 0) {
-                endContainer = endContainer.childNodes[endOffset];
-                endOffset = 0;
+                if (this.childlessTags.includes(endContainer.childNodes[0].tagName)) {
+                    const marker = document.createTextNode("");
+                    endContainer.prepend(marker);
+                    endContainer = marker;
+                    endOffset = 0;
+                } else {
+                    endContainer = endContainer.childNodes[endOffset];
+                    endOffset = 0;
+                }
             } else {
                 endContainer = endContainer.childNodes[endOffset - 1];
                 endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
@@ -3916,15 +3947,17 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        this.imageModule.deselect();
+
         const shouldJoin = !this.inlineBlockStylingCommands.includes(style.type);
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
-
-        // Block extend the range.
-        const blockExtended = this.blockExtendRange(range);
         
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
@@ -4164,13 +4197,15 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        this.imageModule.deselect();
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range);
+
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
-
-        // Block extend the range.
-        const blockExtended = this.blockExtendRange(range, true);
 
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
@@ -4267,22 +4302,16 @@ class Editor {
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
+        
+        this.imageModule.deselect();
 
-        // If the end offset is at the start of a node, move it up.
-        if (endOffset == 0 && endContainer != this.editor) {
-            while (endOffset == 0 && endContainer != this.editor) {
-                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
-                endContainer = endContainer.parentNode;
-            }
-        }
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
-
-        // Block extend the range.
-        const blockExtended = this.blockExtendRange(range, true);
         
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
@@ -4441,6 +4470,7 @@ class Editor {
                     }
                 }
                 marker.before(...elements);
+                marker.remove();
                 // No need to store the first and last indented nodes.
             } else if (["OL", "UL"].includes(clone.tagName)) {
                 // List indentation.
@@ -4497,14 +4527,16 @@ class Editor {
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
+        
+        this.imageModule.deselect();
+
+        // Block extend the range.
+        const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
         range.setStart(startContainer, startOffset);
         range.setEnd(endContainer, endOffset);
-
-        // Block extend the range.
-        const blockExtended = this.blockExtendRange(range);
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
@@ -4748,14 +4780,16 @@ class Editor {
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
-
-        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
         
-        range.setStart(startContainer, startOffset);
-        range.setEnd(endContainer, endOffset);
+        this.imageModule.deselect();
 
         // Block extend the range.
         const blockExtended = this.blockExtendRange(range);
+
+        [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
+
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);

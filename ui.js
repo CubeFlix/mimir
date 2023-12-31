@@ -849,7 +849,7 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
         }
     });
     window.addEventListener("mousedown", (e) => {
-        if (!editor.contains(e.target) && !ui.contains(e.target)) {
+        if (!editor.parentNode.contains(e.target) && !ui.contains(e.target)) {
             deselectImage();
         }
     });

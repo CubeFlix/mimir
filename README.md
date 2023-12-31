@@ -158,6 +158,8 @@ a rich text editor for javascript
 - [x] backspace cursor is not re-inserting BR
 - [x] insertParagraph in an empty blockquote should remove the blockquote
 - [x] block extending range is passing by childless img node
+- [x] bugs with block end point
+- [ ] bugs with indenting list removing list? (indent creating extra LI and removing content)
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
 - [ ] re-select image after block/inline styling it
