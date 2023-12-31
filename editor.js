@@ -1074,6 +1074,16 @@ class Editor {
                 if (child.tagName == "LI" && child.style.listStyleType) {
                     newNode.style.listStyleType = child.style.listStyleType;
                 }
+                if (child.tagName == "LI" && child.style.listStyle && child.style.listStyle.split(" ").length > 0) {
+                    newNode.style.listStyleType = child.style.listStyle.split(" ")[0];
+                }
+                if (["UL", "OL"].includes(child.tagName) && child.style.listStyleType) {
+                    reconstructedChildren.forEach((c) => {c.style.listStyleType = child.style.listStyleType});
+                }
+                if (["UL", "OL"].includes(child.tagName) && child.style.listStyle && child.style.listStyle.split(" ").length > 0) {
+                    const listStyle = child.style.listStyle.split(" ")[0];
+                    reconstructedChildren.forEach((c) => {c.style.listStyleType = listStyle});
+                }
 
                 // If the node was a simple indenting node, apply the node style (simple indenting isn't a inline block style, which is why its added here).
                 if (child.style.marginLeft || child.style.paddingLeft) {
