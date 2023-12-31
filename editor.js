@@ -3582,7 +3582,7 @@ class Editor {
     Check if a boundary point is a valid block end point.
     */
     isValidBlockEndPoint(endContainer, endOffset) {
-        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset])) {
+        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]) || (endContainer.childNodes[endOffset - 1] && this.isValidBlockNode(endContainer.childNodes[endOffset - 1]))) {
             if ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0) {
                 return true;
             } else {
@@ -3601,8 +3601,6 @@ class Editor {
         var startOffset = range.startOffset;
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
-
-        console.log(endContainer, endOffset)
 
         if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer)/* && !this.childlessTags.includes(endContainer.tagName)*/) {
             // If the end offset is at the start of a node, move it up.
@@ -3783,7 +3781,7 @@ class Editor {
     */
     adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset) {
         // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)) {
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(startContainer.tagName) && !startContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (startContainer.childNodes.length == 0) {
                 break;
@@ -3799,7 +3797,7 @@ class Editor {
         }
 
         // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName)) {
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(endContainer.tagName) && !endContainer.tagName == "SPAN") {
             // If there are no children of this node, exit.
             if (endContainer.childNodes.length == 0) {
                 break;
@@ -3811,15 +3809,6 @@ class Editor {
             } else {
                 endContainer = endContainer.childNodes[endOffset - 1];
                 endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-                // if (endContainer.nodeType == Node.ELEMENT_NODE) {
-                //     if (this.childlessTags.includes(endContainer.tagName)) {
-                //         endOffset = 1;
-                //     } else {
-                //         endOffset = endContainer.childNodes.length;
-                //     }
-                // } else {
-                //     endOffset = endContainer.textContent.length;
-                // }
             }
         }
 
