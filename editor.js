@@ -3602,8 +3602,9 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer)) {
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName)) {
             // If the end offset is at the start of a node, move it up.
+            // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
                 endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
                 endContainer = endContainer.parentNode;
@@ -4170,7 +4171,7 @@ class Editor {
 
         // Block extend the range.
         const blockExtended = this.blockExtendRange(range, true);
-        
+
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
 

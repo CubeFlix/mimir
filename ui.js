@@ -972,8 +972,18 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     ui.append(closeButton);
 
     function findInEditor(re) {
+        if (!editor.firstChild) {return;}
         const aggregate = editor.textContent.split("\u00A0").join(" ");
         const matches = aggregate.matchAll(re);
+        const matchGroups = [];
+
+        function findNodesOfOffset(start, end) {
+            var currentNode = editor.firstChild;
+            var currentOffset = 0;
+            const matchNodes = [];
+            // while (!(currentNode.tagName ))
+        }
+
         for (const match of matches) {
             console.log(match);
         }
