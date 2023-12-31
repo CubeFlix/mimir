@@ -160,6 +160,7 @@ a rich text editor for javascript
 - [x] block extending range is passing by childless img node
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
+- [ ] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
 - [ ] copy paste buttons
