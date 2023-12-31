@@ -1184,7 +1184,7 @@ class Editor {
                     node = newElem;
     
                     // Join the nodes.
-                    if (lastStyled && lastStyled.nextSibling == node && !this.blockTags.includes(oldNode.tagName)) {
+                    if (lastStyled && lastStyled.nextSibling == node && !this.blockTags.filter(t => t != "BR").includes(oldNode.tagName)) {
                         lastStyled.append(...node.childNodes);
                         node.remove();
                     } else {
@@ -3988,7 +3988,7 @@ class Editor {
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
             if (!firstStyled) firstStyled = styledNode;
             if (lastStyled && lastStyled.nextSibling == styledNode) {
-                if (!shouldJoin && this.blockTags.includes(node.tagName)) {
+                if (!shouldJoin && this.blockTags.filter(t => t != "BR").includes(node.tagName)) { // Don't join block tags, but do join BR nodes.
                     // If shouldJoin is false, we only want to join inline nodes. Therefore, if the current node is not inline, don't join it.
                     lastStyled = styledNode;
                 } else {
@@ -4180,7 +4180,7 @@ class Editor {
         var lastNode = null;
         for (const node of nodes) {
             // First, check if we should join the nodes. Don't join if the current node is a block node. This is purely for inline nodes that have been separated.
-            const shouldJoin = lastNodeNextSibling && lastNode && lastNodeNextSibling == node && (!this.blockTags.includes(node.tagName));
+            const shouldJoin = lastNodeNextSibling && lastNode && lastNodeNextSibling == node && (!this.blockTags.filter(t => t != "BR").includes(node.tagName));
             lastNodeNextSibling = node.nextSibling;
 
             const styledNode = this.removeBlockStyleOnNode(node, style, removeAllParents);
