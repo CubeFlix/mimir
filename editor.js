@@ -4193,6 +4193,10 @@ class Editor {
                 // Remove the original node.
                 parentNode.remove();
             }
+            if (parentNode.lastChild != this.editor && this.isEmpty(parentNode.lastChild)) {
+                // Remove the original node.
+                parentNode.lastChild.remove();
+            }
             if (splitAfterNode != this.editor && this.isEmpty(splitAfterNode)) {
                 // Remove the split after node.
                 splitAfterNode.remove();
