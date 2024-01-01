@@ -3626,7 +3626,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName)) {
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(endContainer.childNodes[0] && endContainer.childNodes[0].tagName == "BR")) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
@@ -3828,7 +3828,7 @@ class Editor {
             }
 
             if (endOffset == 0) {
-                if (this.childlessTags.includes(endContainer.childNodes[0].tagName)) {
+                if (this.childlessTags.includes(endContainer.childNodes[0].tagName) && endContainer.childNodes[0].tagName != "BR") {
                     const marker = document.createTextNode("");
                     endContainer.prepend(marker);
                     endContainer = marker;
