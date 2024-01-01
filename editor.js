@@ -3815,6 +3815,26 @@ class Editor {
     Adjust the start and end points of a range to be relative to inline nodes.
     */
     adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset) {
+        // Push endOffset back if the current node is a empty node.
+        while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+            if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
+            endOffset -= 1;
+        }
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(endContainer.childNodes[0] && endContainer.childNodes[0].tagName == "BR")) {
+            // If the end offset is at the start of a node, move it up.
+            // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
+            while (endOffset == 0 && endContainer != this.editor) {
+                endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                endContainer = endContainer.parentNode;
+
+                // Push endOffset back if the current node is a empty node.
+                while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+                    if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
+                    endOffset -= 1;
+                }
+            }
+        }
+
         // Adjust the start point so that it is always relative to inline nodes.
         while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName) && !this.inlineStylingTags.includes(startContainer.tagName) && startContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
