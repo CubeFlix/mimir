@@ -3605,7 +3605,7 @@ class Editor {
     */
     isValidBlockEndPoint(endContainer, endOffset) {
         var previousSibling = endContainer.childNodes[endOffset]?.previousSibling;
-        while (previousSibling && previousSibling.nodeType == Node.TEXT_NODE && previousSibling.textContent == "") {previousSibling = previousSibling.previousSibling};
+        while (previousSibling && this.isEmpty(previousSibling)) {previousSibling = previousSibling.previousSibling};
         if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]) || (previousSibling && this.isValidBlockNode(previousSibling))) {
             if ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0) {
                 return true;
@@ -3626,12 +3626,23 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        // Push endOffset back if the current node is a empty node.
+        while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+            if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
+            endOffset -= 1;
+        }
         if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(endContainer.childNodes[0] && endContainer.childNodes[0].tagName == "BR")) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
                 endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
                 endContainer = endContainer.parentNode;
+
+                // Push endOffset back if the current node is a empty node.
+                while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+                    if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
+                    endOffset -= 1;
+                }
             }
         }
 
