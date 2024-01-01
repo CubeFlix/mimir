@@ -3618,6 +3618,17 @@ class Editor {
     }
 
     /*
+    Get the first childless child of a node.
+    */
+    firstChildlessChild(node) {
+        const original = node;
+        while (node.firstChild) {
+            node = node.firstChild;
+        }
+        return node;
+    }
+
+    /*
     Block extend a range.
     */
     blockExtendRange(range, ascendAncestors = true) {
@@ -3631,7 +3642,7 @@ class Editor {
             if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
             endOffset -= 1;
         }
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(endContainer.childNodes[0] && endContainer.childNodes[0].tagName == "BR")) {
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(this.firstChildlessChild(endContainer) && this.firstChildlessChild(endContainer).tagName == "BR")) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
@@ -3749,8 +3760,10 @@ class Editor {
             }
         }
 
+        console.log(currentNode);
+
         // Check if the whole node is within the range.
-        if (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length)) {
+        if (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length) && !this.childlessTags.includes(currentNode.tagName)) {
             // The node isn't fully contained within the range. If there are children, move to the first child.
             if (currentNode.childNodes.length != 0 && range.intersectsNode(currentNode)) {
                 // Continually move to the first child until the node is fully intersected within the range.
@@ -3763,7 +3776,7 @@ class Editor {
             } else {
                 return nodes;
             }
-        } else if (currentNode.nodeType == Node.TEXT_NODE && !range.intersectsNode(currentNode)) {
+        } else if (currentNode.nodeType == Node.TEXT_NODE && !range.intersectsNode(currentNode) && !this.childlessTags.includes(currentNode.tagName)) {
             // The node isn't contained within the range.
             return nodes;
         }
@@ -3820,7 +3833,7 @@ class Editor {
             if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
             endOffset -= 1;
         }
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(endContainer.childNodes[0] && endContainer.childNodes[0].tagName == "BR")) {
+        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(this.firstChildlessChild(endContainer) && this.firstChildlessChild(endContainer).tagName == "BR")) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
@@ -3963,6 +3976,89 @@ class Editor {
     }
 
     /*
+    Remove extraneous parents of a list of nodes. This will force certain nodes to be extraneous, if possible. 
+    */
+    removeExtraneousParents(nodes) {
+        // Remove extraneous parent, if possible.
+        const nodesWithoutExtraneousParents = [];
+        function removeExtraneousNodeIfPossible(node) {
+            if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.includes(n.tagName)) && !node.getAttribute("style")) {
+                // The node contains at least one block tag. Make it extraneous by forcing all the children into DIVs and joining inline nodes.
+                const originalChildren = Array.from(node.childNodes);
+                const children = [];
+                while (originalChildren.length > 0) {
+                    const child = originalChildren.shift();
+                    if (this.blockTags.includes(child.tagName)) {
+                        children.push(child);
+                    } else {
+                        const newDiv = document.createElement("div");
+                        newDiv.append(child);
+                        while (originalChildren[0] && !this.blockTags.includes(originalChildren[0].tagName)) {
+                            const inlineChild = originalChildren.shift();
+                            newDiv.append(inlineChild);
+                        }
+                        children.push(newDiv);
+                    }
+                }
+                nodesWithoutExtraneousParents.push(...children);
+                node.after(...children);
+                node.remove();
+            } else {
+                nodesWithoutExtraneousParents.push(node);
+            }
+        }
+        removeExtraneousNodeIfPossible = removeExtraneousNodeIfPossible.bind(this);
+        nodes.forEach(removeExtraneousNodeIfPossible);
+        return nodesWithoutExtraneousParents;
+    }
+
+    /*
+    Remove extraneous parents within a node. This will force certain nodes to be extraneous, if possible. 
+    This function works recursively and removes all extraneous nodes within node.
+    */
+    removeExtraneousParentsRecursively(parent) {
+        // Remove extraneous parent, if possible.
+        const marker = document.createTextNode("");
+        parent.after(marker);
+        parent.remove();
+        function removeExtraneousNodeIfPossible(node) {
+            if (!node.firstChild) {return;}
+
+            if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.includes(n.tagName)) && !node.getAttribute("style")) {
+                // The node contains at least one block tag. Make it extraneous by forcing all the children into DIVs and joining inline nodes.
+                const originalChildren = Array.from(node.childNodes);
+                const children = [];
+                while (originalChildren.length > 0) {
+                    const child = originalChildren.shift();
+                    if (this.blockTags.includes(child.tagName)) {
+                        children.push(child);
+                    } else {
+                        const newDiv = document.createElement("div");
+                        newDiv.append(child);
+                        while (originalChildren[0] && !this.blockTags.includes(originalChildren[0].tagName)) {
+                            const inlineChild = originalChildren.shift();
+                            newDiv.append(inlineChild);
+                        }
+                        children.push(newDiv);
+                    }
+                }
+                node.after(...children);
+                node.remove();
+                for (const child of children) {
+                    if (child.nodeType == Node.ELEMENT_NODE && (child.querySelector("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])") || child.matches("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])"))) removeExtraneousNodeIfPossible(child);
+                }
+            } else {
+                for (const child of Array.from(node.childNodes)) {
+                    if (child.nodeType == Node.ELEMENT_NODE && (child.querySelector("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])") || child.matches("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])"))) removeExtraneousNodeIfPossible(child);
+                }
+            }
+        }
+        removeExtraneousNodeIfPossible = removeExtraneousNodeIfPossible.bind(this);
+        Array.from(parent.childNodes).forEach(removeExtraneousNodeIfPossible);
+        marker.replaceWith(parent);
+    }
+
+    /*
     Apply a block style to a range.
     */
     applyBlockStyle(style, range) {
@@ -3994,6 +4090,9 @@ class Editor {
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
 
+        const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
+        console.log(nodesWithoutExtraneousParents);
+
         // Fix disallowed children. Inline block styles need to be applied on a line-by-line basis, so all multi-line blocks (P, DIV, etc.) need to be removed.
         const fixedNodes = [];
         if (style.type == "header") {
@@ -4018,7 +4117,7 @@ class Editor {
             }
         }
         fixDisallowedChildrenOfNode = fixDisallowedChildrenOfNode.bind(this);
-        for (const node of nodes) {
+        for (const node of nodesWithoutExtraneousParents) {
             fixDisallowedChildrenOfNode(node);
         }
 
@@ -4079,9 +4178,13 @@ class Editor {
             }
         }
 
+        // In order to aid with joining, remove extraneous nodes on the common editor.
+        this.removeExtraneousParentsRecursively(this.editor);
+
         // See if the first node and last node can be joined.
         if (style.type == "list") {
-            if (firstStyled.previousSibling?.tagName == firstStyled.tagName) {
+            // TODO: handle empty nodes
+            if (firstStyled?.previousSibling?.tagName == firstStyled?.tagName) {
                 // Join.
                 const previousSibling = firstStyled.previousSibling;
                 previousSibling.append(...firstStyled.childNodes);
@@ -4089,7 +4192,7 @@ class Editor {
                 if (lastStyled == firstStyled) lastStyled = previousSibling;
                 firstStyled = previousSibling;
             }
-            if (lastStyled.nextSibling?.tagName == lastStyled.tagName) {
+            if (lastStyled?.nextSibling?.tagName == lastStyled?.tagName) {
                 // Join.
                 const nextSibling = lastStyled.nextSibling;
                 nextSibling.prepend(...lastStyled.childNodes);
@@ -4251,10 +4354,12 @@ class Editor {
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
 
+        const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
+
         // Style the nodes.
         var lastNodeNextSibling = null;
         var lastNode = null;
-        for (const node of nodes) {
+        for (const node of nodesWithoutExtraneousParents) {
             // First, check if we should join the nodes. Don't join if the current node is a block node. This is purely for inline nodes that have been separated.
             const shouldJoin = lastNodeNextSibling && lastNode && lastNodeNextSibling == node && (!this.blockTags.filter(t => t != "BR").includes(node.tagName));
             lastNodeNextSibling = node.nextSibling;
@@ -4592,6 +4697,8 @@ class Editor {
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
 
+        const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
+
         // If possible, get inner children.
         const fixedNodes = [];
         function getInnerChildren(node) {
@@ -4607,7 +4714,7 @@ class Editor {
             }
         }
         getInnerChildren = getInnerChildren.bind(this);
-        for (const node of nodes) {
+        for (const node of nodesWithoutExtraneousParents) {
             getInnerChildren(node);
         }
 
@@ -4850,6 +4957,8 @@ class Editor {
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
 
+        const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
+
         // If possible, get inner children.
         const fixedNodes = [];
         function getInnerChildren(node) {
@@ -4865,7 +4974,7 @@ class Editor {
             }
         }
         getInnerChildren = getInnerChildren.bind(this);
-        for (const node of nodes) {
+        for (const node of nodesWithoutExtraneousParents) {
             getInnerChildren(node);
         }
 

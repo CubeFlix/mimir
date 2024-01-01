@@ -160,6 +160,7 @@ a rich text editor for javascript
 - [x] block extending range is passing by childless img node
 - [x] bugs with block end point
 - [x] bugs with indenting list removing list? (indent creating extra LI and removing content)
+- [ ] bug with `<div>abc</div><br>`
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
 - [ ] re-select image after block/inline styling it
@@ -212,6 +213,8 @@ a rich text editor for javascript
 - [ ] make single backspace/delete cursor feature work with images (or not)
 - [ ] figure out issue with whitespace trimming
 - [ ] paste plaintext (add cursor support)
+- [ ] make removeExtraneousParents work recursively (handle `<div><div>abc<div>abc</div>abc</div></div>abc`)
+- [ ] handle empty nodes when joining lists in applyBlockStyle
 
 ## good editors
 
