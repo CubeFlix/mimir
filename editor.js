@@ -3852,7 +3852,7 @@ class Editor {
         }
 
         // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)&& !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName) && !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (endContainer.childNodes.length == 0) {
                 break;
@@ -3978,6 +3978,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        var imageToReselect = this.imageModule.getSelected();
         this.imageModule.deselect();
 
         const shouldJoin = !this.inlineBlockStylingCommands.includes(style.type);
@@ -4097,6 +4098,10 @@ class Editor {
             }
         }
 
+        if (imageToReselect) {
+            this.imageModule.select(imageToReselect);
+            return;
+        }
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
         newRange.setEnd(endContainer, endOffset);
@@ -4228,6 +4233,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
 
+        var imageToReselect = this.imageModule.getSelected();
         this.imageModule.deselect();
 
         // Block extend the range.
@@ -4260,6 +4266,10 @@ class Editor {
             }
         }
 
+        if (imageToReselect) {
+            this.imageModule.select(imageToReselect);
+            return;
+        }
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
         newRange.setEnd(endContainer, endOffset);
@@ -4334,6 +4344,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
         
+        var imageToReselect = this.imageModule.getSelected();
         this.imageModule.deselect();
 
         // Block extend the range.
@@ -4354,6 +4365,10 @@ class Editor {
             this.replaceListsOnNode(node, oldStyle, style);
         }
 
+        if (imageToReselect) {
+            this.imageModule.select(imageToReselect);
+            return;
+        }
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
         newRange.setEnd(endContainer, endOffset);
@@ -4559,6 +4574,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
         
+        var imageToReselect = this.imageModule.getSelected();
         this.imageModule.deselect();
 
         // Block extend the range.
@@ -4605,6 +4621,10 @@ class Editor {
 
         this.joinAdjacentNestedListsRight(lastIndented);
 
+        if (imageToReselect) {
+            this.imageModule.select(imageToReselect);
+            return;
+        }
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
         newRange.setEnd(endContainer, endOffset);
@@ -4812,6 +4832,7 @@ class Editor {
         var endContainer = range.endContainer;
         var endOffset = range.endOffset;
         
+        var imageToReselect = this.imageModule.getSelected();
         this.imageModule.deselect();
 
         // Block extend the range.
@@ -4858,6 +4879,10 @@ class Editor {
 
         // TODO: join
 
+        if (imageToReselect) {
+            this.imageModule.select(imageToReselect);
+            return;
+        }
         const newRange = new Range();
         newRange.setStart(startContainer, startOffset);
         newRange.setEnd(endContainer, endOffset);
