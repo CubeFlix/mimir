@@ -3805,7 +3805,7 @@ class Editor {
     */
     adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset) {
         // Adjust the start point so that it is always relative to inline nodes.
-        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(startContainer.tagName) && startContainer.tagName != "SPAN") {
+        while (startContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName) && !this.inlineStylingTags.includes(startContainer.tagName) && startContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (startContainer.childNodes.length == 0) {
                 break;
@@ -3821,7 +3821,7 @@ class Editor {
         }
 
         // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
+        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(startContainer.tagName)&& !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (endContainer.childNodes.length == 0) {
                 break;
