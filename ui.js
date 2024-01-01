@@ -981,18 +981,40 @@ EditorUI.findAndReplace = (editor, onEdit) => {
             var currentNode = editor.firstChild;
             var currentOffset = 0;
             const matchNodes = [];
-            while (!(currentNode.nodeType == Node.TEXT_NODE && currentNode.data.length + currentOffset > end)) {
-                if (currentNode.textContent) {};
+            while (currentOffset < end) {
+                if (currentOffset <= start && currentOffset + currentNode.textContent.length > start) {
+                    if (currentNode.nodeType == Node.TEXT_NODE) {
+                        matchNodes.push(currentNode);
+                    } else {
+                        if (currentNode.firstChild) {
+                            currentNode = currentNode.firstChild;
+                            currentOffset += currentNode.textContent;
+                            continue;
+                        }
+                    }
+                }
 
-                if (currentNode.nextNeighbor) {currentNode = currentNode.nextNeighbor};
-
+                currentOffset += currentNode.textContent;
+                if (currentNode.nextNeighbor) {
+                    currentNode = currentNode.nextNeighbor
+                } else {
+                    while (!currentNode.nextNeighbor) {
+                        currentNode = currentNode.parentNode;
+                        if (currentNode == editor) {
+                            return matchNodes;
+                        }
+                        currentNode = currentNode.nextNeighbor;
+                    }
+                };
             }
+            return matchNodes;
         }
 
         for (const match of matches) {
             console.log(match);
-            matchGroups.push(findNodesOfOffset(match.start, match.end));
+            matchGroups.push(findNodesOfOffset(match.index, match.index + match[0].length));
         }
+        console.log(matchGroups);
     }
 
     return {open: open, close: close, find: findInEditor};

@@ -1006,7 +1006,7 @@ class Editor {
                         const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
                         if (value.toLowerCase().endsWith("px")) {
                             const pixels = parseInt(value.slice(0, -2));
-                            const numIndents = Math.floor(pixels / 40);
+                            const numIndents = Math.ceil(pixels / 40);
                             // Wrap the element.
                             for (var i = 0; i < numIndents; i++) {
                                 const newIndent = document.createElement("div");
@@ -1039,7 +1039,7 @@ class Editor {
                         const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
                         if (value && value.toLowerCase().endsWith("px")) {
                             const pixels = parseInt(value.slice(0, -2));
-                            const numIndents = Math.floor(pixels / 40);
+                            const numIndents = Math.ceil(pixels / 40);
                             // Wrap the element.
                             for (var i = 0; i < numIndents; i++) {
                                 const newIndent = document.createElement("div");
@@ -1098,7 +1098,7 @@ class Editor {
                     const value = child.style.marginLeft ? child.style.marginLeft : child.style.paddingLeft;
                     if (value.toLowerCase().endsWith("px")) {
                         const pixels = parseInt(value.slice(0, -2));
-                        const numIndents = Math.floor(pixels / 40);
+                        const numIndents = Math.ceil(pixels / 40);
                         // Wrap the element.
                         for (var i = 0; i < numIndents; i++) {
                             const newIndent = document.createElement("div");
