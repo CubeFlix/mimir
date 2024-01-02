@@ -160,7 +160,8 @@ a rich text editor for javascript
 - [x] block extending range is passing by childless img node
 - [x] bugs with block end point
 - [x] bugs with indenting list removing list? (indent creating extra LI and removing content)
-- [ ] bug with `<div>abc</div><br>`
+- [x] bug with `<div>abc</div><br>`
+- [ ] BR shouldn't be counted as a block when removing extraneous divs
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
 - [ ] re-select image after block/inline styling it

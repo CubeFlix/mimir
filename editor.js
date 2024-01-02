@@ -3882,8 +3882,14 @@ class Editor {
                     endOffset = 0;
                 }
             } else {
-                endContainer = endContainer.childNodes[endOffset - 1];
-                endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+                if (endContainer.childNodes[endOffset - 1].compareDocumentPosition(startContainer) == Node.DOCUMENT_POSITION_FOLLOWING && endContainer.childNodes[endOffset]) {
+                    // Don't let the end container go before the start container;
+                    endContainer = endContainer.childNodes[endOffset];
+                    endOffset = 0;
+                } else {
+                    endContainer = endContainer.childNodes[endOffset - 1];
+                    endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+                }
             }
         }
 
@@ -4184,7 +4190,7 @@ class Editor {
         // See if the first node and last node can be joined.
         if (style.type == "list") {
             // TODO: handle empty nodes
-            if (firstStyled?.previousSibling?.tagName == firstStyled?.tagName) {
+            if (firstStyled && firstStyled?.previousSibling?.tagName == firstStyled?.tagName) {
                 // Join.
                 const previousSibling = firstStyled.previousSibling;
                 previousSibling.append(...firstStyled.childNodes);
@@ -4192,7 +4198,7 @@ class Editor {
                 if (lastStyled == firstStyled) lastStyled = previousSibling;
                 firstStyled = previousSibling;
             }
-            if (lastStyled?.nextSibling?.tagName == lastStyled?.tagName) {
+            if (lastStyled && lastStyled?.nextSibling?.tagName == lastStyled?.tagName) {
                 // Join.
                 const nextSibling = lastStyled.nextSibling;
                 nextSibling.prepend(...lastStyled.childNodes);
