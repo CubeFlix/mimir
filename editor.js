@@ -1808,6 +1808,11 @@ class Editor {
                         }
                     }
                 }
+                // if (endContainer.childNodes[endOffset - 1]) {
+                //     endContainer = endContainer.childNodes[endOffset - 1];
+                //     endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+                // }
+                // TODO: is this necessary?
 
                 const newRange = new Range();
                 newRange.setStart(startContainer, startOffset);
@@ -3643,7 +3648,10 @@ class Editor {
     isValidBlockEndPoint(endContainer, endOffset) {
         var previousSibling = endContainer.childNodes[endOffset]?.previousSibling;
         while (previousSibling && this.isEmpty(previousSibling)) {previousSibling = previousSibling.previousSibling};
-        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length) || this.isValidBlockNode(endContainer.childNodes[endOffset]) || (previousSibling && this.isValidBlockNode(previousSibling))) {
+        if ((endContainer == this.editor && endOffset == this.editor.childNodes.length)
+                 || this.isValidBlockNode(endContainer.childNodes[endOffset])
+                 || (previousSibling && this.isValidBlockNode(previousSibling))
+                 || (this.isValidBlockNode(endContainer) && endOffset == endContainer.childNodes.length)) {
             if ((endContainer.nodeType == Node.TEXT_NODE ? endContainer.textContent.length : endContainer.childNodes.length) != 0) {
                 return true;
             } else {
@@ -3844,6 +3852,9 @@ class Editor {
                             return nodes;
                         }
                     }
+                /* } else if (currentNode == range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(currentNode).tagName)) {
+                    nodes.push(this.firstChildlessChild(currentNode));
+                    return nodes; */ // TODO: this fixes BR nodes, but it selects excess BRs 
                 } else {
                     return nodes;
                 }
@@ -4284,7 +4295,7 @@ class Editor {
                 finalStyled = styledNode;
             }
 
-            if (Array.from(styledNode.childNodes).every((e) => this.blockTags.includes(e.tagName))) {
+            if (Array.from(styledNode.childNodes).every((e) => this.blockTags.filter((t) => t != "BR").includes(e.tagName))) {
                 extraneousDivsToRemove.push(styledNode);
             }
 
@@ -4341,7 +4352,7 @@ class Editor {
                 // Remove the original node.
                 parentNode.remove();
             }
-            if (parentNode.lastChild != this.editor && this.isEmpty(parentNode.lastChild)) {
+            if (parentNode.lastChild && this.isEmpty(parentNode.lastChild)) {
                 // Remove the original node.
                 parentNode.lastChild.remove();
             }
@@ -5183,32 +5194,16 @@ class Editor {
                 case "header":
                     // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
                     this.saveHistory();
-                    if (style.level == "Paragraph") {
-                        const currentHeaderStyle = currentStyling.find(s => s.type == "header");
-                        if (currentHeaderStyle) {
-                            this.removeBlockStyle(currentHeaderStyle, range);
-                        }
-                    } else {
-                        // Remove the other header styling first.
-                        this.removeBlockStyle({type: "header", level: null}, range);
-                        const newRange = this.getRange();
-                        this.applyBlockStyle(style, newRange);
-                    }
+                    this.removeBlockStyle({type: "header", level: null}, range);
+                    var newRange = this.getRange();
+                    this.applyBlockStyle(style, newRange);
                     break;
                 case "align":
                     // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
                     this.saveHistory();
-                    if (style.direction == "left") {
-                        const currentAlignStyle = currentStyling.find(s => s.type == "align");
-                        if (currentAlignStyle) {
-                            this.removeBlockStyle(currentAlignStyle, range);
-                        }
-                    } else {
-                        // Remove the other align styling first.
-                        this.removeBlockStyle({type: "align", direction: null}, range);
-                        const newRange = this.getRange();
-                        this.applyBlockStyle(style, newRange);
-                    }
+                    this.removeBlockStyle({type: "align", direction: null}, range);
+                    var newRange = this.getRange();
+                    this.applyBlockStyle(style, newRange);
                     break;
                 case "list":
                     // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
