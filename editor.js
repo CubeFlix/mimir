@@ -1314,7 +1314,7 @@ class Editor {
         // Add each node.
         var currentLastNode = startNode;
         var firstNode = null;
-        for (const node of reconstructed) {
+        for (var node of reconstructed) {
             // Add in the node.
             if (node.nodeType == Node.TEXT_NODE) {
                 currentLastNode.after(node);
@@ -1373,6 +1373,11 @@ class Editor {
                     }
                 }
             } else {
+                if (node.tagName == "BR") {
+                    const wrapperDiv = document.createElement("div");
+                    wrapperDiv.append(node);
+                    node = wrapperDiv;
+                }
                 if (!firstNode) {
                     // If possible, join the nodes.
                     var lowestJoinable = this.findClosestParent(currentLastNode, currentNode => (currentNode.tagName == node.tagName));
