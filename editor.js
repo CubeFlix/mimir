@@ -3760,8 +3760,6 @@ class Editor {
             }
         }
 
-        console.log(currentNode);
-
         // Check if the whole node is within the range.
         if (currentNode.nodeType == Node.ELEMENT_NODE && !range.isPointInRange(currentNode, currentNode.childNodes.length) && !this.childlessTags.includes(currentNode.tagName)) {
             // The node isn't fully contained within the range. If there are children, move to the first child.
@@ -4097,7 +4095,6 @@ class Editor {
         const nodes = this.getBlockNodesInRange(blockExtended);
 
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
-        console.log(nodesWithoutExtraneousParents);
 
         // Fix disallowed children. Inline block styles need to be applied on a line-by-line basis, so all multi-line blocks (P, DIV, etc.) need to be removed.
         const fixedNodes = [];
