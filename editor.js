@@ -4157,13 +4157,14 @@ class Editor {
                 var inside = false;
             }
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
+            this.removeExtraneousParents([styledNode.parentNode]);
             if (!firstStyled) firstStyled = styledNode;
             if (lastStyled && lastStyled.nextSibling == styledNode) {
                 if (!shouldJoin && this.blockTags.filter(t => t != "BR").includes(node.tagName)) { // Don't join block tags, but do join BR nodes.
                     // If shouldJoin is false, we only want to join inline nodes. Therefore, if the current node is not inline, don't join it.
                     lastStyled = styledNode;
                 } else {
-                    if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName)) {
+                    if (style.type == "list" && !this.blockTags.includes(node.tagName) && !this.blockTags.includes(lastNode.tagName) && this.firstChildlessChild(node).tagName != "BR") {
                         // For non-block lists, we want to join the interior nodes inside the LI.
                         lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
                         styledNode.remove();
