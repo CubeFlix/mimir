@@ -1779,6 +1779,43 @@ class Editor {
             onChangeSelect();
             document.removeEventListener("selectionchange", onChangeSelect);
         }.bind(this));
+        this.editor.addEventListener("click", function (e) {
+            // Handle extra range in triple click.
+            if (e.detail == 3) {
+                // Triple click.
+                const range = this.getRange();
+                var startContainer = range.startContainer;
+                var startOffset = range.startOffset;
+                var endContainer = range.endContainer;
+                var endOffset = range.endOffset;
+
+                // Push endOffset back if the current node is a empty node.
+                while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+                    if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
+                    endOffset -= 1;
+                }
+                if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName)) {
+                    // If the end offset is at the start of a node, move it up.
+                    // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
+                    while (endOffset == 0 && endContainer != this.editor) {
+                        endOffset = Array.from(endContainer.parentNode.childNodes).indexOf(endContainer);
+                        endContainer = endContainer.parentNode;
+                    
+                        // Push endOffset back if the current node is a empty node.
+                        while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+                            if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
+                            endOffset -= 1;
+                        }
+                    }
+                }
+
+                const newRange = new Range();
+                newRange.setStart(startContainer, startOffset);
+                newRange.setEnd(endContainer, endOffset);
+                document.getSelection().removeAllRanges();
+                document.getSelection().addRange(newRange);
+            }
+        }.bind(this));
     }
     
     /*
