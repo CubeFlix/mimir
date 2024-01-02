@@ -161,7 +161,7 @@ a rich text editor for javascript
 - [x] bugs with block end point
 - [x] bugs with indenting list removing list? (indent creating extra LI and removing content)
 - [x] bug with `<div>abc</div><br>`
-- [ ] BR shouldn't be counted as a block when removing extraneous divs
+- [x] BR shouldn't be counted as a block when removing extraneous divs
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
 - [ ] re-select image after block/inline styling it

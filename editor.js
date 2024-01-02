@@ -1206,7 +1206,7 @@ class Editor {
         const divs = fragment.querySelectorAll("div, p");
         const extraneous = [];
         for (const div of divs) {
-            if (!div.getAttribute("style") && Array.from(div.childNodes).every((n) => (this.blockTags.includes(n.tagName) || n.textContent == ""))) {
+            if (!div.getAttribute("style") && Array.from(div.childNodes).every((n) => (this.blockTags.filter((t) => t != "BR").includes(n.tagName) || n.textContent == ""))) {
                 extraneous.push(div);
             }
         }
@@ -3988,7 +3988,7 @@ class Editor {
         // Remove extraneous parent, if possible.
         const nodesWithoutExtraneousParents = [];
         function removeExtraneousNodeIfPossible(node) {
-            if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.includes(n.tagName)) && !node.getAttribute("style")) {
+            if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.filter((t) => t != "BR").includes(n.tagName)) && !node.getAttribute("style")) {
                 // The node contains at least one block tag. Make it extraneous by forcing all the children into DIVs and joining inline nodes.
                 const originalChildren = Array.from(node.childNodes);
                 const children = [];
@@ -4030,7 +4030,7 @@ class Editor {
         function removeExtraneousNodeIfPossible(node) {
             if (!node.firstChild) {return;}
 
-            if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.includes(n.tagName)) && !node.getAttribute("style")) {
+            if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.filter((t) => t != "BR").includes(n.tagName)) && !node.getAttribute("style")) {
                 // The node contains at least one block tag. Make it extraneous by forcing all the children into DIVs and joining inline nodes.
                 const originalChildren = Array.from(node.childNodes);
                 const children = [];
@@ -4254,7 +4254,7 @@ class Editor {
             marker.remove();
 
             // Remove extraneous parents as well.
-            if (Array.from(styledNode.parentNode.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !styledNode.parentNode.getAttribute("style") && styledNode.parentNode != this.editor && styledNode.parentNode.tagName == "DIV") {
+            if (Array.from(styledNode.parentNode.childNodes).every((e) => this.blockTags.filter((t) => t != "BR").includes(e.tagName)) && !styledNode.parentNode.getAttribute("style") && styledNode.parentNode != this.editor && styledNode.parentNode.tagName == "DIV") {
                 extraneousDivsToRemove.push(styledNode.parentNode);
             }
         }
@@ -4287,14 +4287,14 @@ class Editor {
                 finalStyled = styledNode;
             }
 
-            if (Array.from(styledNode.childNodes).every((e) => this.blockTags.includes(e.tagName))) {
+            if (Array.from(styledNode.childNodes).every((e) => this.blockTags.filter((t) => t != "BR").includes(e.tagName))) {
                 extraneousDivsToRemove.push(styledNode);
             }
             marker.after(styledNode, splitAfterNode);
             marker.remove();
 
             // Remove extraneous parents as well.
-            if (Array.from(styledNode.parentNode.childNodes).every((e) => this.blockTags.includes(e.tagName)) && !styledNode.parentNode.getAttribute("style") && styledNode.parentNode != this.editor && styledNode.parentNode.tagName == "DIV") {
+            if (Array.from(styledNode.parentNode.childNodes).every((e) => this.blockTags.filter((t) => t != "BR").includes(e.tagName)) && !styledNode.parentNode.getAttribute("style") && styledNode.parentNode != this.editor && styledNode.parentNode.tagName == "DIV") {
                 extraneousDivsToRemove.push(styledNode.parentNode);
             }
             
