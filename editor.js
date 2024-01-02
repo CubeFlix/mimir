@@ -3986,13 +3986,17 @@ class Editor {
         // Remove extraneous parent, if possible.
         const nodesWithoutExtraneousParents = [];
         function removeExtraneousNodeIfPossible(node) {
+            if (node == this.editor) {
+                nodesWithoutExtraneousParents.push(node); 
+                return;
+            }
             if (["DIV", "P"].includes(node.tagName) && Array.from(node.childNodes).some((n) => this.blockTags.filter((t) => t != "BR").includes(n.tagName)) && !node.getAttribute("style")) {
                 // The node contains at least one block tag. Make it extraneous by forcing all the children into DIVs and joining inline nodes.
                 const originalChildren = Array.from(node.childNodes);
                 const children = [];
                 while (originalChildren.length > 0) {
                     const child = originalChildren.shift();
-                    if (this.blockTags.includes(child.tagName)) {
+                    if (this.blockTags.filter(t => t != "BR").includes(child.tagName)) {
                         children.push(child);
                     } else {
                         const newDiv = document.createElement("div");
@@ -4034,7 +4038,7 @@ class Editor {
                 const children = [];
                 while (originalChildren.length > 0) {
                     const child = originalChildren.shift();
-                    if (this.blockTags.includes(child.tagName)) {
+                    if (this.blockTags.filter(t => t != "BR").includes(child.tagName)) {
                         children.push(child);
                     } else {
                         const newDiv = document.createElement("div");
