@@ -4210,7 +4210,9 @@ class Editor {
         var firstStyled = null;
         var lastStyled = null;
         var lastNode = null;
+        var joinNext = null;
         for (const node of fixedNodes) {
+            const toJoinNext = node.nextSibling;
             if (this.isEmpty(node)) {
                 // Empty nodes.
                 node.remove();
@@ -4228,7 +4230,7 @@ class Editor {
             const styledNode = this.applyBlockStyleToNode(node, style, disallowedParents, inside);
             this.removeExtraneousParents([styledNode.parentNode]);
             if (!firstStyled) firstStyled = styledNode;
-            if (lastStyled && lastStyled.nextSibling == styledNode) {
+            if (lastStyled && lastStyled.nextSibling == styledNode && joinNext == node) {
                 if (!shouldJoin && this.blockTags.filter(t => t != "BR").includes(node.tagName)) { // Don't join block tags, but do join BR nodes.
                     // If shouldJoin is false, we only want to join inline nodes. Therefore, if the current node is not inline, don't join it.
                     lastStyled = styledNode;
@@ -4238,8 +4240,13 @@ class Editor {
                         lastStyled.lastChild.append(...styledNode.firstChild.childNodes);
                         styledNode.remove();
                     } else {
-                        lastStyled.append(...styledNode.childNodes);
-                        styledNode.remove();
+                        if (this.inlineBlockStylingCommands.includes(style.type) && this.blockTags.filter(t => t != "BR").includes(node.tagName)) {
+                            // Don't join blocks.
+                            lastStyled = styledNode;
+                        } else {
+                            lastStyled.append(...styledNode.childNodes);
+                            styledNode.remove();
+                        }
                     }
                 }
             } else {
@@ -4253,6 +4260,7 @@ class Editor {
             } else {
                 lastNode = node;
             }
+            joinNext = toJoinNext;
         }
 
         // In order to aid with joining, remove extraneous nodes on the common editor.
