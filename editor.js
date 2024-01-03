@@ -1153,6 +1153,7 @@ class Editor {
 
             for (const style of inlineBlockPair.inlineBlockStyling) {
                 var lastStyled = null;
+                var joinNext = null;
 
                 // Fix disallowed children of the node.
                 const fixedNodes = [];
@@ -1180,6 +1181,7 @@ class Editor {
                 for (var node of fixedNodes) {
                     // Sort the inline block styling so that the header styling is always on the inside.
                     const oldNode = node;
+                    const toJoinNext = node.nextSibling;
                     const newElem = this.styleToElement(style);
                     const marker = document.createTextNode("");
                     node.after(marker);
@@ -1192,12 +1194,13 @@ class Editor {
                     node = newElem;
     
                     // Join the nodes.
-                    if (lastStyled && lastStyled.nextSibling == node && !this.blockTags.filter(t => t != "BR").includes(oldNode.tagName)) {
+                    if (lastStyled && lastStyled.nextSibling == node && !this.blockTags.filter(t => t != "BR").includes(oldNode.tagName) && joinNext == oldNode) {
                         lastStyled.append(...node.childNodes);
                         node.remove();
                     } else {
                         lastStyled = node;
                     }
+                    joinNext = toJoinNext;
                 }
             }
         }
