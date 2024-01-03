@@ -1015,7 +1015,6 @@ EditorUI.findAndReplace = (editor, onEdit) => {
         }
 
         for (const match of matches) {
-            console.log(match, aggregate.slice(match.index - 5, match.index + 5))
             matchGroups.push(findNodesOfOffset(match.index, match.index + match[0].length));
         }
         return matchGroups;
@@ -1033,37 +1032,33 @@ EditorUI.findAndReplace = (editor, onEdit) => {
         for (const match of matches.reverse()) {
             for (const nodeRange of match) {
                 // Split the node.
-                if (nodeRange.startOffset != 0) {
-                    // Split off the beginning chunk.
-                    const before = document.createTextNode(nodeRange.node.data.slice(0, nodeRange.startOffset));
-                    nodeRange.node.before(before);
-                }
-                if (nodeRange.endOffset != nodeRange.node.data.length) {
-                    // Split off the ending chunk.
-                    const after = document.createTextNode(nodeRange.node.data.slice(nodeRange.endOffset, nodeRange.node.data.length));
-                    nodeRange.node.after(after);
-                }
-                nodeRange.node.data = nodeRange.node.data.slice(nodeRange.startOffset, nodeRange.endOffset);
+                const after = document.createTextNode(nodeRange.node.data.slice(nodeRange.endOffset, nodeRange.node.data.length));
+                nodeRange.node.after(after);
+                const including = document.createTextNode(nodeRange.node.data.slice(nodeRange.startOffset, nodeRange.endOffset));
+                nodeRange.node.after(including);
+                nodeRange.node.data = nodeRange.node.data.slice(0, nodeRange.startOffset);
+                nodeRange.node = including;
 
                 // Update the offsets after slicing the node.
                 nodeRange.startOffset = 0;
                 nodeRange.endOffset = 0;
-
-                // Wrap the node.
-                nodeRange.wrapper = newWrapper();
-                nodeRange.node.after(nodeRange.wrapper);
-                nodeRange.wrapper.append(nodeRange.node);
             }
         }
         return matches;
     }
 
     function highlight(matches) {
-        
+        for (const match of matches) {
+            for (const nodeRange of match) {
+                // Wrap the node.
+                nodeRange.wrapper = newWrapper();
+                nodeRange.node.after(nodeRange.wrapper);
+                nodeRange.wrapper.append(nodeRange.node);
+            }
+        }
     }
 
     function unhighlight(matches) {
-        console.log(matches);
         for (const match of matches) {
             for (const nodeRange of match) {
                 if (!nodeRange.wrapper) continue;
@@ -1075,5 +1070,5 @@ EditorUI.findAndReplace = (editor, onEdit) => {
         return matches;
     }
 
-    return {open: open, close: close, find: findInEditor, highlight: highlight, unhighlight: unhighlight};
+    return {open: open, close: close, find: findInEditor, highlight: highlight, unhighlight: unhighlight, prepareMatches: prepareMatches};
 }
