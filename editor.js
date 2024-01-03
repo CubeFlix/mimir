@@ -5150,7 +5150,25 @@ class Editor {
         if (style.alt) imgNode.setAttribute("alt", style.alt);
         imgNode.style.width = this.defaultImageWidth;
 
+        // Never insert nodes into childless nodes.
+        if (this.childlessTags.includes(range.commonAncestorContainer)) {
+            range.commonAncestorContainer.after(imgNode);
+            range.commonAncestorContainer.remove();
+            document.getSelection().removeAllRanges();
+            this.onNodeDrawn(imgNode, function() {this.imageModule.select(imgNode)}.bind(this));
+            return;
+        }
+
         // Insert the image.
+        if (this.isEmptyOrLineBreak(range.commonAncestorContainer)) {
+            // Remove the line break.
+            const br = range.commonAncestorContainer.querySelector("br");
+            if (br) {
+                br.replaceWith(imgNode);
+                this.onNodeDrawn(imgNode, function() {this.imageModule.select(imgNode)}.bind(this));
+                return;
+            }
+        }
         range.insertNode(imgNode);
         document.getSelection().removeAllRanges();
         this.onNodeDrawn(imgNode, function() {this.imageModule.select(imgNode)}.bind(this));
