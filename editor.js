@@ -4119,11 +4119,11 @@ class Editor {
                 node.after(...children);
                 node.remove();
                 for (const child of children) {
-                    if (child.nodeType == Node.ELEMENT_NODE && (child.querySelector("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])") || child.matches("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])"))) removeExtraneousNodeIfPossible(child);
+                    if (child.nodeType == Node.ELEMENT_NODE && (child.querySelector("div:not([style]), p:not([style])") || child.matches("div:not([style]), p:not([style])"))) removeExtraneousNodeIfPossible(child);
                 }
             } else {
                 for (const child of Array.from(node.childNodes)) {
-                    if (child.nodeType == Node.ELEMENT_NODE && (child.querySelector("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])") || child.matches("div[style]:not([style=\"\"]), p[style]:not([style=\"\"])"))) removeExtraneousNodeIfPossible(child);
+                    if (child.nodeType == Node.ELEMENT_NODE && (child.querySelector("div:not([style]), p:not([style])") || child.matches("div:not([style]), p:not([style])"))) removeExtraneousNodeIfPossible(child);
                 }
             }
         }
