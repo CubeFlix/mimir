@@ -162,6 +162,9 @@ a rich text editor for javascript
 - [x] bugs with indenting list removing list? (indent creating extra LI and removing content)
 - [x] bug with `<div>abc</div><br>`
 - [x] BR shouldn't be counted as a block when removing extraneous divs
+- [ ] when joining, the last BR of a div should be duplicated (if not already) in order to make it visible (`<div>abc<br><br></div>`) see `<div>abc<br>abc<br></div>`
+- [ ] don't join nodes if they weren't originally together
+- [ ] accidentally double indenting
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
 - [ ] re-select image after block/inline styling it
