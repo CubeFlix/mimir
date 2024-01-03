@@ -234,3 +234,7 @@
     border: 1px solid silver;
     border-radius: 2px;
 }
+
+#editor-body .editor-find-and-replace-match {
+    background-color: yellow;
+}

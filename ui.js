@@ -954,7 +954,10 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     replaceInput.setAttribute("placeholder", "Replace with");
     ui.append(replaceInput);
 
+    // State.
     var opened = false;
+    var matches = null;
+    var search = null;
 
     function open() {
         opened = true;
@@ -982,40 +985,95 @@ EditorUI.findAndReplace = (editor, onEdit) => {
             var currentOffset = 0;
             const matchNodes = [];
             while (currentOffset < end) {
-                if (currentOffset <= start && currentOffset + currentNode.textContent.length > start) {
+                if (currentOffset + currentNode.textContent.length > start) {
                     if (currentNode.nodeType == Node.TEXT_NODE) {
-                        matchNodes.push(currentNode);
+                        const offsetStart = Math.max(start - currentOffset, 0);
+                        const offsetEnd = Math.min(end - currentOffset, currentNode.data.length);
+                        matchNodes.push({node: currentNode, startOffset: offsetStart, endOffset: offsetEnd});
                     } else {
                         if (currentNode.firstChild) {
                             currentNode = currentNode.firstChild;
-                            currentOffset += currentNode.textContent;
                             continue;
                         }
                     }
                 }
 
-                currentOffset += currentNode.textContent;
-                if (currentNode.nextNeighbor) {
-                    currentNode = currentNode.nextNeighbor
+                currentOffset += currentNode.textContent.length;
+                if (currentNode.nextSibling) {
+                    currentNode = currentNode.nextSibling;
                 } else {
-                    while (!currentNode.nextNeighbor) {
+                    while (!currentNode.nextSibling) {
                         currentNode = currentNode.parentNode;
                         if (currentNode == editor) {
                             return matchNodes;
                         }
-                        currentNode = currentNode.nextNeighbor;
                     }
-                };
+                    currentNode = currentNode.nextSibling;
+                }
             }
             return matchNodes;
         }
 
         for (const match of matches) {
-            console.log(match);
+            console.log(match, aggregate.slice(match.index - 5, match.index + 5))
             matchGroups.push(findNodesOfOffset(match.index, match.index + match[0].length));
         }
-        console.log(matchGroups);
+        return matchGroups;
     }
 
-    return {open: open, close: close, find: findInEditor};
+    function newWrapper() {
+        const wrapper = document.createElement("span");
+        wrapper.classList.add("editor-find-and-replace-match");
+        return wrapper;
+    }
+
+    function prepareMatches(matches) {
+        // This function takes in a list of matches and splits the text nodes so that the entire nodes are included in the match.
+        // We work backwards so that the earlier matches don't mess up the offset values for later matches.
+        for (const match of matches.reverse()) {
+            for (const nodeRange of match) {
+                // Split the node.
+                if (nodeRange.startOffset != 0) {
+                    // Split off the beginning chunk.
+                    const before = document.createTextNode(nodeRange.node.data.slice(0, nodeRange.startOffset));
+                    nodeRange.node.before(before);
+                }
+                if (nodeRange.endOffset != nodeRange.node.data.length) {
+                    // Split off the ending chunk.
+                    const after = document.createTextNode(nodeRange.node.data.slice(nodeRange.endOffset, nodeRange.node.data.length));
+                    nodeRange.node.after(after);
+                }
+                nodeRange.node.data = nodeRange.node.data.slice(nodeRange.startOffset, nodeRange.endOffset);
+
+                // Update the offsets after slicing the node.
+                nodeRange.startOffset = 0;
+                nodeRange.endOffset = 0;
+
+                // Wrap the node.
+                nodeRange.wrapper = newWrapper();
+                nodeRange.node.after(nodeRange.wrapper);
+                nodeRange.wrapper.append(nodeRange.node);
+            }
+        }
+        return matches;
+    }
+
+    function highlight(matches) {
+        
+    }
+
+    function unhighlight(matches) {
+        console.log(matches);
+        for (const match of matches) {
+            for (const nodeRange of match) {
+                if (!nodeRange.wrapper) continue;
+                nodeRange.wrapper.after(nodeRange.node);
+                console.log(nodeRange.wrapper);
+                nodeRange.wrapper.remove();
+            }
+        }
+        return matches;
+    }
+
+    return {open: open, close: close, find: findInEditor, highlight: highlight, unhighlight: unhighlight};
 }
