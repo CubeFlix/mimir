@@ -2005,6 +2005,16 @@ class Editor {
                 }
             }
         }
+
+        if (range.endContainer.childNodes && range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            // The reason this is done here is that block extending a range removes certain information about whether the final node is included or not.
+            const lastChildless = this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]);
+            if (!nodes.includes(lastChildless) && !(nodes[nodes.length - 1] && nodes[nodes.length - 1].contains(lastChildless))) {
+                nodes.push(lastChildless);
+                endOffset = 1;
+            }
+        }
     
         return {nodes: nodes, startOffset: startOffset, endOffset: endOffset};
     }
@@ -5248,6 +5258,8 @@ class Editor {
                     this.saveHistory();
                     this.removeBlockStyle({type: "header", level: null}, range);
                     var newRange = this.getRange();
+                    this.removeStyle({type: "size", size: null}, newRange);
+                    newRange = this.getRange();
                     this.applyBlockStyle(style, newRange);
                     break;
                 case "align":
