@@ -1813,11 +1813,10 @@ class Editor {
                         }
                     }
                 }
-                // if (endContainer.childNodes[endOffset - 1]) {
-                //     endContainer = endContainer.childNodes[endOffset - 1];
-                //     endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
-                // }
-                // TODO: is this necessary?
+                if (endContainer.childNodes[endOffset - 1]) {
+                    endContainer = endContainer.childNodes[endOffset - 1];
+                    endOffset = endContainer.nodeType == Node.ELEMENT_NODE ? endContainer.childNodes.length : endContainer.textContent.length;
+                }
 
                 const newRange = new Range();
                 newRange.setStart(startContainer, startOffset);
@@ -4144,12 +4143,17 @@ class Editor {
         const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
-
-        range.setStart(startContainer, startOffset);
-        range.setEnd(endContainer, endOffset);
         
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
+
+        if (range.endContainer.childNodes && range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            // The reason this is done here is that block extending a range removes certain information about whether the final node is included or not.
+            if (!nodes.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]))) {
+                nodes.push(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]));
+            }
+        }
 
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
 
@@ -4409,11 +4413,15 @@ class Editor {
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
 
-        range.setStart(startContainer, startOffset);
-        range.setEnd(endContainer, endOffset);
-
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
+
+        if (range.endContainer.childNodes && range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            if (!nodes.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]))) {
+                nodes.push(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]));
+            }
+        }
 
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
 
@@ -4521,12 +4529,16 @@ class Editor {
         const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
-
-        range.setStart(startContainer, startOffset);
-        range.setEnd(endContainer, endOffset);
         
         // Get the block nodes within the range.
         const nodes = this.getBlockNodesInRange(blockExtended);
+
+        if (range.endContainer.childNodes && range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            if (!nodes.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]))) {
+                nodes.push(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]));
+            }
+        }
 
         // Style the nodes.
         oldStyle = oldStyle == "ordered" ? "OL" : "UL";
@@ -4751,12 +4763,16 @@ class Editor {
         const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
-
-        range.setStart(startContainer, startOffset);
-        range.setEnd(endContainer, endOffset);
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
+
+        if (range.endContainer.childNodes && range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            if (!nodes.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]))) {
+                nodes.push(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]));
+            }
+        }
 
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
 
@@ -5011,12 +5027,16 @@ class Editor {
         const blockExtended = this.blockExtendRange(range);
 
         [startContainer, startOffset, endContainer, endOffset] = this.adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset);
-
-        range.setStart(startContainer, startOffset);
-        range.setEnd(endContainer, endOffset);
         
         // Get the block nodes within the range.
         var nodes = this.getBlockNodesInRange(blockExtended);
+
+        if (range.endContainer.childNodes && range.endContainer.childNodes[range.endOffset] && this.childlessTags.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            if (!nodes.includes(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]))) {
+                nodes.push(this.firstChildlessChild(range.endContainer.childNodes[range.endOffset]));
+            }
+        }
 
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
 
