@@ -3878,12 +3878,23 @@ class Editor {
     Adjust the start and end points of a range to be relative to inline nodes.
     */
     adjustStartAndEndPoints(startContainer, startOffset, endContainer, endOffset) {
+        // If endContainer is anchored onto a childless node, select it.
+        var adjustEndOffset = true;
+        if (endContainer.childNodes && endContainer.childNodes[endOffset] && this.childlessTags.includes(this.firstChildlessChild(endContainer.childNodes[endOffset]).tagName)) {
+            // If the original node ends on a childless element, add it.
+            // The reason this is done here is that block extending a range removes certain information about whether the final node is included or not.
+            const lastChildless = this.firstChildlessChild(endContainer.childNodes[endOffset]);
+            endContainer = lastChildless;
+            endOffset = 0;
+            adjustEndOffset = false;
+        }
+
         // Push endOffset back if the current node is a empty node.
-        while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset]))) {
+        while ((endContainer[endOffset] && this.isEmpty(endContainer[endOffset])) && adjustEndOffset) {
             if (endContainer == startContainer && endOffset == startOffset) {startOffset -= 1;}
             endOffset -= 1;
         }
-        if (endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(this.firstChildlessChild(endContainer) && this.firstChildlessChild(endContainer).tagName == "BR")) {
+        if (adjustEndOffset && endOffset == 0 && endContainer != this.editor && !(endOffset == startOffset && endContainer == startContainer) && !this.childlessTags.includes(endContainer.tagName) && !(this.firstChildlessChild(endContainer) && this.firstChildlessChild(endContainer).tagName == "BR")) {
             // If the end offset is at the start of a node, move it up.
             // We don't want to do this if the end container is a childless tag, because an offset of zero on a childless tag indicates that the entire tag is selected.
             while (endOffset == 0 && endContainer != this.editor) {
@@ -3915,7 +3926,7 @@ class Editor {
         }
 
         // Adjust the end point so that it is always relative to inline nodes.
-        while (endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName) && !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
+        while (adjustEndOffset && endContainer.nodeType == Node.ELEMENT_NODE && !this.childlessTags.includes(endContainer.tagName) && !this.inlineStylingTags.includes(endContainer.tagName) && endContainer.tagName != "SPAN") {
             // If there are no children of this node, exit.
             if (endContainer.childNodes.length == 0) {
                 break;
