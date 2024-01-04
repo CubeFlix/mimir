@@ -975,6 +975,7 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     ui.append(closeButton);
 
     function findInEditor(re) {
+        const blocks = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "HR"];
         if (!editor.firstChild) {return;}
         const aggregate = editor.textContent.split("\u00A0").join(" ");
         const matches = aggregate.matchAll(re);
@@ -984,12 +985,18 @@ EditorUI.findAndReplace = (editor, onEdit) => {
             var currentNode = editor.firstChild;
             var currentOffset = 0;
             const matchNodes = [];
+            var foundFirstNode = false;
             while (currentOffset < end) {
+                if (foundFirstNode && blocks.includes(currentNode.tagName)) {
+                    return null;
+                }
+
                 if (currentOffset + currentNode.textContent.length > start) {
                     if (currentNode.nodeType == Node.TEXT_NODE) {
                         const offsetStart = Math.max(start - currentOffset, 0);
                         const offsetEnd = Math.min(end - currentOffset, currentNode.data.length);
                         matchNodes.push({node: currentNode, startOffset: offsetStart, endOffset: offsetEnd});
+                        foundFirstNode = true;
                     } else {
                         if (currentNode.firstChild) {
                             currentNode = currentNode.firstChild;
@@ -1015,7 +1022,10 @@ EditorUI.findAndReplace = (editor, onEdit) => {
         }
 
         for (const match of matches) {
-            matchGroups.push(findNodesOfOffset(match.index, match.index + match[0].length));
+            const group = findNodesOfOffset(match.index, match.index + match[0].length);
+            if (group != null) {
+                matchGroups.push(group);
+            }
         }
         return matchGroups;
     }
