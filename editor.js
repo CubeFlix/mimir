@@ -4627,10 +4627,10 @@ class Editor {
     */
     joinAdjacentNestedListsLeft(node) {
         // Join adjacent lists within a list.
-        if (node && node.lastSibling && ["OL", "UL"].includes(node.tagName) && node.lastSibling.tagName == node.tagName) {
+        if (node && node.previousSibling && ["OL", "UL"].includes(node.tagName) && node.previousSibling.tagName == node.tagName) {
             // Join.
-            const nodeSibling = node.lastSibling;
-            node.lastSibling.append(...node.childNodes);
+            const nodeSibling = node.previousSibling;
+            node.previousSibling.append(...node.childNodes);
             
             // Remove the original node.
             node.remove();
@@ -4725,6 +4725,7 @@ class Editor {
         const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || (n.style && n.style.marginLeft.toLowerCase() == "40px")));
         var lastIndented = null; // Store the first and last indented nodes so that we can join adjacent lists.
         var firstIndented = null;
+        console.log(siblings);
         if (siblings[0].tagName == "LI") {
             // Wrap list nodes.
             const newLi = document.createElement("li");
@@ -4734,6 +4735,15 @@ class Editor {
             newLi.append(clone);
             if (!firstIndented) firstIndented = clone;
             lastIndented = clone;
+
+            // Try joining the parent LI node with its previous sibling.
+            if (clone.parentNode.tagName == "LI" && clone.parentNode.previousSibling) {
+                // if (firstIndented == clone) firstIndented = clone.parentNode.previousSibling;
+                // lastIndented = clone.parentNode.previousSibling;
+                const oldParent = clone.parentNode;
+                oldParent.previousSibling.append(...oldParent.childNodes);
+                oldParent.remove();
+            }
         } else {
             const clone = parent ? parent.cloneNode(false) : document.createElement("div");
             if (clone.tagName == "DIV") {
@@ -4790,6 +4800,15 @@ class Editor {
                 clone.append(...list);
                 if (!firstIndented) firstIndented = clone;
                 lastIndented = clone;
+
+                // Try joining the parent LI node with its previous sibling.
+                if (clone.parentNode.tagName == "LI" && clone.parentNode.previousSibling) {
+                    // if (firstIndented == clone) firstIndented = clone.parentNode.previousSibling;
+                    // lastIndented = clone.parentNode.previousSibling;
+                    const oldParent = clone.parentNode;
+                    oldParent.previousSibling.append(...oldParent.childNodes);
+                    oldParent.remove();
+                }
             }
         }
 
@@ -4842,6 +4861,7 @@ class Editor {
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
 
         // If possible, get inner children.
+        console.log(nodes);
         const fixedNodes = [];
         function getInnerChildren(node) {
             // If the current node is not a OL/UL element but contains a OL/UL, go inside.
