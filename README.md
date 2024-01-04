@@ -169,7 +169,7 @@ a rich text editor for javascript
 - [x] accidentally double indenting
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after selecting image
-- [ ] re-select image after block/inline styling it
+- [x] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
 - [ ] copy paste buttons

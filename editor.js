@@ -2261,6 +2261,7 @@ class Editor {
         // For certain styles with multiple possible values, we don't want to compare exact values, we just want to see if the style exists.
         if (styling.some(s => s.type == "foreColor") && style.type == "foreColor" && style.color == null) {return true;}
         if (styling.some(s => s.type == "backColor") && style.type == "backColor" && style.color == null) {return true;}
+        if (styling.some(s => s.type == "size") && style.type == "size" && style.size == null) {return true;}
         if (styling.some(s => s.type == "link") && style.type == "link") {return true;}
         if (styling.some(s => s.type == "header") && style.type == "header" && style.level == null) {return true;}
         if (styling.some(s => s.type == "align") && style.type == "align" && style.direction == null) {return true;}
