@@ -958,6 +958,7 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     var opened = false;
     var matches = null;
     var search = null;
+    var selectedOffset = null;
 
     function open() {
         opened = true;
@@ -967,7 +968,45 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     function close() {
         opened = false;
         ui.style.display = "none";
+        removeSearch();
     }
+
+    function removeSearch() {
+        if (search) {
+            unhighlight(matches);
+            matches = null;
+            search = null;
+            selectedOffset = null;
+        }
+    }
+
+    function find() {
+        removeSearch();
+        matches = findInEditor(findInput.value);
+        matches = prepareMatches(matches);
+        search = findInput.value;
+        matches = highlight(matches);
+        selectedOffset = 0;
+        console.log(matches);
+        matches[selectedOffset].forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+    }
+
+    function next() {
+        matches[selectedOffset].forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
+        selectedOffset = (selectedOffset + 1) % matches.length;
+        matches[selectedOffset].forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+    }
+
+    function previous() {
+        matches[selectedOffset].forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
+        selectedOffset = selectedOffset - 1;
+        if (selectedOffset == -1) {selectedOffset = matches.length - 1};
+        matches[selectedOffset].forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+    }
+
+    findButton.addEventListener("click", find);
+    findUpButton.addEventListener("click", previous);
+    findDownButton.addEventListener("click", next);
 
     const closeButton = document.createElement("button");
     closeButton.innerHTML = "X";
@@ -1054,6 +1093,7 @@ EditorUI.findAndReplace = (editor, onEdit) => {
                 nodeRange.endOffset = 0;
             }
         }
+        matches.reverse();
         return matches;
     }
 
@@ -1066,6 +1106,7 @@ EditorUI.findAndReplace = (editor, onEdit) => {
                 nodeRange.wrapper.append(nodeRange.node);
             }
         }
+        return matches;
     }
 
     function unhighlight(matches) {
@@ -1073,7 +1114,6 @@ EditorUI.findAndReplace = (editor, onEdit) => {
             for (const nodeRange of match) {
                 if (!nodeRange.wrapper) continue;
                 nodeRange.wrapper.after(nodeRange.node);
-                console.log(nodeRange.wrapper);
                 nodeRange.wrapper.remove();
             }
         }

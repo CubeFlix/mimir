@@ -238,3 +238,7 @@
 #editor-body .editor-find-and-replace-match {
     background-color: yellow;
 }
+
+#editor-body .editor-find-and-replace-current {
+    background-color: orange;
+}
