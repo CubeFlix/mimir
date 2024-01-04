@@ -1247,6 +1247,34 @@ class Editor {
         range.deleteContents();
         if (this.imageModule.getSelected()) this.imageModule.deselect();
         const tabNode = document.createTextNode("\t");
+
+        // Never insert nodes into childless nodes.
+        if (this.childlessTags.includes(range.commonAncestorContainer)) {
+            range.commonAncestorContainer.after(tabNode);
+            range.commonAncestorContainer.remove();
+            const newRange = new Range();
+            newRange.selectNodeContents(tabNode);
+            newRange.collapse(false);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(newRange);
+            return;
+        }
+
+        // Insert the tab.
+        if (this.isEmptyOrLineBreak(range.commonAncestorContainer)) {
+            // Remove the line break.
+            const br = range.commonAncestorContainer.querySelector("br");
+            if (br) {
+                br.replaceWith(tabNode);
+                const newRange = new Range();
+                newRange.selectNodeContents(tabNode);
+                newRange.collapse(false);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(newRange);
+                return;
+            }
+        }
+
         range.insertNode(tabNode);
 
         const newRange = new Range();
