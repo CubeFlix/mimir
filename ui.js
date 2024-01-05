@@ -1104,25 +1104,37 @@ EditorUI.findAndReplace = (editor, onEdit) => {
 
     function replace(newText) {
         if (matches[selectedOffset]) {
-            matches[selectedOffset][0].node.textContent = newText;
-            for (const nodeRange of matches.slice(1, -1)) {
+            const match = matches[selectedOffset];
+            match[0].node.textContent = newText;
+            if (match[0].wrapper) {
+                match[0].wrapper.after(match[0].node);
+                match[0].wrapper.remove();
+            }
+            for (const nodeRange of match.slice(1, -1)) {
                 nodeRange.node.remove();
                 if (nodeRange.wrapper) {
                     nodeRange.wrapper.remove();
                 }
             }
+            // TODO: add BR if necessary
+            matches.splice(selectedOffset, 1);
+            selectedOffset = selectedOffset % matches.length;
+            matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
         }
-        // TODO: add BR if necessary
-        delete matches[selectedOffset];
-        selectedOffset = selectedOffset % matches.length;
-        matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
     }
 
     function replaceClick() {
         replace(replaceInput.value);
     }
 
-    replaceButton.addEventListener("click", replace);
+    function replaceAllClick() {
+        while (matches.length != 0) {
+            replace(replaceInput.value);
+        }
+    }
+
+    replaceButton.addEventListener("click", replaceClick);
+    replaceAllButton.addEventListener("click", replaceAllClick);
 
     function prepareMatches(matches) {
         // This function takes in a list of matches and splits the text nodes so that the entire nodes are included in the match.
