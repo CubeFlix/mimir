@@ -953,6 +953,14 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     replaceInput.classList.add("editor-find-and-replace-replace-input");
     replaceInput.setAttribute("placeholder", "Replace with");
     ui.append(replaceInput);
+    const replaceButton = document.createElement("button");
+    replaceButton.classList.add("editor-find-and-replace-replace-button");
+    replaceButton.innerHTML = "Replace";
+    ui.append(replaceButton);
+    const replaceAllButton = document.createElement("button");
+    replaceAllButton.classList.add("editor-find-and-replace-replace-all-button");
+    replaceAllButton.innerHTML = "Replace All";
+    ui.append(replaceAllButton);
 
     // State.
     var opened = false;
@@ -963,6 +971,12 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     function open() {
         opened = true;
         ui.style.display = "block";
+        findInput.value = "";
+        findUpButton.disabled = true;
+        findDownButton.disabled = true;
+        replaceInput.value = "";
+        replaceButton.disabled = true;
+        replaceAllButton.disabled = true;
     }
 
     function close() {
@@ -982,26 +996,39 @@ EditorUI.findAndReplace = (editor, onEdit) => {
 
     function find() {
         removeSearch();
-        matches = findInEditor(findInput.value);
+        if (findInput.value == "") {
+            search = null;
+            matches = null;
+            selectedOffset = 0;
+            findUpButton.disabled = true;
+            findDownButton.disabled = true;
+            replaceButton.disabled = true;
+            replaceAllButton.disabled = true;
+            return;
+        }
+        matches = findInEditor(findInput.value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'));
         matches = prepareMatches(matches);
         search = findInput.value;
         matches = highlight(matches);
         selectedOffset = 0;
-        console.log(matches);
-        matches[selectedOffset].forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+        findUpButton.disabled = false;
+        findDownButton.disabled = false;
+        replaceButton.disabled = false;
+        replaceAllButton.disabled = false;
     }
 
     function next() {
-        matches[selectedOffset].forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
         selectedOffset = (selectedOffset + 1) % matches.length;
-        matches[selectedOffset].forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
     }
 
     function previous() {
-        matches[selectedOffset].forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
         selectedOffset = selectedOffset - 1;
         if (selectedOffset == -1) {selectedOffset = matches.length - 1};
-        matches[selectedOffset].forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
     }
 
     findButton.addEventListener("click", find);
@@ -1074,6 +1101,28 @@ EditorUI.findAndReplace = (editor, onEdit) => {
         wrapper.classList.add("editor-find-and-replace-match");
         return wrapper;
     }
+
+    function replace(newText) {
+        if (matches[selectedOffset]) {
+            matches[selectedOffset][0].node.textContent = newText;
+            for (const nodeRange of matches.slice(1, -1)) {
+                nodeRange.node.remove();
+                if (nodeRange.wrapper) {
+                    nodeRange.wrapper.remove();
+                }
+            }
+        }
+        // TODO: add BR if necessary
+        delete matches[selectedOffset];
+        selectedOffset = selectedOffset % matches.length;
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+    }
+
+    function replaceClick() {
+        replace(replaceInput.value);
+    }
+
+    replaceButton.addEventListener("click", replace);
 
     function prepareMatches(matches) {
         // This function takes in a list of matches and splits the text nodes so that the entire nodes are included in the match.
