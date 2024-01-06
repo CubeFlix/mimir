@@ -5850,6 +5850,6 @@ class Editor {
         this.findAndReplaceModule = EditorUI.findAndReplace(this.editor, function() {
             this.saveHistory(); 
             this.shouldTakeSnapshotOnNextChange = true;
-        }.bind(this));
+        }.bind(this), this);
     }
 }

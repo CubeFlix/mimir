@@ -924,7 +924,7 @@ EditorUI.bindImageEditing = (editor, onEdit) => {
 /*
 Find and replace module.
 */
-EditorUI.findAndReplace = (editor, onEdit) => {
+EditorUI.findAndReplace = (editor, onEdit, api) => {
     // Find and replace modal UI.
     const ui = document.createElement("div");
     ui.setAttribute("id", "editor-find-and-replace-ui");
@@ -1103,6 +1103,16 @@ EditorUI.findAndReplace = (editor, onEdit) => {
     }
 
     function replace(newText) {
+        function removeExtraneousParents(node) {
+            var currentNode = node;
+            while (currentNode.parentNode != editor && api.isEmpty(currentNode.parentNode) && !api.blockTags.includes(currentNode.tagName)) {
+                const newNode = currentNode.parentNode;
+                currentNode.remove();
+                currentNode = newNode;
+            }
+            return currentNode;
+        }
+
         if (matches[selectedOffset]) {
             const match = matches[selectedOffset];
             match[0].node.textContent = newText;
@@ -1111,12 +1121,19 @@ EditorUI.findAndReplace = (editor, onEdit) => {
                 match[0].wrapper.remove();
             }
             for (const nodeRange of match.slice(1, -1)) {
+                removeExtraneousParents(nodeRange.node);
                 nodeRange.node.remove();
                 if (nodeRange.wrapper) {
                     nodeRange.wrapper.remove();
                 }
             }
-            // TODO: add BR if necessary
+            // If newText is empty, remove extraneous nodes and insert a BR if necessary.
+            if (newText == "") {
+                const endNode = removeExtraneousParents(match[0].node);
+                if (api.blockTags.includes(endNode.tagName) && api.isEmpty(endNode)) {
+                    endNode.append(document.createElement("br"));
+                }
+            }
             matches.splice(selectedOffset, 1);
             selectedOffset = selectedOffset % matches.length;
             matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
