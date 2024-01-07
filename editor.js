@@ -397,7 +397,15 @@ class Editor {
                     }
 
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
-                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode)) currentNode.before(document.createElement("BR"));
+                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
+                        currentNode.before(document.createElement("BR"));
+                    } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
+                            || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                        // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
+                        const newDiv = document.createElement("div");
+                        newDiv.append(document.createElement("br"));
+                        currentNode.before(newDiv);
+                    }
                     currentNode.remove();
                     this.currentCursor = null;
                 }
@@ -430,7 +438,15 @@ class Editor {
                         currentNode = currentNode.parentNode;
                     }
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
-                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
+                    if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
+                        currentNode.before(document.createElement("BR"));
+                    } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
+                            || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                        // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
+                        const newDiv = document.createElement("div");
+                        newDiv.append(document.createElement("br"));
+                        currentNode.before(newDiv);
+                    }
                     currentNode.remove();
                     this.currentCursor = null;
                     this.updateMenubarOptions();
@@ -768,7 +784,17 @@ class Editor {
                 currentNode = currentNode.parentNode;
             }
             // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
-            if (insertBrIfNeeded && this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
+            if (insertBrIfNeeded) {
+                if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
+                    currentNode.before(document.createElement("BR"));
+                } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
+                        || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                    // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
+                    const newDiv = document.createElement("div");
+                    newDiv.append(document.createElement("br"));
+                    currentNode.before(newDiv);
+                }
+            }
             currentNode.remove();
             this.currentCursor = null;
             this.updateMenubarOptions();
@@ -1783,7 +1809,15 @@ class Editor {
                     currentNode = currentNode.parentNode;
                 }
                 // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
-                if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) currentNode.before(document.createElement("BR"));
+                if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
+                    currentNode.before(document.createElement("BR"));
+                } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
+                        || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                    // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
+                    const newDiv = document.createElement("div");
+                    newDiv.append(document.createElement("br"));
+                    currentNode.before(newDiv);
+                }
                 currentNode.remove();
                 this.currentCursor = null;
             }
