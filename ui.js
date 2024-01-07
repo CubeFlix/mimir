@@ -1103,25 +1103,50 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     }
 
     function replace(newText) {
-        function removeExtraneousParents(node) {
+        function removeExtraneousParents(node, insertBrIfNeeded) {
             var currentNode = node;
-            while (currentNode.parentNode != editor && api.isEmpty(currentNode.parentNode) && !api.blockTags.includes(currentNode.tagName)) {
-                const newNode = currentNode.parentNode;
-                currentNode.remove();
-                currentNode = newNode;
+            while (api.inEditor(currentNode.parentNode) && currentNode.parentNode != editor && api.isEmpty(currentNode.parentNode) && (api.inlineStylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
+                currentNode = currentNode.parentNode;
             }
+            // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
+            if (insertBrIfNeeded) {
+                const previousSibling = api.leftSiblingIgnoreEmpty(currentNode);
+                const nextSibling = api.rightSiblingIgnoreEmpty(currentNode);
+                // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
+                if (api.blockTags.includes(currentNode.parentNode.tagName) && api.isEmpty(currentNode.parentNode) && !api.childlessTags.includes(currentNode.parentNode.tagName)) {
+                    currentNode.before(document.createElement("BR"));
+                } else if ((previousSibling && api.blockTags.includes(previousSibling.tagName) && (!nextSibling || api.blockTags.includes(nextSibling.tagName)))
+                        || (nextSibling && api.blockTags.includes(nextSibling.tagName) && (!previousSibling || api.blockTags.includes(previousSibling.tagName)))) {
+                    // If the next sibling or previous sibling is a BR, remove it.
+                    if (nextSibling && nextSibling.tagName == "BR") {
+                        nextSibling.remove();
+                    }
+                    if (previousSibling && previousSibling.tagName == "BR") {
+                        previousSibling.remove();
+                    }
+                    
+                    // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
+                    const newDiv = document.createElement("div");
+                    newDiv.append(document.createElement("br"));
+                    currentNode.before(newDiv);
+                }
+            }
+
+            currentNode.remove();
+            
             return currentNode;
         }
 
         if (matches[selectedOffset]) {
+            debugger;
             const match = matches[selectedOffset];
             match[0].node.textContent = newText;
-            if (match[0].wrapper) {
+            if (match[0].wrapper && newText != "") {
                 match[0].wrapper.after(match[0].node);
                 match[0].wrapper.remove();
             }
             for (const nodeRange of match.slice(1, -1)) {
-                removeExtraneousParents(nodeRange.node);
+                removeExtraneousParents(nodeRange.node, false);
                 nodeRange.node.remove();
                 if (nodeRange.wrapper) {
                     nodeRange.wrapper.remove();
@@ -1129,10 +1154,7 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
             }
             // If newText is empty, remove extraneous nodes and insert a BR if necessary.
             if (newText == "") {
-                const endNode = removeExtraneousParents(match[0].node);
-                if (api.blockTags.includes(endNode.tagName) && api.isEmpty(endNode)) {
-                    endNode.append(document.createElement("br"));
-                }
+                removeExtraneousParents(match[0].node, true);
             }
             matches.splice(selectedOffset, 1);
             selectedOffset = selectedOffset % matches.length;

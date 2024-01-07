@@ -396,17 +396,19 @@ class Editor {
                         currentNode = currentNode.parentNode;
                     }
 
+                    const previousSibling = this.leftSiblingIgnoreEmpty(currentNode);
+                    const nextSibling = this.rightSiblingIgnoreEmpty(currentNode);
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
                     if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
                         currentNode.before(document.createElement("BR"));
-                    } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
-                            || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                    } else if ((previousSibling && this.blockTags.includes(previousSibling.tagName) && (!nextSibling || this.blockTags.includes(nextSibling.tagName)))
+                            || (nextSibling && this.blockTags.includes(nextSibling.tagName) && (!previousSibling || this.blockTags.includes(previousSibling.tagName)))) {
                         // If the next sibling or previous sibling is a BR, remove it.
-                        if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
-                            currentNode.nextSibling.remove();
+                        if (nextSibling && nextSibling.tagName == "BR") {
+                            nextSibling.remove();
                         }
-                        if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
-                            currentNode.previousSibling.remove();
+                        if (previousSibling && previousSibling.tagName == "BR") {
+                            previousSibling.remove();
                         }
                         
                         // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
@@ -445,17 +447,19 @@ class Editor {
                     while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
                         currentNode = currentNode.parentNode;
                     }
+                    const previousSibling = this.leftSiblingIgnoreEmpty(currentNode);
+                    const nextSibling = this.rightSiblingIgnoreEmpty(currentNode);
                     // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
                     if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
                         currentNode.before(document.createElement("BR"));
-                    } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
-                            || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                    } else if ((previousSibling && this.blockTags.includes(previousSibling.tagName) && (!nextSibling || this.blockTags.includes(nextSibling.tagName)))
+                            || (nextSibling && this.blockTags.includes(nextSibling.tagName) && (!previousSibling || this.blockTags.includes(previousSibling.tagName)))) {
                         // If the next sibling or previous sibling is a BR, remove it.
-                        if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
-                            currentNode.nextSibling.remove();
+                        if (nextSibling && nextSibling.tagName == "BR") {
+                            nextSibling.remove();
                         }
-                        if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
-                            currentNode.previousSibling.remove();
+                        if (previousSibling && previousSibling.tagName == "BR") {
+                            previousSibling.remove();
                         }
                         
                         // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
@@ -801,16 +805,19 @@ class Editor {
             }
             // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
             if (insertBrIfNeeded) {
+                const previousSibling = this.leftSiblingIgnoreEmpty(currentNode);
+                const nextSibling = this.rightSiblingIgnoreEmpty(currentNode);
+                // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
                 if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
                     currentNode.before(document.createElement("BR"));
-                } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
-                        || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                } else if ((previousSibling && this.blockTags.includes(previousSibling.tagName) && (!nextSibling || this.blockTags.includes(nextSibling.tagName)))
+                        || (nextSibling && this.blockTags.includes(nextSibling.tagName) && (!previousSibling || this.blockTags.includes(previousSibling.tagName)))) {
                     // If the next sibling or previous sibling is a BR, remove it.
-                    if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
-                        currentNode.nextSibling.remove();
+                    if (nextSibling && nextSibling.tagName == "BR") {
+                        nextSibling.remove();
                     }
-                    if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
-                        currentNode.previousSibling.remove();
+                    if (previousSibling && previousSibling.tagName == "BR") {
+                        previousSibling.remove();
                     }
                     
                     // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
@@ -887,6 +894,28 @@ class Editor {
             currentNode = currentNode.parentNode;
         }
         return null;
+    }
+
+    /*
+    Left sibling of node, ignoring empty nodes.
+    */
+    leftSiblingIgnoreEmpty(node) {
+        var currentNode = node.previousSibling;
+        while (currentNode && this.isEmpty(currentNode)) {
+            currentNode = currentNode.previousSibling;
+        }
+        return currentNode;
+    }
+
+    /*
+    Right sibling of node, ignoring empty nodes.
+    */
+    rightSiblingIgnoreEmpty(node) {
+        var currentNode = node.nextSibling;
+        while (currentNode && this.isEmpty(currentNode)) {
+            currentNode = currentNode.nextSibling;
+        }
+        return currentNode;
     }
 
     /*
@@ -1832,17 +1861,19 @@ class Editor {
                 while (this.inEditor(currentNode.parentNode) && currentNode.parentNode != this.editor && this.isEmpty(currentNode.parentNode) && (this.inlineStylingTags.includes(currentNode.parentNode.tagName) || currentNode.parentNode.tagName == "SPAN")) {
                     currentNode = currentNode.parentNode;
                 }
+                const previousSibling = this.leftSiblingIgnoreEmpty(currentNode);
+                const nextSibling = this.rightSiblingIgnoreEmpty(currentNode);
                 // In case we were in a DIV and it has since became empty, add in a BR to retain the line.
                 if (this.blockTags.includes(currentNode.parentNode.tagName) && this.isEmpty(currentNode.parentNode) && !this.childlessTags.includes(currentNode.parentNode.tagName)) {
                     currentNode.before(document.createElement("BR"));
-                } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
-                        || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                } else if ((previousSibling && this.blockTags.includes(previousSibling.tagName) && (!nextSibling || this.blockTags.includes(nextSibling.tagName)))
+                        || (nextSibling && this.blockTags.includes(nextSibling.tagName) && (!previousSibling || this.blockTags.includes(previousSibling.tagName)))) {
                     // If the next sibling or previous sibling is a BR, remove it.
-                    if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
-                        currentNode.nextSibling.remove();
+                    if (nextSibling && nextSibling.tagName == "BR") {
+                        nextSibling.remove();
                     }
-                    if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
-                        currentNode.previousSibling.remove();
+                    if (previousSibling && previousSibling.tagName == "BR") {
+                        previousSibling.remove();
                     }
                     
                     // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
