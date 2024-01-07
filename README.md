@@ -221,7 +221,7 @@ a rich text editor for javascript
 - [ ] figure out issue with whitespace trimming
 - [ ] paste plaintext (add cursor support)
 - [ ] make removeExtraneousParents work recursively (handle `<div><div>abc<div>abc</div>abc</div></div>abc`)
-- [ ] handle empty nodes when joining lists in applyBlockStyle
+- [x] handle empty nodes when joining lists in applyBlockStyle
 - [x] figure out issue with selecting last BR in range (mostly ok because of DIVs)
 
 ## good editors
