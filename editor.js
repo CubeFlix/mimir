@@ -4407,22 +4407,27 @@ class Editor {
 
         // See if the first node and last node can be joined.
         if (style.type == "list") {
-            // TODO: handle empty nodes
-            if (firstStyled && firstStyled?.previousSibling?.tagName == firstStyled?.tagName) {
+            if (firstStyled) {
                 // Join.
-                const previousSibling = firstStyled.previousSibling;
-                previousSibling.append(...firstStyled.childNodes);
-                firstStyled.remove();
-                if (lastStyled == firstStyled) lastStyled = previousSibling;
-                firstStyled = previousSibling;
+                const previousSibling = this.leftSiblingIgnoreEmpty(firstStyled);
+                if (previousSibling && previousSibling.tagName == firstStyled.tagName) {
+                    previousSibling.append(...firstStyled.childNodes);
+                    firstStyled.remove();
+                    if (lastStyled == firstStyled) lastStyled = previousSibling;
+                    firstStyled = previousSibling;
+                }
             }
-            if (lastStyled && lastStyled?.nextSibling?.tagName == lastStyled?.tagName) {
+            if (lastStyled) {
                 // Join.
-                const nextSibling = lastStyled.nextSibling;
-                nextSibling.prepend(...lastStyled.childNodes);
-                lastStyled.remove();
-                lastStyled = nextSibling;
+                const nextSibling = this.rightSiblingIgnoreEmpty(lastStyled);
+                if (nextSibling && nextSibling.tagName == lastStyled.tagName) {
+                    // Join.
+                    nextSibling.prepend(...lastStyled.childNodes);
+                    lastStyled.remove();
+                    lastStyled = nextSibling;
+                }
             }
+            
         }
 
         if (imageToReselect) {
@@ -4724,26 +4729,27 @@ class Editor {
     */
     joinAdjacentNestedListsLeft(node) {
         // Join adjacent lists within a list.
-        if (node && node.previousSibling && ["OL", "UL"].includes(node.tagName) && node.previousSibling.tagName == node.tagName) {
+        if (!node) {return node;}
+        const previousSibling = this.leftSiblingIgnoreEmpty(node);
+        if (previousSibling && ["OL", "UL"].includes(node.tagName) && previousSibling.tagName == node.tagName) {
             // Join.
-            const nodeSibling = node.previousSibling;
-            node.previousSibling.append(...node.childNodes);
+            previousSibling.append(...node.childNodes);
             
             // Remove the original node.
             node.remove();
-            return nodeSibling;
+            return previousSibling;
         }
-        if (node && !node.previousSibling && ["OL", "UL"].includes(node.tagName) && 
+        if (!previousSibling && ["OL", "UL"].includes(node.tagName) && 
             node.parentNode.tagName == "LI" && 
-            node.parentNode.previousSibling && 
-            node.parentNode.previousSibling.childNodes.length != 0 && 
-            node.parentNode.previousSibling.childNodes[node.parentNode.previousSibling.childNodes.length - 1].tagName == node.tagName) {
-
+            this.leftSiblingIgnoreEmpty(node.parentNode) && 
+            this.leftSiblingIgnoreEmpty(node.parentNode).childNodes.length != 0 && 
+            this.leftSiblingIgnoreEmpty(node.parentNode).childNodes[this.leftSiblingIgnoreEmpty(node.parentNode).childNodes.length - 1].tagName == node.tagName) {
+            const previousSibling = this.leftSiblingIgnoreEmpty(node.parentNode);
             // Save the joined nodes.
-            const outputNode = node.parentNode.previousSibling.childNodes[node.parentNode.previousSibling.childNodes.length - 1];
+            const outputNode = previousSibling.childNodes[previousSibling.childNodes.length - 1];
 
             // Join.
-            node.parentNode.previousSibling.childNodes[node.parentNode.previousSibling.childNodes.length - 1].append(...node.childNodes);
+            previousSibling.childNodes[previousSibling.childNodes.length - 1].append(...node.childNodes);
 
             // Remove the original node. If possible, remove its parent as well.
             const nodeParent = node.parentNode;
@@ -4761,23 +4767,25 @@ class Editor {
     */
     joinAdjacentNestedListsRight(node) {
         // Join the last list rightwards.
-        if (node && node.nextSibling && ["OL", "UL"].includes(node.tagName) && node.nextSibling.tagName == node.tagName) {
+        if (!node) {return node;}
+        const nextSibling = this.rightSiblingIgnoreEmpty(node);
+        if (nextSibling && ["OL", "UL"].includes(node.tagName) && nextSibling.tagName == node.tagName) {
             // Join.
-            const nodeSibling = node.nextSibling;
-            node.nextSibling.prepend(...node.childNodes);
+            nextSibling.prepend(...node.childNodes);
             
             // Remove the original node.
             node.remove();
-            return nodeSibling;
+            return nextSibling;
         }
 
-        if (node && !node.nextSibling && ["OL", "UL"].includes(node.tagName) && 
+        if (!nextSibling && ["OL", "UL"].includes(node.tagName) && 
             node.parentNode.tagName == "LI" && 
-            node.parentNode.nextSibling && 
-            node.parentNode.nextSibling.childNodes.length != 0 && 
-            node.parentNode.nextSibling.childNodes[0].tagName == node.tagName) {
+            this.rightSiblingIgnoreEmpty(node.parentNode) && 
+            this.rightSiblingIgnoreEmpty(node.parentNode).childNodes.length != 0 && 
+            this.rightSiblingIgnoreEmpty(node.parentNode).childNodes[0].tagName == node.tagName) {
+            const nextSibling = this.rightSiblingIgnoreEmpty(node.parentNode);
             // Join.
-            node.parentNode.nextSibling.childNodes[0].prepend(...node.childNodes);
+            nextSibling.childNodes[0].prepend(...node.childNodes);
 
             // Remove the original node. If possible, remove its parent as well.
             const nodeParent = node.parentNode;
@@ -5135,6 +5143,7 @@ class Editor {
                     }
 
                     // Hide nested lists.
+                    this.updateHideNestedLists(newLiForSplitNodes);
                     list.forEach((l) => this.updateHideNestedLists(l));
                     this.updateHideNestedLists(parentLi);
 
