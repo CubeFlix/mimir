@@ -401,6 +401,14 @@ class Editor {
                         currentNode.before(document.createElement("BR"));
                     } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
                             || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                        // If the next sibling or previous sibling is a BR, remove it.
+                        if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
+                            currentNode.nextSibling.remove();
+                        }
+                        if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
+                            currentNode.previousSibling.remove();
+                        }
+                        
                         // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
                         const newDiv = document.createElement("div");
                         newDiv.append(document.createElement("br"));
@@ -442,6 +450,14 @@ class Editor {
                         currentNode.before(document.createElement("BR"));
                     } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
                             || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                        // If the next sibling or previous sibling is a BR, remove it.
+                        if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
+                            currentNode.nextSibling.remove();
+                        }
+                        if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
+                            currentNode.previousSibling.remove();
+                        }
+                        
                         // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
                         const newDiv = document.createElement("div");
                         newDiv.append(document.createElement("br"));
@@ -789,6 +805,14 @@ class Editor {
                     currentNode.before(document.createElement("BR"));
                 } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
                         || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                    // If the next sibling or previous sibling is a BR, remove it.
+                    if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
+                        currentNode.nextSibling.remove();
+                    }
+                    if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
+                        currentNode.previousSibling.remove();
+                    }
+                    
                     // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
                     const newDiv = document.createElement("div");
                     newDiv.append(document.createElement("br"));
@@ -1813,6 +1837,14 @@ class Editor {
                     currentNode.before(document.createElement("BR"));
                 } else if ((currentNode.previousSibling && this.blockTags.includes(currentNode.previousSibling.tagName) && (!currentNode.nextSibling || this.blockTags.includes(currentNode.nextSibling.tagName)))
                         || (currentNode.nextSibling && this.blockTags.includes(currentNode.nextSibling.tagName) && (!currentNode.previousSibling || this.blockTags.includes(currentNode.previousSibling.tagName)))) {
+                    // If the next sibling or previous sibling is a BR, remove it.
+                    if (currentNode.nextSibling && currentNode.nextSibling.tagName == "BR") {
+                        currentNode.nextSibling.remove();
+                    }
+                    if (currentNode.previousSibling && currentNode.previousSibling.tagName == "BR") {
+                        currentNode.previousSibling.remove();
+                    }
+                    
                     // If the current node is surrounded by blocks, insert a DIV with a BR (new paragraph).
                     const newDiv = document.createElement("div");
                     newDiv.append(document.createElement("br"));
