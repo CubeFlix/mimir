@@ -1016,13 +1016,18 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         findDownButton.disabled = false;
         replaceButton.disabled = false;
         replaceAllButton.disabled = false;
+        if (matches[selectedOffset]) {
+            matches[selectedOffset][0].wrapper?.scrollIntoView(false);
+        }
     }
 
     function next() {
         matches[selectedOffset]?.forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
         selectedOffset = (selectedOffset + 1) % matches.length;
         matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
-        matches[selectedOffset]?.node.scrollIntoView();
+        if (matches[selectedOffset]) {
+            matches[selectedOffset][0].wrapper?.scrollIntoView(false);
+        }
     }
 
     function previous() {
@@ -1030,6 +1035,9 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         selectedOffset = selectedOffset - 1;
         if (selectedOffset == -1) {selectedOffset = matches.length - 1};
         matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+        if (matches[selectedOffset]) {
+            matches[selectedOffset][0].wrapper?.scrollIntoView(false);
+        }
     }
 
     findButton.addEventListener("click", find);
@@ -1159,6 +1167,9 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
             matches.splice(selectedOffset, 1);
             selectedOffset = selectedOffset % matches.length;
             matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+            if (matches[selectedOffset]) {
+                matches[selectedOffset][0].wrapper?.scrollIntoView(false);
+            }
         }
     }
 
