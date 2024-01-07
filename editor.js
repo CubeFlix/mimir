@@ -4822,7 +4822,6 @@ class Editor {
         const parent = this.findClosestParent(siblings[0], (n) => n.nodeType == Node.ELEMENT_NODE && (["OL", "UL"].includes(n.tagName) || (n.style && n.style.marginLeft.toLowerCase() == "40px")));
         var lastIndented = null; // Store the first and last indented nodes so that we can join adjacent lists.
         var firstIndented = null;
-        console.log(siblings);
         if (siblings[0].tagName == "LI") {
             // Wrap list nodes.
             const newLi = document.createElement("li");
@@ -4958,7 +4957,6 @@ class Editor {
         const nodesWithoutExtraneousParents = this.removeExtraneousParents(nodes);
 
         // If possible, get inner children.
-        console.log(nodes);
         const fixedNodes = [];
         function getInnerChildren(node) {
             // If the current node is not a OL/UL element but contains a OL/UL, go inside.

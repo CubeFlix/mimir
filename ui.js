@@ -1022,6 +1022,7 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         matches[selectedOffset]?.forEach(n => n.wrapper.classList.remove("editor-find-and-replace-current"));
         selectedOffset = (selectedOffset + 1) % matches.length;
         matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("editor-find-and-replace-current"));
+        matches[selectedOffset]?.node.scrollIntoView();
     }
 
     function previous() {
@@ -1138,7 +1139,6 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         }
 
         if (matches[selectedOffset]) {
-            debugger;
             const match = matches[selectedOffset];
             match[0].node.textContent = newText;
             if (match[0].wrapper && newText != "") {
