@@ -23,6 +23,12 @@ EditorUI.dropdown = (button, content) => {
     dropdown.append(dropdownBody);
     dropdownBody.append(content);
 
+    function onKeyPress(event) {
+        if (event.key == "Escape") {
+            close();
+        }
+    }
+
     // Add event listeners.
     function onClick(event) {
         if (!(dropdownBody.contains(event.target))) {
@@ -33,6 +39,7 @@ EditorUI.dropdown = (button, content) => {
             document.removeEventListener("mousedown", onClick);
             dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
             dropdownButton.addEventListener("click", dropdownClick);
+            document.removeEventListener("keydown", onKeyPress);
         }
     }
     dropdownButton.addEventListener("mousedown", function(event) {
@@ -48,6 +55,7 @@ EditorUI.dropdown = (button, content) => {
         dropdownBody.style.left = "";
         dropdownBody.classList.add("editor-dropdown-show");
         document.addEventListener("mousedown", onClick);
+        document.addEventListener("keydown", onKeyPress);
         dropdown.dispatchEvent(new Event("editorDropdownOpen", {bubbles: true}));
 
         // Adjust the x offset of the dropdown to make sure it always appears on screen.
@@ -67,6 +75,7 @@ EditorUI.dropdown = (button, content) => {
         document.removeEventListener("mousedown", onClick);
         dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
         dropdownButton.addEventListener("click", dropdownClick);
+        document.removeEventListener("keydown", onKeyPress);
     }
 
     return {dropdown: dropdown, body: content, button: dropdownButton, close: close};
