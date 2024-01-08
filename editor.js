@@ -421,6 +421,10 @@ class Editor {
                 }
                 this.editor.innerHTML = this.editor.innerHTML;
                 return;
+            } else if (e.key.toLowerCase() == "f" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                this.openFindAndReplace();
+                return;
             }
 
             if (e.key == "Enter") {

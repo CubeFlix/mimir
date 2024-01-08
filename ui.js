@@ -996,12 +996,31 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         replaceInput.value = "";
         replaceButton.disabled = true;
         replaceAllButton.disabled = true;
+        document.addEventListener("mousedown", onClick);
+        document.addEventListener("keydown", onKeyPress);
     }
 
     function close() {
         opened = false;
         ui.style.display = "none";
         removeSearch();
+    }
+
+    function onKeyPress(event) {
+        if (event.key == "Escape") {
+            close();
+        }
+    }
+
+    // TODO: ignore press on own button
+    function onClick(event) {
+        if (!(ui.contains(event.target))) {
+            if (ui.style.display == "block") {
+                ui.style.display = "none";
+            }
+            document.removeEventListener("mousedown", onClick);
+            document.removeEventListener("keydown", onKeyPress);
+        }
     }
 
     function removeSearch() {
