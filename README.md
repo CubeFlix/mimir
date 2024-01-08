@@ -163,13 +163,13 @@ a rich text editor for javascript
 - [x] bug with `<div>abc</div><br>`
 - [x] BR shouldn't be counted as a block when removing extraneous divs
 - [ ] when joining, the last BR of a div should be duplicated (if not already) in order to make it visible (`<div>abc<br><br></div>`) see `<div>abc<br>abc<br></div>` (is this really needed??)
-- [ ] bug with cursor not creating div when in between two blocks
+- [x] bug with cursor not creating div when in between two blocks
 - [x] don't join nodes if they weren't originally together (fix this with paste too) (`abc<div><br></div>`) (inline block style)
 - [x] joining `abc<div>abc</div>`
 - [x] `<div>abc</div><br>` inline block styling and block styling
 - [x] accidentally double indenting
 - [ ] undo redo context menu grayed out
-- [ ] focus editor after selecting image
+- [ ] focus editor after inserting/selecting image
 - [x] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 
 - [ ] overhaul UI
