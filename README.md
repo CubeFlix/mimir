@@ -168,10 +168,14 @@ a rich text editor for javascript
 - [x] joining `abc<div>abc</div>`
 - [x] `<div>abc</div><br>` inline block styling and block styling
 - [x] accidentally double indenting
+- [ ] icons
+- [ ] modal overhaul
+- [ ] menubar should stay at top of editor
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after inserting/selecting image
 - [x] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 
+- [ ] disable find and replace option
 - [ ] overhaul UI
 - [ ] copy paste buttons
 - [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
@@ -182,7 +186,6 @@ a rich text editor for javascript
 - [ ] change list style (possibly)
 - [ ] find and replace
 - [ ] more history (calculate)
-- [ ] menubar should stay at top of editor
 - [ ] format paint (possibly)
 - [ ] release 1.0
 - [ ] code block (possibly)
