@@ -947,47 +947,56 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     // Find and replace modal UI.
     const ui = document.createElement("div");
     ui.setAttribute("id", "editor-find-and-replace-ui");
-    editor.after(ui);
+    editor.before(ui);
 
     // Find UI.
+    const findDiv = document.createElement("div");
     const findInput = document.createElement("input");
     findInput.classList.add("editor-find-and-replace-find-input");
     findInput.setAttribute("placeholder", "Search for");
-    ui.append(findInput);
+    findDiv.append(findInput);
     const findButton = document.createElement("button");
     findButton.classList.add("editor-find-and-replace-find-button");
     findButton.innerHTML = "Find";
-    ui.append(findButton);
+    findDiv.append(findButton);
     const findUpButton = document.createElement("button");
     findUpButton.classList.add("editor-find-and-replace-find-up-button");
     findUpButton.innerHTML = "&#9650;";
-    ui.append(findUpButton);
+    findDiv.append(findUpButton);
     const findDownButton = document.createElement("button");
     findDownButton.classList.add("editor-find-and-replace-find-down-button");
     findDownButton.innerHTML = "&#9660;";
-    ui.append(findDownButton);
+    findDiv.append(findDownButton);
+    ui.append(findDiv);
 
     // Replace UI.
+    const replaceDiv = document.createElement("div");
     const replaceInput = document.createElement("input");
     replaceInput.classList.add("editor-find-and-replace-replace-input");
     replaceInput.setAttribute("placeholder", "Replace with");
-    ui.append(replaceInput);
+    replaceDiv.append(replaceInput);
     const replaceButton = document.createElement("button");
     replaceButton.classList.add("editor-find-and-replace-replace-button");
     replaceButton.innerHTML = "Replace";
-    ui.append(replaceButton);
+    replaceDiv.append(replaceButton);
     const replaceAllButton = document.createElement("button");
     replaceAllButton.classList.add("editor-find-and-replace-replace-all-button");
     replaceAllButton.innerHTML = "Replace All";
-    ui.append(replaceAllButton);
+    replaceDiv.append(replaceAllButton);
+    ui.append(replaceDiv);
 
     // State.
     var opened = false;
     var matches = null;
     var search = null;
     var selectedOffset = null;
+    var ignoreNextClick = false;
 
     function open() {
+        if (ignoreNextClick) {
+            ignoreNextClick = false;
+            return;
+        }
         opened = true;
         ui.style.display = "block";
         findInput.value = "";
@@ -998,6 +1007,14 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         replaceAllButton.disabled = true;
         document.addEventListener("mousedown", onClick);
         document.addEventListener("keydown", onKeyPress);
+
+        updateModalPosition();
+    }
+
+    function updateModalPosition() {
+        const rect = ui.getBoundingClientRect();
+        const editorRect = editor.getBoundingClientRect();
+        ui.style.left = editorRect.right - rect.width + "px";
     }
 
     function close() {
@@ -1012,7 +1029,10 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         }
     }
 
-    // TODO: ignore press on own button
+    window.addEventListener("resize", () => {
+        if (opened) updateModalPosition();
+    });
+
     function onClick(event) {
         if (!(ui.contains(event.target))) {
             if (ui.style.display == "block") {
@@ -1020,6 +1040,10 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
             }
             document.removeEventListener("mousedown", onClick);
             document.removeEventListener("keydown", onKeyPress);
+            if (api.menubarOptions.openFindAndReplace && api.menubarOptions.openFindAndReplace.contains(event.target)) {
+                // If we click on the menubar button for opening find and replace
+                ignoreNextClick = true;
+            }
         }
     }
 
@@ -1081,11 +1105,6 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     findButton.addEventListener("click", find);
     findUpButton.addEventListener("click", previous);
     findDownButton.addEventListener("click", next);
-
-    const closeButton = document.createElement("button");
-    closeButton.innerHTML = "X";
-    closeButton.addEventListener("click", close);
-    ui.append(closeButton);
 
     function findInEditor(re) {
         const blocks = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "HR"];
