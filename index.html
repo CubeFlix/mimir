@@ -20,7 +20,9 @@
         </div>
         <script>
             const container = document.getElementById("editor");
-            const editor = new Editor(container, {});
+            const editor = new Editor(container, {
+                iconDirectory: "assets/icons"
+            });
             editor.init();
         </script>
     </body>

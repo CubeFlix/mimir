@@ -51,6 +51,7 @@ class Editor {
         this.defaultSize = 16 || settings.defaultSize;
         this.spellcheck = settings.spellcheck == undefined ? true : settings.spellcheck;
         this.defaultImageWidth = "300px" || settings.defaultImageWidth;
+        this.iconDirectory = settings.iconDirectory;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -125,6 +126,13 @@ class Editor {
     Create the menubar.
     */
     createMenubar() {
+        function iconPathFromName(name) { // See https://stackoverflow.com/questions/29855098/.
+            var separator = '/';
+            var replace = new RegExp(separator + '{1,}', 'g');
+            return "<img src=\"" + ([this.iconDirectory, name + ".svg"].join(separator).replace(replace, separator)) + "\">";
+        }
+        iconPathFromName = iconPathFromName.bind(this);
+
         this.menubar = document.createElement("div");
         this.menubar.setAttribute("id", "editor-menubar");
         this.menubar.setAttribute("role", "toolbar");
@@ -138,28 +146,28 @@ class Editor {
                     case "bold":
                         this.menubarOptions.bold = document.createElement("button");
                         this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
-                        this.menubarOptions.bold.innerHTML = "B";
+                        this.menubarOptions.bold.innerHTML = this.iconDirectory ? iconPathFromName("bold") : "B";
                         this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
                         this.menubar.append(this.menubarOptions.bold);
                         break;
                     case "italic":
                         this.menubarOptions.italic = document.createElement("button");
                         this.menubarOptions.italic.setAttribute("id", "editor-menubar-option-italic");
-                        this.menubarOptions.italic.innerHTML = "I";
+                        this.menubarOptions.italic.innerHTML = this.iconDirectory ? iconPathFromName("italic") : "I";
                         this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
                         this.menubar.append(this.menubarOptions.italic);
                         break;
                     case "underline":
                         this.menubarOptions.underline = document.createElement("button");
                         this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-underline");
-                        this.menubarOptions.underline.innerHTML = "U";
+                        this.menubarOptions.underline.innerHTML = this.iconDirectory ? iconPathFromName("underline") : "U";
                         this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
                         this.menubar.append(this.menubarOptions.underline);
                         break;
                     case "strikethrough":
                         this.menubarOptions.strikethrough = document.createElement("button");
                         this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
-                        this.menubarOptions.strikethrough.innerHTML = "S";
+                        this.menubarOptions.strikethrough.innerHTML = this.iconDirectory ? iconPathFromName("strikethrough") : "S";
                         this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
                         this.menubar.append(this.menubarOptions.strikethrough);
                         break;
@@ -187,8 +195,12 @@ class Editor {
                         break;
                     case "foreColor":
                         const foreColorButton = document.createElement("button");
-                        foreColorButton.innerHTML = "A";
-                        foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                        foreColorButton.innerHTML = this.iconDirectory ? iconPathFromName("a") : "A";
+                        if (this.iconDirectory) {
+                            foreColorButton.childNodes[0].style.borderBottom = `2px solid rgb(255, 0, 0)`;
+                        } else {
+                            foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                        }
                         foreColorButton.classList.add("editor-menubar-option-fore-color-button");
                         foreColorButton.addEventListener("click", function() {this.foreColor(foreColorInput.getValue());}.bind(this));
                         const foreColorOpenButton = document.createElement("button");
@@ -204,8 +216,12 @@ class Editor {
                         break;
                     case "backColor":
                         const backColorButton = document.createElement("button");
-                        backColorButton.innerHTML = "&#9639;";
-                        backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                        backColorButton.innerHTML = this.iconDirectory ? iconPathFromName("fill") : "&#9639;";
+                        if (this.iconDirectory) {
+                            backColorButton.childNodes[0].style.borderBottom = `2px solid rgb(255, 0, 0)`;
+                        } else {
+                            backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
+                        }
                         backColorButton.classList.add("editor-menubar-option-back-color-button");
                         backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
                         const backColorOpenButton = document.createElement("button");
@@ -222,20 +238,20 @@ class Editor {
                     case "sup":
                         this.menubarOptions.sup = document.createElement("button");
                         this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
-                        this.menubarOptions.sup.innerHTML = "x<sup>2</sup>";
+                        this.menubarOptions.sup.innerHTML = this.iconDirectory ? iconPathFromName("superscript") : "x<sup>2</sup>";
                         this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
                         this.menubar.append(this.menubarOptions.sup);
                         break;
                     case "sub":
                         this.menubarOptions.sub = document.createElement("button");
                         this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
-                        this.menubarOptions.sub.innerHTML = "x<sub>2</sub>";
+                        this.menubarOptions.sub.innerHTML = this.iconDirectory ? iconPathFromName("subscript") : "x<sub>2</sub>";
                         this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
                         this.menubar.append(this.menubarOptions.sub);
                         break;
                     case "link":
                         const linkButton = document.createElement("button");
-                        linkButton.innerHTML = "&#128279;";
+                        linkButton.innerHTML = this.iconDirectory ? iconPathFromName("link") : "&#128279;";
                         linkButton.classList.add("editor-menubar-option-link-button");
                         const linkInput = EditorUI.linkInput(this.link.bind(this), linkButton);
                         this.menubarOptions.link = linkInput;
@@ -245,7 +261,7 @@ class Editor {
                     case "quote":
                         this.menubarOptions.quote = document.createElement("button");
                         this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
-                        this.menubarOptions.quote.innerHTML = "\"";
+                        this.menubarOptions.quote.innerHTML = this.iconDirectory ? iconPathFromName("quote") : "\"";
                         this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
                         this.menubar.append(this.menubarOptions.quote);
                         break;
@@ -276,32 +292,32 @@ class Editor {
                     case "list":
                         this.menubarOptions.listOrdered = document.createElement("button");
                         this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
-                        this.menubarOptions.listOrdered.innerHTML = "OL";
+                        this.menubarOptions.listOrdered.innerHTML = this.iconDirectory ? iconPathFromName("list-ordered") : "OL";
                         this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
                         this.menubar.append(this.menubarOptions.listOrdered);
                         this.menubarOptions.listUnordered = document.createElement("button");
                         this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
-                        this.menubarOptions.listUnordered.innerHTML = "UL";
+                        this.menubarOptions.listUnordered.innerHTML = this.iconDirectory ? iconPathFromName("list-unordered") : "UL";
                         this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
                         this.menubar.append(this.menubarOptions.listUnordered);
                         break;
                     case "indent":
                         this.menubarOptions.indent = document.createElement("button");
                         this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
-                        this.menubarOptions.indent.innerHTML = ">";
+                        this.menubarOptions.indent.innerHTML = this.iconDirectory ? iconPathFromName("indent") : ">";
                         this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
                         this.menubar.append(this.menubarOptions.indent);
                         break;
                     case "outdent":
                         this.menubarOptions.outdent = document.createElement("button");
                         this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
-                        this.menubarOptions.outdent.innerHTML = "<";
+                        this.menubarOptions.outdent.innerHTML = this.iconDirectory ? iconPathFromName("outdent") : "<";
                         this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
                         this.menubar.append(this.menubarOptions.outdent);
                         break;
                     case "insertImage":
                         const imageButton = document.createElement("button");
-                        imageButton.innerHTML = "&#128444;";
+                        imageButton.innerHTML = this.iconDirectory ? iconPathFromName("image") : "&#128444;";
                         imageButton.classList.add("editor-menubar-option-image-button");
                         const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
                         this.menubarOptions.insertImage = imageInput;
@@ -311,35 +327,35 @@ class Editor {
                     case "insertHorizontalRule":
                         this.menubarOptions.hr = document.createElement("button");
                         this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
-                        this.menubarOptions.hr.innerHTML = "&#9135;";
+                        this.menubarOptions.hr.innerHTML = this.iconDirectory ? iconPathFromName("hr") : "&#9135;";
                         this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
                         this.menubar.append(this.menubarOptions.hr);
                         break;
                     case "undo":
                         this.menubarOptions.undo = document.createElement("button");
                         this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
-                        this.menubarOptions.undo.innerHTML = "&#8630;";
+                        this.menubarOptions.undo.innerHTML = this.iconDirectory ? iconPathFromName("undo") : "&#8630;";
                         this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
                         this.menubar.append(this.menubarOptions.undo);
                         break;
                     case "redo":
                         this.menubarOptions.redo = document.createElement("button");
                         this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
-                        this.menubarOptions.redo.innerHTML = "&#8631;";
+                        this.menubarOptions.redo.innerHTML = this.iconDirectory ? iconPathFromName("redo") : "&#8631;";
                         this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
                         this.menubar.append(this.menubarOptions.redo);
                         break;
                     case "remove":
                         this.menubarOptions.remove = document.createElement("button");
                         this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
-                        this.menubarOptions.remove.innerHTML = "X";
+                        this.menubarOptions.remove.innerHTML = this.iconDirectory ? iconPathFromName("remove") : "X";
                         this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
                         this.menubar.append(this.menubarOptions.remove);
                         break;
                     case "openFindAndReplace":
                         this.menubarOptions.openFindAndReplace = document.createElement("button");
                         this.menubarOptions.openFindAndReplace.setAttribute("id", "editor-menubar-option-open-find-and-replace");
-                        this.menubarOptions.openFindAndReplace.innerHTML = "&#128270;";
+                        this.menubarOptions.openFindAndReplace.innerHTML = this.iconDirectory ? iconPathFromName("search") : "&#128270;";
                         this.menubarOptions.openFindAndReplace.addEventListener("click", this.openFindAndReplace.bind(this));
                         this.menubar.append(this.menubarOptions.openFindAndReplace);
                         break;
