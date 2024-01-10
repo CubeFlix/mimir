@@ -168,7 +168,8 @@ a rich text editor for javascript
 - [x] joining `abc<div>abc</div>`
 - [x] `<div>abc</div><br>` inline block styling and block styling
 - [x] accidentally double indenting
-- [ ] icons
+- [x] icons
+- [ ] dropdown lists
 - [ ] modal overhaul
 - [ ] menubar should stay at top of editor
 - [ ] undo redo context menu grayed out
