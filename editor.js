@@ -5547,7 +5547,13 @@ class Editor {
     */
     foreColor(color) {
         this.performStyleCommand({type: "foreColor", color: color});
-        if (color != null) this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
+        if (color != null) {
+            if (this.iconDirectory) {
+                this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
+            } else {
+                this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
+            }
+        }
     }
 
     /*
@@ -5555,7 +5561,13 @@ class Editor {
     */
     backColor(color) {
         this.performStyleCommand({type: "backColor", color: color});
-        if (color != null) this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].style.textDecorationColor = color;
+        if (color != null) {
+            if (this.iconDirectory) {
+                this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
+            } else {
+                this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].style.textDecorationColor = color;
+            }
+        }
     }
 
     /*
