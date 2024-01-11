@@ -84,12 +84,63 @@ EditorUI.dropdown = (button, content) => {
 /*
 Create a dropdown list.
 */
-EditorUI.dropdownList = (options) => {
+EditorUI.dropdownList = (optionValues, onChange) => {
+    if (optionValues.length == 0) {return null;}
+
     // Create the input button.
     const inputButton = document.createElement("button");
+    inputButton.classList.add("editor-dropdown-list-open-button")
     
+    // State.
+    var currentSelected = optionValues[0].name;
+
     // Create the options.
-    
+    const options = [];
+    const optionDiv = document.createElement("div");
+    for (const option of optionValues) {
+        const content = option.content;
+        const name = option.name;
+
+        // Create the button option.
+        const button = document.createElement("button");
+        button.append(content);
+        options.push({name: name, button: button, content: content});
+        optionDiv.append(button);
+
+        button.addEventListener("click", (e) => {
+            setValue(name); 
+            onChange(name);
+            dropdownObj.close();
+        });
+    }
+    optionDiv.classList.add("editor-dropdown-list-options");
+
+    // Create the modal.
+    const dropdownObj = EditorUI.dropdown(inputButton, optionDiv);
+    dropdownObj.dropdown.classList.add("editor-dropdown-list");
+
+    // Get the current value.
+    function getValue() {
+        return currentSelected;
+    }
+
+    // Set the current value.
+    function setValue(value) {
+        currentSelected = value;
+        updateValue();
+    }
+
+    // Update value.
+    function updateValue() {
+        inputButton.innerHTML = "";
+        const option = options.find((o) => o.name == currentSelected);
+        if (!option) return;
+        inputButton.append(option.content.cloneNode(true));
+    }
+
+    updateValue();
+
+    return {dropdown: dropdownObj, getValue: getValue, setValue: setValue, list: dropdownObj.dropdown};
 }
 
 /*

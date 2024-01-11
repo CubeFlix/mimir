@@ -20,6 +20,37 @@
     display: block;
 }
 
+/* List dropdown. */
+.editor-dropdown-list-open-button {
+    min-height: 30px;
+    padding: 5px 30px 5px 5px;
+    border: none;
+    border-radius: 5px;
+    background-color: white;
+    background-repeat: no-repeat;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 15px top 1em, right 10px top 1em;
+    background-size: 5px 5px, 5px 5px;
+}
+
+.editor-dropdown-list-open-button:hover,
+.editor-dropdown-list-open-button:focus {
+    background-color: #e0e0e0;
+}
+
+.editor-dropdown-list-options > button {
+    min-height: 30px;
+    border: none;
+    padding: 5px 5px 5px 5px;
+    border-radius: 5px;
+    background-color: white;
+}
+
+.editor-dropdown-list-options > button:hover,
+.editor-dropdown-list-options > button:focus {
+    background-color: #e0e0e0;
+}
+
 /* Number input. */
 .editor-number-input {
     background-color: #f7f7f7;

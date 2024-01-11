@@ -33,6 +33,7 @@
             container.append(EditorUI.colorInput(() => {}, button, 200, 40, 200).colorInput);
             container.append(EditorUI.linkInput(() => {}, button2).linkInput);
             container.append(EditorUI.imageInput((i) => {console.log(i)}, button3).imageInput);
+            container.append(EditorUI.dropdownList([{name: "abc", content: document.createTextNode("abc")}, {name: "123", content: document.createTextNode("123")}]).list);
 
             // Touch test.
             const touchBox = document.getElementById("touch");

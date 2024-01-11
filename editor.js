@@ -266,16 +266,25 @@ class Editor {
                         this.menubar.append(this.menubarOptions.quote);
                         break;
                     case "header":
-                        this.menubarOptions.header = document.createElement("select");
-                        this.menubarOptions.header.setAttribute("id", "editor-menubar-option-header");
+                        var options = [];
+                        const createFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}">${t}</span>`; return e;};
+                        const headerToHTML = {
+                            Paragraph: document.createTextNode("Paragraph"), 
+                            H1: createFontTextElem(24, "Heading 1"),
+                            H2: createFontTextElem(24, "Heading 2"),
+                            H3: createFontTextElem(24, "Heading 3"),
+                            H4: createFontTextElem(24, "Heading 4"),
+                            H5: createFontTextElem(24, "Heading 5"),
+                            H6: createFontTextElem(24, "Heading 6")}
                         for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
-                            const newHeaderOption = document.createElement("option");
+                            const newHeaderOption = document.createElement("div");
                             newHeaderOption.innerHTML = level;
                             newHeaderOption.setAttribute("value", level);
-                            this.menubarOptions.header.append(newHeaderOption);
+                            options.push({name: level, content: headerToHTML[level]});
                         }
-                        this.menubarOptions.header.addEventListener("change", this.header.bind(this));
-                        this.menubar.append(this.menubarOptions.header);
+                        this.menubarOptions.header = EditorUI.dropdownList(options, this.header.bind(this));
+                        this.menubarOptions.header.list.setAttribute("id", "editor-menubar-option-header");
+                        this.menubar.append(this.menubarOptions.header.list);
                         break;
                     case "align":
                         this.menubarOptions.align = document.createElement("select");
@@ -1845,7 +1854,7 @@ class Editor {
             }
 
             if (option == "header") {
-                this.menubarOptions.header.value = styling.find(s => s.type == "header") ? styling.find(s => s.type == "header").level : "Paragraph";
+                this.menubarOptions.header.setValue(styling.find(s => s.type == "header") ? styling.find(s => s.type == "header").level : "Paragraph");
                 continue;
             }
 
@@ -5645,7 +5654,7 @@ class Editor {
     Header.
     */
     header() {
-        this.performStyleCommand({type: "header", level: this.menubarOptions.header.value});
+        this.performStyleCommand({type: "header", level: this.menubarOptions.header.getValue()});
     }
 
     /*
