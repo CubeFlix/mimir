@@ -82,6 +82,14 @@ EditorUI.dropdown = (button, content) => {
 }
 
 /*
+Create a dropdown list.
+*/
+EditorUI.dropdownList = (options) => {
+    // Create the input button.
+    
+}
+
+/*
 Create a number input.
 */
 EditorUI.numberInput = (min, max) => {

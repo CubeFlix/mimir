@@ -3014,7 +3014,7 @@ class Editor {
         var found = false;
 
         // Traverse upwards and reconstruct all the nodes passed on the way up.
-        while (this.inEditor(currentNode) && currentNode != this.editor) {
+        while (this.inEditor(currentNode) && currentNode != this.editor && currentNode.parentNode != this.editor) {
             currentNode = currentNode.parentNode;
 
             // Add the node.
@@ -4356,6 +4356,22 @@ class Editor {
             fixDisallowedChildrenOfNode(node);
         }
 
+        // If this is a header style, remove all font size nodes.
+        if (style.type == "header") {
+            for (const node of fixedNodes) {
+                const inlines = Array.from(node.querySelectorAll("span, font"));
+                if (node.matches("span, font")) {inlines.push(node)}
+                for (const inline of inlines) {
+                    if (inline.style.fontSize) {
+                        inline.style.fontSize = "";
+                    }
+                    if (inline.getAttribute("size")) {
+                        inline.removeAttribute("size");
+                    }
+                }
+            }
+        }
+
         // Fix disallowed parents.
         if (style.type == "quote" || style.type == "list") {
             var disallowedParents = (e) => (this.inlineStylingTags.includes(e.tagName) || e.tagName == "SPAN" || ["H1", "H2", "H3", "H4", "H5", "H6"].includes(e.tagName) || (e.style && (e.style.textAlign || e.style.marginLeft)));
@@ -5413,7 +5429,7 @@ class Editor {
         // Set the style.
         if (style.type == "remove") {
             this.removeAllStyles(style, range);
-        } else if (this.multipleValueStylingCommands.includes(style.type)) {
+        } else if (this.multipleValueStylingCommands.includes(style.type) && this.inlineStylingCommands.includes(style.type)) {
             if (((style.type == "foreColor" || style.type == "backColor") && style.color == null) || (style.type == "link" && style.url == null)) {
                 // Remove the styling.
                 this.removeStyle(style, range);
@@ -5449,9 +5465,7 @@ class Editor {
                     this.saveHistory();
                     this.removeBlockStyle({type: "header", level: null}, range);
                     var newRange = this.getRange();
-                    this.removeStyle({type: "size", size: null}, newRange);
-                    newRange = this.getRange();
-                    this.applyBlockStyle(style, newRange);
+                    if (style.level != "Paragraph") this.applyBlockStyle(style, newRange);
                     break;
                 case "align":
                     // We need to save history now since there might be multiple calls to removeBlockStyle or applyBlockStyle.
