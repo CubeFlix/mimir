@@ -648,12 +648,13 @@ class Editor {
                         newRange.collapse();
                         document.getSelection().removeAllRanges();
                         document.getSelection().addRange(newRange);
+                        this.scrollTextNodeIntoView(cursor);
                     }
                 }
                 this.updateMenubarOptions();
             }
 
-            if ((this.ascii.includes(e.key) || /\p{Emoji}/u.test(e.key)) && !e.ctrlKey && !e.metaKey) {
+            if (e.key.length == 1 && !e.ctrlKey && !e.metaKey) {
                 // Take a snapshot if needed.
                 if (this.shouldTakeSnapshotOnNextChange) {
                     this.saveHistory();
@@ -676,6 +677,7 @@ class Editor {
                     newRange.collapse(false);
                     document.getSelection().removeAllRanges();
                     document.getSelection().addRange(newRange);
+                    this.scrollTextNodeIntoView(newTextNode);
 
                     this.updateMenubarOptions();
                     return;
@@ -751,6 +753,7 @@ class Editor {
             range.setStart(container, 0);
             document.getSelection().removeAllRanges();
             document.getSelection().addRange(range);
+            container.scrollIntoView(false);
         }
     }
 
@@ -809,6 +812,7 @@ class Editor {
             range.setStart(container, 0);
             document.getSelection().removeAllRanges();
             document.getSelection().addRange(range);
+            container.scrollIntoView(false);
         }
     }
 
@@ -1321,6 +1325,18 @@ class Editor {
     }
 
     /*
+    Scroll a text node into view.
+    */
+    scrollTextNodeIntoView(node) {
+        // debugger;
+        const a = document.createElement("a");
+        a.innerHTML = " ";
+        node.after(a);
+        a.scrollIntoView({block: 'start'});
+        a.remove();
+    }
+
+    /*
     Insert a tab.
     */
     insertTab() {
@@ -1340,6 +1356,7 @@ class Editor {
             newRange.collapse(false);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
+            this.scrollTextNodeIntoView(tabNode);
             return;
         }
 
@@ -1356,6 +1373,7 @@ class Editor {
             newRange.collapse(false);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
+            this.scrollTextNodeIntoView(tabNode);
             return;
         }
 
@@ -1370,6 +1388,7 @@ class Editor {
                 newRange.collapse(false);
                 window.getSelection().removeAllRanges();
                 window.getSelection().addRange(newRange);
+                this.scrollTextNodeIntoView(tabNode);
                 return;
             }
         }
@@ -1381,6 +1400,7 @@ class Editor {
         newRange.collapse(false);
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(newRange);
+        this.scrollTextNodeIntoView(tabNode);
     }
 
     /*
@@ -4359,6 +4379,7 @@ class Editor {
         // If this is a header style, remove all font size nodes.
         if (style.type == "header") {
             for (const node of fixedNodes) {
+                if (node.nodeType != Node.ELEMENT_NODE) {continue;}
                 const inlines = Array.from(node.querySelectorAll("span, font"));
                 if (node.matches("span, font")) {inlines.push(node)}
                 for (const inline of inlines) {

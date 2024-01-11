@@ -207,7 +207,7 @@ a rich text editor for javascript
 - [x] make new block styling nodes go inside (this can be done during the fixDisallowedChildrenOfNode process, by entering block nodes (this could break joining, however))
 - [x] bug: when list styling `<p><p>abc</p></p><p><p>abc</p></p><p><p>abc</p></p>`, where all Ps have margin, uneven list ordering
 - [x] possibly join adjacent lists during indent
-- [ ] preserve styling with cursor on insertParagraph
+- [ ] scroll to selected nodes
 - [ ] join adjacent lists during outdent
 - [ ] consider joining adjacent list nodes during indent, event at different levels. see `<ol><li><ol><li><ol><li>abc</li></ol></li></ol></li><li><ol><li>abc</li></ol></li></ol>`
 - [ ] detectStyling for font sizes (em, etc.), superscript/subscript in css

@@ -86,6 +86,9 @@ Create a dropdown list.
 */
 EditorUI.dropdownList = (options) => {
     // Create the input button.
+    const inputButton = document.createElement("button");
+    
+    // Create the options.
     
 }
 
