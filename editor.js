@@ -267,20 +267,20 @@ class Editor {
                         break;
                     case "header":
                         var options = [];
-                        const createFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}">${t}</span>`; return e;};
+                        const createFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}px">${t}</span>`; return e;};
                         const headerToHTML = {
-                            Paragraph: document.createTextNode("Paragraph"), 
-                            H1: createFontTextElem(24, "Heading 1"),
-                            H2: createFontTextElem(24, "Heading 2"),
-                            H3: createFontTextElem(24, "Heading 3"),
-                            H4: createFontTextElem(24, "Heading 4"),
-                            H5: createFontTextElem(24, "Heading 5"),
-                            H6: createFontTextElem(24, "Heading 6")}
+                            Paragraph: [document.createTextNode("Paragraph"), document.createTextNode("Paragraph")], 
+                            H1: [createFontTextElem(36, "Heading 1"), document.createTextNode("Heading 1")],
+                            H2: [createFontTextElem(24, "Heading 2"), document.createTextNode("Heading 2")],
+                            H3: [createFontTextElem(18, "Heading 3"), document.createTextNode("Heading 3")],
+                            H4: [createFontTextElem(16, "Heading 4"), document.createTextNode("Heading 4")],
+                            H5: [createFontTextElem(14, "Heading 5"), document.createTextNode("Heading 5")],
+                            H6: [createFontTextElem(12, "Heading 6"), document.createTextNode("Heading 6")]}
                         for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
                             const newHeaderOption = document.createElement("div");
                             newHeaderOption.innerHTML = level;
                             newHeaderOption.setAttribute("value", level);
-                            options.push({name: level, content: headerToHTML[level]});
+                            options.push({name: level, content: headerToHTML[level][0], buttonDisplay: headerToHTML[level][1]});
                         }
                         this.menubarOptions.header = EditorUI.dropdownList(options, this.header.bind(this));
                         this.menubarOptions.header.list.setAttribute("id", "editor-menubar-option-header");
@@ -4419,6 +4419,7 @@ class Editor {
         for (const node of fixedNodes) {
             const toJoinNext = node.nextSibling;
             if (this.isEmpty(node)) {
+                joinNext = toJoinNext;
                 // Empty nodes.
                 node.remove();
                 continue;
@@ -5844,8 +5845,8 @@ class Editor {
     snapshot() {
         const content = this.editor.cloneNode(true);
         var range = null;
-        if (window.getSelection().rangeCount != 0) {
-            const selRange = this.getRange();
+        const selRange = this.getRange();
+        if (selRange) {
             if (selRange && this.inEditor(selRange.commonAncestorContainer)) {
                 range = this.serializeRange(selRange, this.editor);
             }

@@ -104,8 +104,10 @@ EditorUI.dropdownList = (optionValues, onChange) => {
         // Create the button option.
         const button = document.createElement("button");
         button.append(content);
-        options.push({name: name, button: button, content: content});
-        optionDiv.append(button);
+        options.push({name: name, button: button, content: content, buttonDisplay: option.buttonDisplay});
+        const div = document.createElement("div");
+        div.append(button);
+        optionDiv.append(div);
 
         button.addEventListener("click", (e) => {
             setValue(name); 
@@ -135,7 +137,11 @@ EditorUI.dropdownList = (optionValues, onChange) => {
         inputButton.innerHTML = "";
         const option = options.find((o) => o.name == currentSelected);
         if (!option) return;
-        inputButton.append(option.content.cloneNode(true));
+        if (option.buttonDisplay) {
+            inputButton.append(option.buttonDisplay.cloneNode(true))
+        } else {
+            inputButton.append(option.content.cloneNode(true));
+        }
     }
 
     updateValue();

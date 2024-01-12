@@ -21,6 +21,11 @@
 }
 
 /* List dropdown. */
+.editor-dropdown-list > .editor-dropdown-body {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 .editor-dropdown-list-open-button {
     min-height: 30px;
     padding: 5px 30px 5px 5px;
@@ -38,16 +43,21 @@
     background-color: #e0e0e0;
 }
 
-.editor-dropdown-list-options > button {
-    min-height: 30px;
-    border: none;
-    padding: 5px 5px 5px 5px;
-    border-radius: 5px;
-    background-color: white;
+.editor-dropdown-list-options {
+    width: max-content;
 }
 
-.editor-dropdown-list-options > button:hover,
-.editor-dropdown-list-options > button:focus {
+.editor-dropdown-list-options button {
+    min-height: 30px;
+    border: none;
+    padding: 5px 12px 5px 12px;
+    background-color: white;
+    width: 100%;
+    text-align: left;
+}
+
+.editor-dropdown-list-options button:hover,
+.editor-dropdown-list-options button:focus {
     background-color: #e0e0e0;
 }
 
