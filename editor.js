@@ -172,18 +172,19 @@ class Editor {
                         this.menubar.append(this.menubarOptions.strikethrough);
                         break;
                     case "font":
-                        this.menubarOptions.font = document.createElement("select");
-                        this.menubarOptions.font.setAttribute("id", "editor-menubar-option-font");
+                        var options = [];
                         for (const font of this.supportedFonts) {
-                            const newFontOption = document.createElement("option");
+                            const newFontOption = document.createElement("div");
                             newFontOption.innerHTML = font;
                             newFontOption.style.fontFamily = font;
                             newFontOption.setAttribute("value", font);
-                            this.menubarOptions.font.append(newFontOption);
+                            options.push({name: font, content: newFontOption});
                         }
-                        this.menubarOptions.font.value = this.defaultFont;
-                        this.menubarOptions.font.addEventListener("change", this.font.bind(this));
-                        this.menubar.append(this.menubarOptions.font);
+                        this.menubarOptions.font = EditorUI.dropdownList(options, this.font.bind(this));
+                        this.menubarOptions.font.list.setAttribute("id", "editor-menubar-option-font");
+                        this.menubarOptions.font.setValue(this.defaultFont);
+                        this.menubar.append(this.menubarOptions.font.list);
+                        this.menubarOptions.font.list.style.width = "130px";
                         break;
                     case "size":
                         const { numberInput, input, plus, minus } = EditorUI.numberInput(1, 200);
@@ -267,19 +268,16 @@ class Editor {
                         break;
                     case "header":
                         var options = [];
-                        const createFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}px">${t}</span>`; return e;};
+                        const createHeaderFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}px">${t}</span>`; return e;};
                         const headerToHTML = {
                             Paragraph: [document.createTextNode("Paragraph"), document.createTextNode("Paragraph")], 
-                            H1: [createFontTextElem(36, "Heading 1"), document.createTextNode("Heading 1")],
-                            H2: [createFontTextElem(24, "Heading 2"), document.createTextNode("Heading 2")],
-                            H3: [createFontTextElem(18, "Heading 3"), document.createTextNode("Heading 3")],
-                            H4: [createFontTextElem(16, "Heading 4"), document.createTextNode("Heading 4")],
-                            H5: [createFontTextElem(14, "Heading 5"), document.createTextNode("Heading 5")],
-                            H6: [createFontTextElem(12, "Heading 6"), document.createTextNode("Heading 6")]}
+                            H1: [createHeaderFontTextElem(36, "Heading 1"), document.createTextNode("Heading 1")],
+                            H2: [createHeaderFontTextElem(24, "Heading 2"), document.createTextNode("Heading 2")],
+                            H3: [createHeaderFontTextElem(18, "Heading 3"), document.createTextNode("Heading 3")],
+                            H4: [createHeaderFontTextElem(16, "Heading 4"), document.createTextNode("Heading 4")],
+                            H5: [createHeaderFontTextElem(14, "Heading 5"), document.createTextNode("Heading 5")],
+                            H6: [createHeaderFontTextElem(12, "Heading 6"), document.createTextNode("Heading 6")]}
                         for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
-                            const newHeaderOption = document.createElement("div");
-                            newHeaderOption.innerHTML = level;
-                            newHeaderOption.setAttribute("value", level);
                             options.push({name: level, content: headerToHTML[level][0], buttonDisplay: headerToHTML[level][1]});
                         }
                         this.menubarOptions.header = EditorUI.dropdownList(options, this.header.bind(this));
@@ -287,16 +285,16 @@ class Editor {
                         this.menubar.append(this.menubarOptions.header.list);
                         break;
                     case "align":
-                        this.menubarOptions.align = document.createElement("select");
-                        this.menubarOptions.align.setAttribute("id", "editor-menubar-option-align");
+                        var options = [];
                         for (const direction of ["Left", "Right", "Center", "Justify"]) {
-                            const newAlignOption = document.createElement("option");
-                            newAlignOption.innerHTML = direction;
+                            const newAlignOption = document.createElement("div");
+                            newAlignOption.innerHTML = this.iconDirectory ? iconPathFromName("align-" + direction.toLowerCase()) : direction;
                             newAlignOption.setAttribute("value", direction.toLowerCase());
-                            this.menubarOptions.align.append(newAlignOption);
+                            options.push({name: direction.toLowerCase(), content: newAlignOption});
                         }
-                        this.menubarOptions.align.addEventListener("change", this.align.bind(this));
-                        this.menubar.append(this.menubarOptions.align);
+                        this.menubarOptions.align = EditorUI.dropdownList(options, this.align.bind(this));
+                        this.menubarOptions.align.list.setAttribute("id", "editor-menubar-option-align");
+                        this.menubar.append(this.menubarOptions.align.list);
                         break;
                     case "list":
                         this.menubarOptions.listOrdered = document.createElement("button");
@@ -1849,7 +1847,7 @@ class Editor {
         const styling = this.detectStyling(range);
         for (const option of this.commands) {
             if (option == "font") {
-                this.menubarOptions.font.value = styling.find(s => s.type == "font") ? styling.find(s => s.type == "font").family : "";
+                this.menubarOptions.font.setValue(styling.find(s => s.type == "font") ? styling.find(s => s.type == "font").family : "");
                 continue;
             }
 
@@ -1859,7 +1857,7 @@ class Editor {
             }
 
             if (option == "align") {
-                this.menubarOptions.align.value = styling.find(s => s.type == "align") ? styling.find(s => s.type == "align").direction : "left";
+                this.menubarOptions.align.setValue(styling.find(s => s.type == "align") ? styling.find(s => s.type == "align").direction : "left");
                 continue;
             }
 
@@ -5584,7 +5582,7 @@ class Editor {
     Font change.
     */
     font() {
-        this.performStyleCommand({type: "font", family: this.menubarOptions.font.value});
+        this.performStyleCommand({type: "font", family: this.menubarOptions.font.getValue()});
     }
 
     /*
@@ -5662,7 +5660,7 @@ class Editor {
     Text align.
     */
     align() {
-        this.performStyleCommand({type: "align", direction: this.menubarOptions.align.value});
+        this.performStyleCommand({type: "align", direction: this.menubarOptions.align.getValue()});
     }
 
     /*
