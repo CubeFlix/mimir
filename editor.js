@@ -1660,17 +1660,20 @@ class Editor {
         this.editor.addEventListener("drag", function(e) {
             // Set the range to remove during the drag.
             this.dragRangeToRemove = this.getRange();
+            console.log("DRAG", this.dragRangeToRemove)
         }.bind(this));
 
         this.editor.addEventListener("dragend", function(e) {
             // Set the range to remove during the drag.
             this.dragRangeToRemove = null;
+            console.log("DROP", this.dragRangeToRemove)
         }.bind(this));
 
         this.editor.addEventListener("drop", function(e) {
             this.saveHistory();
             this.imageModule.deselect();
             this.removeCursor(false);
+            console.log("DROP", this.dragRangeToRemove)
 
             // Insert HTML data.
             if (e.dataTransfer.getData("text/html")) {
@@ -1706,6 +1709,7 @@ class Editor {
 
                     // Split the start container at the start offset.
                     if (range.startContainer.nodeType == Node.TEXT_NODE) {
+                        debugger;
                         // Insert the start node to begin inserting after. Modify the range to remove so that it stays consistent.
                         // Split the text node and place an empty node in between.
                         const sliceOffset = range.startOffset;
@@ -1730,7 +1734,7 @@ class Editor {
                             }
                         }
                         if (endContainer == range.startContainer) {
-                            if (endOffset >= endOffset) {
+                            if (endOffset >= sliceOffset) {
                                 // The end offset is after the slice.
                                 endContainer = endTextNode;
                                 endOffset = endOffset - sliceOffset;
