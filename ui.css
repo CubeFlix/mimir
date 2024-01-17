@@ -121,7 +121,7 @@
 }
 
 /* Color input. */
-.editor-color-input-body {
+.editor-color-picker-row {
     display: flex;
     gap: 10px;
 }

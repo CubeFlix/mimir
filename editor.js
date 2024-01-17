@@ -4420,7 +4420,7 @@ class Editor {
         var joinNext = null;
         for (const node of fixedNodes) {
             const toJoinNext = node.nextSibling;
-            if (this.isEmpty(node)) {
+            if (this.isEmpty(node) && !(this.currentCursor && node.contains(this.currentCursor))) {
                 joinNext = toJoinNext;
                 // Empty nodes.
                 node.remove();

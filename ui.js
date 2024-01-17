@@ -128,6 +128,9 @@ EditorUI.dropdownList = (optionValues, onChange) => {
 
     // Set the current value.
     function setValue(value) {
+        if (!options.some((o) => o.name == value)) {
+            value = options[0]?.name;
+        }
         currentSelected = value;
         updateValue();
     }
@@ -222,6 +225,9 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const body = document.createElement("div");
     body.classList.add("editor-color-input-body");
 
+    // First row of content.
+    const rowOne = document.createElement("div");
+
     // Primary editor.
     const primaryContainer = document.createElement("div");
     primaryContainer.style.width = primaryWidth + "px";
@@ -235,7 +241,7 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const primaryThumb = document.createElement("div");
     primaryThumb.classList.add("editor-color-picker-primary-thumb");
     primaryContainer.append(primaryThumb);
-    body.append(primaryContainer);
+    rowOne.append(primaryContainer);
 
     // Hue editor.
     const hueContainer = document.createElement("div");
@@ -250,7 +256,7 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const hueSlider = document.createElement("div");
     hueSlider.classList.add("editor-color-picker-hue-slider");
     hueContainer.append(hueSlider);
-    body.append(hueContainer);
+    rowOne.append(hueContainer);
 
     // RGB form.
     const rgbForm = document.createElement("div");
@@ -314,7 +320,13 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const [rgbFormInputContainerG, rgbFormInputG] = createColorValueInput("G");
     const [rgbFormInputContainerB, rgbFormInputB] = createColorValueInput("B");
     rgbForm.append(rgbFormInputContainerR, rgbFormInputContainerG, rgbFormInputContainerB)
-    body.append(rgbForm);
+    rowOne.append(rgbForm);
+
+    body.append(rowOne);
+    rowOne.classList.add("editor-color-picker-row");
+
+    // Row two.
+    const rowTwo = document.createElement("div");
 
     // Save and remove buttons.
     const saveButton = document.createElement("button");
@@ -325,7 +337,10 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     removeButton.classList.add("editor-color-picker-remove-button");
     removeButton.innerHTML = "Remove";
     removeButton.addEventListener("click", () => {callback(null); closeFunc();});
-    body.append(saveButton, removeButton);
+    rowTwo.append(saveButton, removeButton);
+
+    body.append(rowTwo);
+    rowTwo.classList.add("editor-color-picker-row");
     
     // Create the button.
     button.classList.add("editor-color-picker-button");
