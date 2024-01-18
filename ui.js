@@ -1050,6 +1050,10 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     findDownButton.classList.add("editor-find-and-replace-find-down-button");
     findDownButton.innerHTML = "&#9660;";
     findDiv.append(findDownButton);
+    const toggleCaseSensitiveButton = document.createElement("button");
+    toggleCaseSensitiveButton.classList.add("editor-find-and-replace-toggle-case-sensitive-button");
+    toggleCaseSensitiveButton.innerHTML = "Aa";
+    findDiv.append(toggleCaseSensitiveButton);
     ui.append(findDiv);
 
     // Replace UI.
@@ -1074,6 +1078,7 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     var search = null;
     var selectedOffset = null;
     var ignoreNextClick = false;
+    var caseSensitive = true;
 
     function open() {
         if (ignoreNextClick) {
@@ -1112,6 +1117,17 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         }
     }
 
+    function toggleCaseSensitive(event) {
+        caseSensitive = !caseSensitive;
+        if (caseSensitive) {
+            toggleCaseSensitiveButton.classList.toggle("editor-toggled", caseSensitive);
+        }
+        if (search) {
+            find();
+        }
+    }
+    toggleCaseSensitiveButton.addEventListener("click", toggleCaseSensitive);
+
     window.addEventListener("resize", () => {
         if (opened) updateModalPosition();
     });
@@ -1119,7 +1135,7 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     function onClick(event) {
         if (!(ui.contains(event.target))) {
             if (ui.style.display == "block") {
-                ui.style.display = "none";
+                close();
             }
             document.removeEventListener("mousedown", onClick);
             document.removeEventListener("keydown", onKeyPress);
@@ -1192,7 +1208,11 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     function findInEditor(re) {
         const blocks = ["BR", "DIV", "P", "OL", "UL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "HR"];
         if (!editor.firstChild) {return;}
-        const aggregate = editor.textContent.split("\u00A0").join(" ");
+        var aggregate = editor.textContent.split("\u00A0").join(" ");
+        if (!caseSensitive) {
+            aggregate = aggregate.toLowerCase();
+            re = re.toLowerCase();
+        }
         const matches = aggregate.matchAll(re);
         const matchGroups = [];
 

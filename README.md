@@ -169,6 +169,7 @@ a rich text editor for javascript
 - [x] `<div>abc</div><br>` inline block styling and block styling
 - [x] accidentally double indenting
 - [x] icons
+- [x] case insensitive find and replace
 - [ ] dropdown lists
 - [ ] modal overhaul
 - [ ] menubar should stay at top of editor
