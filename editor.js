@@ -724,8 +724,9 @@ class Editor {
                 this.redo();
                 return;
             } else if (e.inputType == "insertParagraph") {
-                this.handleEscapeBlockquote(e);
-                this.handleEscapeLists(e);
+                var didEscape = this.handleEscapeBlockquote(e);
+                didEscape |= this.handleEscapeLists(e);
+                if (!didEscape) this.handleEscapeCursorParagraph(e);
             } else if ((e.inputType == "insertText" || e.inputType.startsWith("deleteContent")) && !e.key) {
                 this.removeCursor();
             }
@@ -741,7 +742,7 @@ class Editor {
         while (!this.blockTags.includes(container.tagName) && this.inEditor(container)) {
             container = container.parentNode;
         }
-        if (container.tagName == "DIV" || container.tagName == "P") {
+        if (container.tagName == "DIV" || container.tagName == "P" || container.tagName == "BR") {
             // See W3 bug 13841.
             var outerContainer = container;
             while (outerContainer.tagName != "BLOCKQUOTE" && this.inEditor(outerContainer.parentNode)) {outerContainer = outerContainer.parentNode};
@@ -756,12 +757,22 @@ class Editor {
             container.after(newDiv);
             container.remove();
             container = newDiv;
+            if (this.currentCursor && newDiv.contains(this.currentCursor)) {
+                const range = new Range();
+                range.selectNodeContents(this.currentCursor);
+                range.collapse();
+                document.getSelection().removeAllRanges();
+                document.getSelection().addRange(range);
+                return true;
+            }
             const range = new Range();
             range.setStart(container, 0);
             document.getSelection().removeAllRanges();
             document.getSelection().addRange(range);
             container.scrollIntoView(false);
+            return true;
         }
+        return false;
     }
 
     /*
@@ -776,7 +787,7 @@ class Editor {
         while (!this.blockTags.includes(container.tagName) && this.inEditor(container)) {
             container = container.parentNode;
         }
-        if (container.tagName == "DIV" || container.tagName == "P") {
+        if (container.tagName == "DIV" || container.tagName == "P" || container.tagName == "BR") {
             // See W3 bug 13841.
             var outerContainer = container;
             while (outerContainer.tagName != "LI" && this.inEditor(outerContainer.parentNode)) {outerContainer = outerContainer.parentNode};
@@ -806,6 +817,9 @@ class Editor {
                     // Split the container into its parent.
                     const nodesAfterContainer = Array.from(container.parentNode.childNodes).slice(Array.from(container.parentNode.childNodes).indexOf(container) + 1, container.parentNode.childNodes.length);
                     container.parentNode.after(container, ...nodesAfterContainer);
+                    if (container.previousSibling && this.isEmpty(container.previousSibling)) {
+                        container.previousSibling.remove();
+                    }
                 } else {
                     const newDiv = document.createElement("div");
                     newDiv.append(...container.childNodes);
@@ -815,12 +829,142 @@ class Editor {
                 }
             }
             
+            if (this.currentCursor && container.contains(this.currentCursor)) {
+                const range = new Range();
+                range.selectNodeContents(this.currentCursor);
+                range.collapse();
+                document.getSelection().removeAllRanges();
+                document.getSelection().addRange(range);
+                return true;
+            }
             const range = new Range();
             range.setStart(container, 0);
             document.getSelection().removeAllRanges();
             document.getSelection().addRange(range);
             container.scrollIntoView(false);
+            return true;
         }
+        return false;
+    }
+
+    /*
+    Get all inline siblings after a node.
+    */
+    inlineSiblingsAfterNode(n) {
+        const s = [];
+        while (n.nextSibling && !this.blockTags.includes(n.tagName)) {
+            n = n.nextSibling;
+            s.push(n);
+        }
+        return s;
+    }
+
+    /*
+    Get all inline siblings before a node.
+    */
+    inlineSiblingsBeforeNode(n) {
+        const s = [];
+        while (n.previousSibling && !this.blockTags.includes(n.tagName)) {
+            n = n.previousSibling;
+            s.push(n);
+        }
+        return s;
+    }
+
+    /*
+    Handle escaping a cursor on a paragraph.
+    */
+    handleEscapeCursorParagraph(e) {
+        const range = this.getRange();
+        if (!range) {return false;}
+        if (!(this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer))) {return false;}
+        e.preventDefault();
+        // Find the topmost block container. We split out of extraneous DIVs.
+        var container = range.commonAncestorContainer;
+        // Here, we look for the node to split. We want to split out of all extraneous nodes and single-line containers, but we stop at the first list we encounter.
+        var lastBlock = null;
+        var lastNode = null;
+        while (!["LI"].includes(container.tagName) && this.inEditor(container) && container != this.editor) {
+            lastNode = container;
+            container = container.parentNode;
+            if (this.blockTags.includes(container.tagName) && container != this.editor) {lastBlock = container;}
+        }
+
+        if (container == this.editor) {
+            if (!lastBlock) {
+                if (lastNode == this.currentCursor) {
+                    // Last node is current cursor, so just place current cursor in a DIV.
+                    const newDiv = document.createElement("div");
+                    this.currentCursor.after(newDiv);
+                    newDiv.append(this.currentCursor);
+                    const newRange = new Range();
+                    newRange.selectNodeContents(this.currentCursor);
+                    newRange.collapse();
+                    document.getSelection().removeAllRanges();
+                    document.getSelection().addRange(newRange);
+                    return true;
+                }
+
+                // Split the last node and insert the new split in a DIV. Insert all inline nodes after the cursor into a DIV.
+                const afterCursor = this.splitNodeAtChild(lastNode, this.currentCursor, true);
+                const inlineSiblings = this.inlineSiblingsAfterNode(lastNode);
+                const newDiv = document.createElement("div");
+                newDiv.append(afterCursor, ...inlineSiblings);
+                lastNode.after(newDiv);
+                const divForLastNode = document.createElement("div");
+                lastNode.after(divForLastNode);
+                divForLastNode.append(lastNode, ...this.inlineSiblingsBeforeNode(lastNode));
+                if (this.isEmpty(divForLastNode)) {
+                    // Handle empty last node.
+                    var lastChild = divForLastNode;
+                    while (lastChild.lastChild && !this.childlessTags.includes(lastChild.lastChild.tagName) && lastChild.lastChild.nodeType == Node.ELEMENT_NODE) {lastChild = lastChild.lastChild};
+                    lastChild.append(document.createElement("br"));
+                }
+                const newRange = new Range();
+                newRange.selectNodeContents(this.currentCursor);
+                newRange.collapse();
+                document.getSelection().removeAllRanges();
+                document.getSelection().addRange(newRange);
+                return true;
+            }
+            // We didn't find any lists. Split the last block.
+            const afterCursor = this.splitNodeAtChild(lastBlock, this.currentCursor, true);
+            lastBlock.after(afterCursor);
+
+            // Insert a BR to the previous block.
+            if (this.isEmpty(lastBlock)) {
+                var lastChild = lastBlock;
+                while (lastChild.lastChild && !this.childlessTags.includes(lastChild.lastChild.tagName) && lastChild.lastChild.nodeType == Node.ELEMENT_NODE) {lastChild = lastChild.lastChild};
+                lastChild.append(document.createElement("br"));
+            }
+            
+            // Set the cursor.
+            const newRange = new Range();
+            newRange.selectNodeContents(this.currentCursor);
+            newRange.collapse();
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(newRange);
+            return true;
+        }
+
+        // Split.
+        const afterCursor = this.splitNodeAtChild(container, this.currentCursor, true);
+        container.after(afterCursor);
+
+        // Insert a BR to the previous block.
+        if (this.isEmpty(container)) {
+            var lastChild = container;
+            while (lastChild.lastChild && !this.childlessTags.includes(lastChild.lastChild.tagName) && lastChild.lastChild.nodeType == Node.ELEMENT_NODE) {lastChild = lastChild.lastChild};
+            lastChild.append(document.createElement("br"));
+        }
+
+        // Set the cursor.
+        const newRange = new Range();
+        newRange.selectNodeContents(this.currentCursor);
+        newRange.collapse();
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(newRange);
+        return true;
     }
 
     /*
@@ -5974,6 +6118,8 @@ class Editor {
 
         // Initialize the global range cache variable.
         this.rangeCache = null;
+
+        this.ignoreNextSelectEvent = false;
 
         // Clear the container.
         this.container.innerHTML = "";

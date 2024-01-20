@@ -175,6 +175,10 @@ a rich text editor for javascript
 - [ ] menubar should stay at top of editor
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after inserting/selecting image
+- [ ] reinsert cursor on cut and delete event
+- [ ] remove cursor on beforeInput insert event (but preserve styling)
+- [ ] preserve styling on tab event
+- [x] remove cursor on new line but preserve styling
 - [x] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 
 - [ ] disable find and replace option
@@ -195,7 +199,7 @@ a rich text editor for javascript
 - [ ] text indent (possibly)
 - [ ] equations (possibly)
 - [ ] table (possibly)
-- [ ] when converting indent to list, create invisible lists to preserve indent
+- [ ] when converting indent to list, create invisible lists to preserve indent, and vice versa
 - [ ] special characters
 - [x] `sup`
 - [x] `pre`
