@@ -330,11 +330,11 @@ EditorUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
 
     // Save and remove buttons.
     const saveButton = document.createElement("button");
-    saveButton.classList.add("editor-color-picker-save-button");
+    saveButton.classList.add("editor-color-picker-save-button", "editor-action-button-primary");
     saveButton.innerHTML = "Save";
     saveButton.addEventListener("click", () => {callback(`rgb(${r}, ${g}, ${b})`); closeFunc();});
     const removeButton = document.createElement("button");
-    removeButton.classList.add("editor-color-picker-remove-button");
+    removeButton.classList.add("editor-color-picker-remove-button", "editor-action-button-secondary");
     removeButton.innerHTML = "Remove";
     removeButton.addEventListener("click", () => {callback(null); closeFunc();});
     rowTwo.append(saveButton, removeButton);

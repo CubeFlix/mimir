@@ -177,7 +177,7 @@ a rich text editor for javascript
 - [ ] focus editor after inserting/selecting image
 - [ ] reinsert cursor on cut and delete event
 - [ ] remove cursor on beforeInput insert event (but preserve styling)
-- [ ] preserve styling on tab event
+- [x] preserve styling on tab event
 - [x] remove cursor on new line but preserve styling
 - [x] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 

@@ -1,5 +1,11 @@
 /* Custom UI. */
 
+/* Non-toggle buttons. */
+.editor-action-button-primary {
+    background-color: #cee2ff;
+    font-family: var(--ui-font-family);
+}
+
 /* Dropdown. */
 .editor-dropdown {
     position: relative;
@@ -14,6 +20,7 @@
     padding: 7px;
     display: none;
     box-shadow: 0px 10px 30px 10px rgba(140, 150, 160, 0.15);
+    font-family: var(--ui-font-family);
 }
 
 .editor-dropdown-show {
@@ -24,6 +31,7 @@
 .editor-dropdown-list > .editor-dropdown-body {
     padding-left: 0px;
     padding-right: 0px;
+    font-family: var(--ui-font-family);
 }
 
 .editor-dropdown-list-open-button {
@@ -37,6 +45,7 @@
     background-position: right 15px top 1em, right 10px top 1em;
     background-size: 5px 5px, 5px 5px;
     width: 100%;
+    font-family: var(--ui-font-family);
 }
 
 .editor-dropdown-list-open-button div {
@@ -61,6 +70,7 @@
     padding: 5px 12px 5px 12px;
     background-color: white;
     width: 100%;
+    font-family: var(--ui-font-family);
     text-align: left;
 }
 
@@ -89,6 +99,7 @@
     outline: none;
     height: 100%;
     padding: 0;
+    font-family: var(--ui-font-family);
 }
 
 .editor-number-input-input[type="number"]:focus,
@@ -114,6 +125,7 @@
     min-height: 30px;
     background: none;
     border: none;
+    font-family: var(--ui-font-family);
 }
 
 .editor-number-input-button:hover {
@@ -168,6 +180,7 @@
 .editor-color-picker-rgb-form-input-container {
     width: 80px;
     display: flex;
+    gap: 3px;
 }
 
 .editor-color-picker-rgb-form {
@@ -186,9 +199,9 @@
 .editor-color-picker-rgb-form-input-label {
     display: block;
     width: 15px;
-    font-family: Arial, Helvetica, sans-serif;
     display: flex;
     align-items: center;
+    font-family: var(--ui-font-family);
 }
 
 .editor-color-picker-rgb-form-input-container > input {
@@ -196,6 +209,8 @@
     flex-grow: 1;
     height: 20px;
     border: 1px solid black;
+    font-family: var(--ui-font-family);
+    width: 100%;
 }
 
 .editor-color-picker-rgb-form-input-container > input[type="number"]::-webkit-inner-spin-button,
