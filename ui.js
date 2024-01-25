@@ -542,11 +542,11 @@ EditorUI.linkInput = (callback, button) => {
     const body = document.createElement("div");
     body.classList.add("editor-link-input-body");
     
-    const title = document.createElement("p");
+    const title = document.createElement("h4");
     title.innerHTML = "Insert Link";
-    title.classList.add("editor-link-input-label");
+    title.classList.add("editor-modal-label");
     const urlInput = document.createElement("input")
-    urlInput.classList.add("editor-link-input-input");
+    urlInput.classList.add("editor-link-input-input", "editor-modal-input");
     urlInput.setAttribute("placeholder", "URL");
     body.append(title, urlInput);
 
@@ -564,14 +564,17 @@ EditorUI.linkInput = (callback, button) => {
 
     // Save and remove buttons.
     const saveButton = document.createElement("button");
-    saveButton.classList.add("editor-link-input-save-button");
+    saveButton.classList.add("editor-link-input-save-button", "editor-action-button-primary");
     saveButton.innerHTML = "Save";
     saveButton.addEventListener("click", () => {callback(urlInput.value); value = urlInput.value; closeFunc(); urlInput.value = "";});
     const removeButton = document.createElement("button");
-    removeButton.classList.add("editor-link-input-remove-button");
+    removeButton.classList.add("editor-link-input-remove-button", "editor-action-button-secondary");
     removeButton.innerHTML = "Remove";
     removeButton.addEventListener("click", () => {callback(null); closeFunc();});
-    body.append(saveButton, removeButton);
+    const buttonRow = document.createElement("div");
+    buttonRow.classList.add("editor-modal-row");
+    buttonRow.append(saveButton, removeButton);
+    body.append(buttonRow);
 
     return {linkInput: dropdown, dropdown: dropdownObj, getValue: getValue};
 }
@@ -584,18 +587,18 @@ EditorUI.imageInput = (callback, button, objectURLList) => {
     const body = document.createElement("div");
     body.classList.add("editor-image-input-body");
     
-    const title = document.createElement("p");
+    const title = document.createElement("h4");
     title.innerHTML = "Insert Image";
-    title.classList.add("editor-image-input-label");
+    title.classList.add("editor-modal-label");
     const imageInput = document.createElement("input")
     imageInput.classList.add("editor-image-input-input");
     imageInput.setAttribute("type", "file");
     imageInput.setAttribute("accept", "image/jpeg, image/png, image/gif, image/bmp, image/webp, image/tiff");
     const urlInput = document.createElement("input");
-    urlInput.classList.add("editor-image-url-input");
+    urlInput.classList.add("editor-image-url-input", "editor-modal-input");
     urlInput.setAttribute("placeholder", "URL");
     const altInput = document.createElement("input")
-    altInput.classList.add("editor-image-alt-input");
+    altInput.classList.add("editor-image-alt-input", "editor-modal-input");
     altInput.setAttribute("placeholder", "Alt Text");
     body.append(title, imageInput, urlInput, altInput);
 
@@ -621,7 +624,11 @@ EditorUI.imageInput = (callback, button, objectURLList) => {
         urlInput.value = "";
         closeFunc();
     });
-    body.append(saveButton);
+    saveButton.classList.add("editor-action-button-primary");
+    const buttonRow = document.createElement("div");
+    buttonRow.classList.add("editor-modal-row");
+    buttonRow.append(saveButton);
+    body.append(buttonRow);
 
     return {imageInput: dropdown, dropdown: dropdownObj};
 }
