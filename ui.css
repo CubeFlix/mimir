@@ -365,6 +365,36 @@
     background-color: white;
     border: 1px solid silver;
     border-radius: 2px;
+
+    --ui-font-family: Segoe UI, Arial, Helvetica, sans-serif;
+}
+
+.editor-find-and-replace-toggle-case-sensitive-button {
+    min-width: 30px;
+    min-height: 30px;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--ui-font-family);
+}
+
+.editor-find-and-replace-toggle-case-sensitive-button:hover {
+    background: #e0e0e0;
+}
+
+.editor-find-and-replace-toggle-case-sensitive-button.editor-toggled {
+    background: #cee2ff;
+}
+
+.editor-find-and-replace-find-input {
+    flex-grow: 1;
+}
+
+.editor-find-and-replace-replace-input {
+    flex-grow: 1;
 }
 
 #editor-body .editor-find-and-replace-match {

@@ -1041,40 +1041,43 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
 
     // Find UI.
     const findDiv = document.createElement("div");
+    findDiv.classList.add("editor-modal-row");
     const findInput = document.createElement("input");
-    findInput.classList.add("editor-find-and-replace-find-input");
+    findInput.classList.add("editor-find-and-replace-find-input", "editor-modal-input");
     findInput.setAttribute("placeholder", "Search for");
     findDiv.append(findInput);
     const findButton = document.createElement("button");
-    findButton.classList.add("editor-find-and-replace-find-button");
+    findButton.classList.add("editor-find-and-replace-find-button", "editor-action-button-primary");
     findButton.innerHTML = "Find";
     findDiv.append(findButton);
     const findUpButton = document.createElement("button");
-    findUpButton.classList.add("editor-find-and-replace-find-up-button");
+    findUpButton.classList.add("editor-find-and-replace-find-up-button", "editor-action-button-secondary");
     findUpButton.innerHTML = "&#9650;";
     findDiv.append(findUpButton);
     const findDownButton = document.createElement("button");
-    findDownButton.classList.add("editor-find-and-replace-find-down-button");
+    findDownButton.classList.add("editor-find-and-replace-find-down-button", "editor-action-button-secondary");
     findDownButton.innerHTML = "&#9660;";
     findDiv.append(findDownButton);
     const toggleCaseSensitiveButton = document.createElement("button");
     toggleCaseSensitiveButton.classList.add("editor-find-and-replace-toggle-case-sensitive-button");
     toggleCaseSensitiveButton.innerHTML = "Aa";
+    toggleCaseSensitiveButton.classList.toggle("editor-toggled", true);
     findDiv.append(toggleCaseSensitiveButton);
     ui.append(findDiv);
 
     // Replace UI.
     const replaceDiv = document.createElement("div");
+    replaceDiv.classList.add("editor-modal-row");
     const replaceInput = document.createElement("input");
-    replaceInput.classList.add("editor-find-and-replace-replace-input");
+    replaceInput.classList.add("editor-find-and-replace-replace-input", "editor-modal-input");
     replaceInput.setAttribute("placeholder", "Replace with");
     replaceDiv.append(replaceInput);
     const replaceButton = document.createElement("button");
-    replaceButton.classList.add("editor-find-and-replace-replace-button");
+    replaceButton.classList.add("editor-find-and-replace-replace-button", "editor-action-button-primary");
     replaceButton.innerHTML = "Replace";
     replaceDiv.append(replaceButton);
     const replaceAllButton = document.createElement("button");
-    replaceAllButton.classList.add("editor-find-and-replace-replace-all-button");
+    replaceAllButton.classList.add("editor-find-and-replace-replace-all-button", "editor-action-button-primary");
     replaceAllButton.innerHTML = "Replace All";
     replaceDiv.append(replaceAllButton);
     ui.append(replaceDiv);
@@ -1126,9 +1129,7 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
 
     function toggleCaseSensitive(event) {
         caseSensitive = !caseSensitive;
-        if (caseSensitive) {
-            toggleCaseSensitiveButton.classList.toggle("editor-toggled", caseSensitive);
-        }
+        toggleCaseSensitiveButton.classList.toggle("editor-toggled", caseSensitive);
         if (search) {
             find();
         }
@@ -1175,6 +1176,7 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
             return;
         }
         matches = findInEditor(findInput.value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'));
+        if (!matches) {return;}
         matches = prepareMatches(matches);
         search = findInput.value;
         matches = highlight(matches);
