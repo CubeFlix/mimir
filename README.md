@@ -170,8 +170,8 @@ a rich text editor for javascript
 - [x] accidentally double indenting
 - [x] icons
 - [x] case insensitive find and replace
-- [ ] dropdown lists
-- [ ] modal overhaul
+- [x] dropdown lists
+- [x] modal overhaul
 - [ ] menubar should stay at top of editor
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after inserting/selecting image
@@ -184,7 +184,7 @@ a rich text editor for javascript
 - [ ] disable find and replace option
 - [ ] overhaul UI
 - [ ] copy paste buttons
-- [ ] accessibility (for, name, aria, etc.) and esc button handling for modals
+- [ ] accessibility (for, name, aria, etc.) and esc button handling for modals tab on buttons
 - [x] remove all styling from text, remove all color from 
 - [x] bolding and unbolding and cursor on single images (test cursor before and after image) 
 - [x] HR not splitting out of inline nodes
