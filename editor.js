@@ -136,6 +136,7 @@ class Editor {
         this.menubar = document.createElement("div");
         this.menubar.setAttribute("id", "editor-menubar");
         this.menubar.setAttribute("role", "toolbar");
+        this.menubar.setAttribute("aria-label", "Editor menubar");
         this.container.append(this.menubar);
 
         // Add the options.
@@ -148,6 +149,9 @@ class Editor {
                         this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
                         this.menubarOptions.bold.innerHTML = this.iconDirectory ? iconPathFromName("bold") : "B";
                         this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
+                        this.menubarOptions.bold.setAttribute("title", "Bold");
+                        this.menubarOptions.bold.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.bold.setAttribute("aria-label", "Editor toggle bold");
                         this.menubar.append(this.menubarOptions.bold);
                         break;
                     case "italic":
@@ -155,6 +159,9 @@ class Editor {
                         this.menubarOptions.italic.setAttribute("id", "editor-menubar-option-italic");
                         this.menubarOptions.italic.innerHTML = this.iconDirectory ? iconPathFromName("italic") : "I";
                         this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
+                        this.menubarOptions.italic.setAttribute("title", "Italic");
+                        this.menubarOptions.italic.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.italic.setAttribute("aria-label", "Editor toggle italic");
                         this.menubar.append(this.menubarOptions.italic);
                         break;
                     case "underline":
@@ -162,6 +169,9 @@ class Editor {
                         this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-underline");
                         this.menubarOptions.underline.innerHTML = this.iconDirectory ? iconPathFromName("underline") : "U";
                         this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
+                        this.menubarOptions.underline.setAttribute("title", "Underline");
+                        this.menubarOptions.underline.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.underline.setAttribute("aria-label", "Editor toggle underline");
                         this.menubar.append(this.menubarOptions.underline);
                         break;
                     case "strikethrough":
@@ -169,6 +179,9 @@ class Editor {
                         this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
                         this.menubarOptions.strikethrough.innerHTML = this.iconDirectory ? iconPathFromName("strikethrough") : "S";
                         this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
+                        this.menubarOptions.strikethrough.setAttribute("title", "Strikethrough");
+                        this.menubarOptions.strikethrough.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.strikethrough.setAttribute("aria-label", "Editor toggle strikethrough");
                         this.menubar.append(this.menubarOptions.strikethrough);
                         break;
                     case "font":
@@ -178,12 +191,16 @@ class Editor {
                             newFontOption.innerHTML = font;
                             newFontOption.style.fontFamily = font;
                             newFontOption.setAttribute("value", font);
+                            newFontOption.setAttribute("title", font);
+                            newFontOption.setAttribute("aria-label", "Editor select font " + font);
                             options.push({name: font, content: newFontOption});
                         }
                         this.menubarOptions.font = EditorUI.dropdownList(options, this.font.bind(this));
                         this.menubarOptions.font.list.setAttribute("id", "editor-menubar-option-font");
                         this.menubarOptions.font.setValue(this.defaultFont);
                         this.menubar.append(this.menubarOptions.font.list);
+                        this.menubarOptions.font.list.setAttribute("title", "Font");
+                        this.menubarOptions.font.list.setAttribute("aria-label", "Editor select font");
                         this.menubarOptions.font.list.style.width = "130px";
                         break;
                     case "size":
@@ -192,6 +209,12 @@ class Editor {
                         numberInput.setAttribute("id", "editor-menubar-option-size");
                         this.menubarOptions.size.value = this.defaultSize;
                         this.menubarOptions.size.addEventListener("change", this.size.bind(this));
+                        this.menubarOptions.size.setAttribute("title", "Size");
+                        this.menubarOptions.size.setAttribute("aria-label", "Editor change size");
+                        plus.setAttribute("title", "Increase Size");
+                        plus.setAttribute("aria-label", "Editor change size increase");
+                        minus.setAttribute("title", "Decrease Size");
+                        minus.setAttribute("aria-label", "Editor change size decrease");
                         this.menubar.append(numberInput);
                         break;
                     case "foreColor":
@@ -213,6 +236,8 @@ class Editor {
                         foreColorButtonContainer.classList.add("editor-menubar-option-fore-color-button-container");
                         foreColorButtonContainer.append(foreColorButton, foreColorInput.dropdown.button);
                         foreColorInput.colorInput.prepend(foreColorButtonContainer);
+                        foreColorInput.colorInput.setAttribute("title", "Foreground Color");
+                        foreColorInput.colorInput.setAttribute("aria-label", "Editor change foreground color");
                         this.menubar.append(foreColorInput.colorInput);
                         break;
                     case "backColor":
@@ -234,6 +259,8 @@ class Editor {
                         backColorButtonContainer.classList.add("editor-menubar-option-back-color-button-container");
                         backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
                         backColorInput.colorInput.prepend(backColorButtonContainer);
+                        backColorInput.colorInput.setAttribute("title", "Background Color");
+                        backColorInput.colorInput.setAttribute("aria-label", "Editor change background color");
                         this.menubar.append(backColorInput.colorInput);
                         break;
                     case "sup":
@@ -241,6 +268,9 @@ class Editor {
                         this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
                         this.menubarOptions.sup.innerHTML = this.iconDirectory ? iconPathFromName("superscript") : "x<sup>2</sup>";
                         this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
+                        this.menubarOptions.sup.setAttribute("title", "Superscript");
+                        this.menubarOptions.sup.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.sup.setAttribute("aria-label", "Editor toggle superscript");
                         this.menubar.append(this.menubarOptions.sup);
                         break;
                     case "sub":
@@ -248,6 +278,9 @@ class Editor {
                         this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
                         this.menubarOptions.sub.innerHTML = this.iconDirectory ? iconPathFromName("subscript") : "x<sub>2</sub>";
                         this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
+                        this.menubarOptions.sub.setAttribute("title", "Subscript");
+                        this.menubarOptions.sub.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.sub.setAttribute("aria-label", "Editor toggle subscript");
                         this.menubar.append(this.menubarOptions.sub);
                         break;
                     case "link":
@@ -257,6 +290,9 @@ class Editor {
                         const linkInput = EditorUI.linkInput(this.link.bind(this), linkButton);
                         this.menubarOptions.link = linkInput;
                         linkInput.linkInput.setAttribute("id", "editor-menubar-option-link");
+                        linkInput.linkInput.setAttribute("title", "Hyperlink");
+                        linkInput.linkInput.setAttribute("aria-pressed", "false");
+                        linkInput.linkInput.setAttribute("aria-label", "Editor insert link");
                         this.menubar.append(linkInput.linkInput);
                         break;
                     case "quote":
@@ -264,24 +300,30 @@ class Editor {
                         this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
                         this.menubarOptions.quote.innerHTML = this.iconDirectory ? iconPathFromName("quote") : "\"";
                         this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
+                        this.menubarOptions.quote.setAttribute("title", "Blockquote");
+                        this.menubarOptions.quote.setAttribute("aria-pressed", "false");
+                        this.menubarOptions.quote.setAttribute("aria-label", "Editor toggle blockquote");
                         this.menubar.append(this.menubarOptions.quote);
                         break;
                     case "header":
                         var options = [];
-                        const createHeaderFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}px">${t}</span>`; return e;};
+                        const createHeaderFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}px" title="${t}" aria-label="Editor select header ${t}">${t}</span>`; return e;};
+                        const createHeaderTextLabelElem = (t) => {const e = document.createElement("div"); e.innerHTML = `<span aria-label="Editor select header ${t}">${t}</span>`; return e;};
                         const headerToHTML = {
-                            Paragraph: [document.createTextNode("Paragraph"), document.createTextNode("Paragraph")], 
-                            H1: [createHeaderFontTextElem(36, "Heading 1"), document.createTextNode("Heading 1")],
-                            H2: [createHeaderFontTextElem(24, "Heading 2"), document.createTextNode("Heading 2")],
-                            H3: [createHeaderFontTextElem(18, "Heading 3"), document.createTextNode("Heading 3")],
-                            H4: [createHeaderFontTextElem(16, "Heading 4"), document.createTextNode("Heading 4")],
-                            H5: [createHeaderFontTextElem(14, "Heading 5"), document.createTextNode("Heading 5")],
-                            H6: [createHeaderFontTextElem(12, "Heading 6"), document.createTextNode("Heading 6")]}
+                            Paragraph: [createHeaderTextLabelElem("Paragraph"), createHeaderTextLabelElem("Paragraph")], 
+                            H1: [createHeaderFontTextElem(36, "Heading 1"), createHeaderTextLabelElem("Heading 1")],
+                            H2: [createHeaderFontTextElem(24, "Heading 2"), createHeaderTextLabelElem("Heading 2")],
+                            H3: [createHeaderFontTextElem(18, "Heading 3"), createHeaderTextLabelElem("Heading 3")],
+                            H4: [createHeaderFontTextElem(16, "Heading 4"), createHeaderTextLabelElem("Heading 4")],
+                            H5: [createHeaderFontTextElem(14, "Heading 5"), createHeaderTextLabelElem("Heading 5")],
+                            H6: [createHeaderFontTextElem(12, "Heading 6"), createHeaderTextLabelElem("Heading 6")]}
                         for (const level of ["Paragraph", "H1", "H2", "H3", "H4", "H5", "H6"]) {
                             options.push({name: level, content: headerToHTML[level][0], buttonDisplay: headerToHTML[level][1]});
                         }
                         this.menubarOptions.header = EditorUI.dropdownList(options, this.header.bind(this));
                         this.menubarOptions.header.list.setAttribute("id", "editor-menubar-option-header");
+                        this.menubarOptions.header.list.setAttribute("title", "Header");
+                        this.menubarOptions.header.list.setAttribute("aria-label", "Editor select header");
                         this.menubar.append(this.menubarOptions.header.list);
                         break;
                     case "align":
@@ -290,10 +332,14 @@ class Editor {
                             const newAlignOption = document.createElement("div");
                             newAlignOption.innerHTML = this.iconDirectory ? iconPathFromName("align-" + direction.toLowerCase()) : direction;
                             newAlignOption.setAttribute("value", direction.toLowerCase());
+                            newAlignOption.setAttribute("title", direction);
+                            newAlignOption.setAttribute("aria-label", "Editor change alignment " + direction);
                             options.push({name: direction.toLowerCase(), content: newAlignOption});
                         }
                         this.menubarOptions.align = EditorUI.dropdownList(options, this.align.bind(this));
                         this.menubarOptions.align.list.setAttribute("id", "editor-menubar-option-align");
+                        this.menubarOptions.align.list.setAttribute("title", "Alignment");
+                        this.menubarOptions.align.list.setAttribute("aria-label", "Editor change alignment");
                         this.menubar.append(this.menubarOptions.align.list);
                         break;
                     case "list":
@@ -301,11 +347,15 @@ class Editor {
                         this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
                         this.menubarOptions.listOrdered.innerHTML = this.iconDirectory ? iconPathFromName("list-ordered") : "OL";
                         this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
+                        this.menubarOptions.listOrdered.setAttribute("title", "Ordered List");
+                        this.menubarOptions.listOrdered.setAttribute("aria-label", "Editor toggle ordered list");
                         this.menubar.append(this.menubarOptions.listOrdered);
                         this.menubarOptions.listUnordered = document.createElement("button");
                         this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
                         this.menubarOptions.listUnordered.innerHTML = this.iconDirectory ? iconPathFromName("list-unordered") : "UL";
                         this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
+                        this.menubarOptions.listUnordered.setAttribute("title", "Unordered List");
+                        this.menubarOptions.listUnordered.setAttribute("aria-label", "Editor toggle unordered list");
                         this.menubar.append(this.menubarOptions.listUnordered);
                         break;
                     case "indent":
@@ -313,6 +363,8 @@ class Editor {
                         this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
                         this.menubarOptions.indent.innerHTML = this.iconDirectory ? iconPathFromName("indent") : ">";
                         this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
+                        this.menubarOptions.indent.setAttribute("title", "Indent");
+                        this.menubarOptions.indent.setAttribute("aria-label", "Editor increase indent");
                         this.menubar.append(this.menubarOptions.indent);
                         break;
                     case "outdent":
@@ -320,6 +372,8 @@ class Editor {
                         this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
                         this.menubarOptions.outdent.innerHTML = this.iconDirectory ? iconPathFromName("outdent") : "<";
                         this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
+                        this.menubarOptions.outdent.setAttribute("title", "Outdent");
+                        this.menubarOptions.outdent.setAttribute("aria-label", "Editor decrease indent");
                         this.menubar.append(this.menubarOptions.outdent);
                         break;
                     case "insertImage":
@@ -329,6 +383,8 @@ class Editor {
                         const imageInput = EditorUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
                         this.menubarOptions.insertImage = imageInput;
                         imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
+                        imageInput.imageInput.setAttribute("title", "Insert Image");
+                        imageInput.imageInput.setAttribute("aria-label", "Editor insert image");
                         this.menubar.append(imageInput.imageInput);
                         break;
                     case "insertHorizontalRule":
@@ -336,6 +392,8 @@ class Editor {
                         this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
                         this.menubarOptions.hr.innerHTML = this.iconDirectory ? iconPathFromName("hr") : "&#9135;";
                         this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
+                        this.menubarOptions.hr.setAttribute("title", "Horizontal Line");
+                        this.menubarOptions.hr.setAttribute("aria-label", "Editor insert horizontal line");
                         this.menubar.append(this.menubarOptions.hr);
                         break;
                     case "undo":
@@ -343,6 +401,8 @@ class Editor {
                         this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
                         this.menubarOptions.undo.innerHTML = this.iconDirectory ? iconPathFromName("undo") : "&#8630;";
                         this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
+                        this.menubarOptions.undo.setAttribute("title", "Undo");
+                        this.menubarOptions.undo.setAttribute("aria-label", "Editor undo");
                         this.menubar.append(this.menubarOptions.undo);
                         break;
                     case "redo":
@@ -350,6 +410,8 @@ class Editor {
                         this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
                         this.menubarOptions.redo.innerHTML = this.iconDirectory ? iconPathFromName("redo") : "&#8631;";
                         this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
+                        this.menubarOptions.redo.setAttribute("title", "Redo");
+                        this.menubarOptions.redo.setAttribute("aria-label", "Editor redo");
                         this.menubar.append(this.menubarOptions.redo);
                         break;
                     case "remove":
@@ -357,6 +419,8 @@ class Editor {
                         this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
                         this.menubarOptions.remove.innerHTML = this.iconDirectory ? iconPathFromName("remove") : "X";
                         this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
+                        this.menubarOptions.remove.setAttribute("title", "Remove Styling");
+                        this.menubarOptions.remove.setAttribute("aria-label", "Editor remove all styling");
                         this.menubar.append(this.menubarOptions.remove);
                         break;
                     case "openFindAndReplace":
@@ -364,6 +428,10 @@ class Editor {
                         this.menubarOptions.openFindAndReplace.setAttribute("id", "editor-menubar-option-open-find-and-replace");
                         this.menubarOptions.openFindAndReplace.innerHTML = this.iconDirectory ? iconPathFromName("search") : "&#128270;";
                         this.menubarOptions.openFindAndReplace.addEventListener("click", this.openFindAndReplace.bind(this));
+                        this.menubarOptions.openFindAndReplace.setAttribute("title", "Find and Replace");
+                        this.menubarOptions.openFindAndReplace.setAttribute("aria-label", "Editor open find and replace dialog");
+                        this.menubarOptions.openFindAndReplace.setAttribute("aria-haspopup", "true");
+                        this.menubarOptions.openFindAndReplace.setAttribute("aria-expanded", "false");
                         this.menubar.append(this.menubarOptions.openFindAndReplace);
                         break;
                 }
@@ -6123,6 +6191,8 @@ class Editor {
 
         // Clear the container.
         this.container.innerHTML = "";
+        this.container.setAttribute("role", "application");
+        this.container.setAttribute("aria-label", "Editor");
 
         // Create menubar.
         this.createMenubar();
@@ -6132,6 +6202,8 @@ class Editor {
         this.editor.setAttribute("id", "editor-body");
         this.editor.setAttribute("contenteditable", "true");
         this.editor.setAttribute("spellcheck", !!this.spellcheck);
+        this.editor.setAttribute("role", "textbox");
+        this.editor.setAttribute("aria-label", "Editor main editing area");
         this.container.append(this.editor);
 
         this.saveHistory();

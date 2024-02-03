@@ -23,6 +23,12 @@ EditorUI.dropdown = (button, content) => {
     dropdown.append(dropdownBody);
     dropdownBody.append(content);
 
+    dropdownBody.setAttribute("role", "dialog");
+    dropdownBody.setAttribute("aria-hidden", "true");
+    dropdownBody.setAttribute("aria-disabled", "true");
+    dropdownButton.setAttribute("aria-haspopup", "true");
+    dropdownButton.setAttribute("aria-expanded", "false");
+
     function onKeyPress(event) {
         if (event.key == "Escape") {
             close();
@@ -35,6 +41,9 @@ EditorUI.dropdown = (button, content) => {
             if (dropdownBody.classList.contains("editor-dropdown-show")) {
                 dropdownBody.classList.remove("editor-dropdown-show");
             }
+            dropdownButton.setAttribute("aria-expanded", "false");
+            dropdownBody.setAttribute("aria-hidden", "true");
+            dropdownBody.setAttribute("aria-disabled", "true");
             if (button.contains(event.target)) ignoreNextClick = true;
             document.removeEventListener("mousedown", onClick);
             dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
@@ -54,6 +63,9 @@ EditorUI.dropdown = (button, content) => {
         dropdownButton.removeEventListener("click", dropdownClick);
         dropdownBody.style.left = "";
         dropdownBody.classList.add("editor-dropdown-show");
+        dropdownButton.setAttribute("aria-expanded", "true");
+        dropdownBody.setAttribute("aria-hidden", "false");
+        dropdownBody.setAttribute("aria-disabled", "false");
         document.addEventListener("mousedown", onClick);
         document.addEventListener("keydown", onKeyPress);
         dropdown.dispatchEvent(new Event("editorDropdownOpen", {bubbles: true}));
@@ -72,6 +84,9 @@ EditorUI.dropdown = (button, content) => {
         if (dropdownBody.classList.contains("editor-dropdown-show")) {
             dropdownBody.classList.remove("editor-dropdown-show");
         }
+        dropdownButton.setAttribute("aria-expanded", "false");
+        dropdownBody.setAttribute("aria-hidden", "true");
+        dropdownBody.setAttribute("aria-disabled", "true");
         document.removeEventListener("mousedown", onClick);
         dropdown.dispatchEvent(new Event("editorDropdownClose", {bubbles: true}));
         dropdownButton.addEventListener("click", dropdownClick);
@@ -108,6 +123,7 @@ EditorUI.dropdownList = (optionValues, onChange) => {
         const div = document.createElement("div");
         div.append(button);
         optionDiv.append(div);
+        optionDiv.setAttribute("role", "menuitem");
 
         button.addEventListener("click", (e) => {
             setValue(name); 
@@ -120,6 +136,7 @@ EditorUI.dropdownList = (optionValues, onChange) => {
     // Create the modal.
     const dropdownObj = EditorUI.dropdown(inputButton, optionDiv);
     dropdownObj.dropdown.classList.add("editor-dropdown-list");
+    dropdownObj.dropdown.setAttribute("role", "listbox");
 
     // Get the current value.
     function getValue() {
@@ -1037,6 +1054,8 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     // Find and replace modal UI.
     const ui = document.createElement("div");
     ui.setAttribute("id", "editor-find-and-replace-ui");
+    ui.setAttribute("aria-hidden", "true");
+    ui.setAttribute("aria-disabled", "true");
     editor.before(ui);
 
     // Find UI.
@@ -1097,6 +1116,9 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
         }
         opened = true;
         ui.style.display = "block";
+        api.menubarOptions.openFindAndReplace.setAttribute("aria-expanded", "true");
+        ui.setAttribute("aria-hidden", "false");
+        ui.setAttribute("aria-disabled", "false");
         findInput.value = "";
         findUpButton.disabled = true;
         findDownButton.disabled = true;
@@ -1118,6 +1140,10 @@ EditorUI.findAndReplace = (editor, onEdit, api) => {
     function close() {
         opened = false;
         ui.style.display = "none";
+        api.menubarOptions.openFindAndReplace.setAttribute("aria-expanded", "false");
+        ui.setAttribute("aria-expanded", "false");
+        ui.setAttribute("aria-hidden", "true");
+        ui.setAttribute("aria-disabled", "true");
         removeSearch();
     }
 
