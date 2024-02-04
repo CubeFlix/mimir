@@ -242,3 +242,29 @@ a rich text editor for javascript
 - Lexical
 - Froala
 - SyncFusion
+
+## aria information
+
+### aria attributes
+
+- aria-title
+- aria-label
+- aria-haspopup
+- aria-expanded
+
+- aria-disabled
+- aria-hidden
+
+- aria-pressed
+- tabindex
+- type
+- role
+
+### aria todo
+- [ ] image ui
+- [ ] modals
+- [ ] type
+- [ ] aria-pressed
+- [ ] tabindex (everything)
+- [ ] role (everything)
+- [ ] all other values
