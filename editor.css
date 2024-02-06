@@ -2,10 +2,12 @@
 #editor-body {
     white-space: pre-wrap;
     word-wrap: break-word;
+    overflow-y: scroll;
+    border: 1px solid silver;
+    padding: 10px;
 }
 
 #editor-body:focus {
-    border: none;
     outline: none;
 }
 

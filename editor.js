@@ -1547,7 +1547,6 @@ class Editor {
     Scroll a text node into view.
     */
     scrollTextNodeIntoView(node) {
-        // debugger;
         const a = document.createElement("a");
         a.innerHTML = " ";
         node.after(a);
@@ -1921,7 +1920,6 @@ class Editor {
 
                     // Split the start container at the start offset.
                     if (range.startContainer.nodeType == Node.TEXT_NODE) {
-                        debugger;
                         // Insert the start node to begin inserting after. Modify the range to remove so that it stays consistent.
                         // Split the text node and place an empty node in between.
                         const sliceOffset = range.startOffset;
