@@ -1,5 +1,6 @@
 /* mimir.js - A simple, lightweight yet powerful rich text editor written in vanilla JavaScript. */
 
+const _ = require("./assets/core.css")
 
 /* 
 The Mimir rich text editor class. 
@@ -35,6 +36,7 @@ class Mimir {
     Create the editor. 
     */
     constructor(element, settings) {
+        settings = settings == null ? { } : settings;
         this.container = element;
         this.settings = settings;
 
@@ -54,9 +56,9 @@ class Mimir {
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
         this.defaultSize = 16 || settings.defaultSize;
-        this.spellcheck = true && !!settings.spellcheck;
+        this.spellcheck = settings.spellcheck == undefined ? true : !!settings.spellcheck;
         this.defaultImageWidth = "300px" || settings.defaultImageWidth;
-        this.useIcons = true && !!settings.useIcons;
+        this.useIcons = settings.useIcons == undefined ? true : !!settings.useIcons;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");

@@ -1,4 +1,7 @@
-/* Editor. */
+/* Mimir core styles. */
+
+@import url("./ui.css");
+
 #editor-body {
     white-space: pre-wrap;
     word-wrap: break-word;
