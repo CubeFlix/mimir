@@ -5,7 +5,7 @@ stay out!!!! gaming in progress!!!
 ## 1.0 Release Roadmap
 
 - Current Features:
-    - [ ] ARIA for all UI components
+    - [x] ARIA for all UI components
     - [ ] `tabindex`
     - [x] Rename `editor` styles to `mimir` styles
     - [ ] Disallow pasting HTML option in settings

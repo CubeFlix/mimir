@@ -162,6 +162,7 @@ MimirUI.dropdownList = (optionValues, onChange) => {
         } else {
             inputButton.append(option.content.cloneNode(true));
         }
+        inputButton.setAttribute("aria-valuetext", currentSelected);
     }
 
     updateValue();
@@ -208,7 +209,7 @@ MimirUI.numberInput = (min, max) => {
 /*
 Convert RGB to HSV.
 */
-MimirUI.rgbToHsv = (r , g , b) => { 
+MimirUI.rgbToHsv = (r, g, b) => { 
     r = r / 255.0; 
     g = g / 255.0; 
     b = b / 255.0; 
@@ -249,14 +250,17 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const primaryContainer = document.createElement("div");
     primaryContainer.style.width = primaryWidth + "px";
     primaryContainer.style.height = height + "px";
+    primaryContainer.setAttribute("role", "slider");
     primaryContainer.classList.add("mimir-color-picker-primary-container");
     const primary = document.createElement("canvas");
     primary.setAttribute("width", primaryWidth);
     primary.setAttribute("height", height)
+    primary.setAttribute("role", "presentation");
     primary.classList.add("mimir-color-picker-primary-canvas");
     primaryContainer.append(primary);
     const primaryThumb = document.createElement("div");
     primaryThumb.classList.add("mimir-color-picker-primary-thumb");
+    primaryThumb.setAttribute("role", "presentation");
     primaryContainer.append(primaryThumb);
     rowOne.append(primaryContainer);
 
@@ -264,14 +268,17 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const hueContainer = document.createElement("div");
     hueContainer.style.width = hueWidth + "px";
     hueContainer.style.height = height + "px";
+    hueContainer.setAttribute("role", "slider");
     hueContainer.classList.add("mimir-color-picker-hue-container");
     const hue = document.createElement("canvas");
     hue.setAttribute("width", hueWidth);
     hue.setAttribute("height", height)
+    hue.setAttribute("role", "presentation");
     hue.classList.add("mimir-color-picker-hue-canvas");
     hueContainer.append(hue);
     const hueSlider = document.createElement("div");
     hueSlider.classList.add("mimir-color-picker-hue-slider");
+    hueSlider.setAttribute("role", "presentation");
     hueContainer.append(hueSlider);
     rowOne.append(hueContainer);
 
@@ -279,13 +286,15 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     const rgbForm = document.createElement("div");
     rgbForm.classList.add("mimir-color-picker-rgb-form");
     const rgbFormColor = document.createElement("div");
+    rgbFormColor.setAttribute("role", "presentation");
     rgbFormColor.classList.add("mimir-color-picker-rgb-form-color");
     rgbForm.append(rgbFormColor);
-    function createColorValueInput(label) {
+    function createColorValueInput(label, aria) {
         const inputContainer = document.createElement("div");
         inputContainer.classList.add("mimir-color-picker-rgb-form-input-container");
         const colorLabel = document.createElement("label");
         colorLabel.append(label);
+        colorLabel.setAttribute("aria-label", aria);
         colorLabel.classList.add("mimir-color-picker-rgb-form-input-label");
         const input = document.createElement("input");
         input.setAttribute("type", "number");
@@ -333,9 +342,9 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         inputContainer.append(colorLabel, input);
         return [inputContainer, input];
     }
-    const [rgbFormInputContainerR, rgbFormInputR] = createColorValueInput("R");
-    const [rgbFormInputContainerG, rgbFormInputG] = createColorValueInput("G");
-    const [rgbFormInputContainerB, rgbFormInputB] = createColorValueInput("B");
+    const [rgbFormInputContainerR, rgbFormInputR] = createColorValueInput("R", "Red component");
+    const [rgbFormInputContainerG, rgbFormInputG] = createColorValueInput("G", "Green component");
+    const [rgbFormInputContainerB, rgbFormInputB] = createColorValueInput("B", "Blue component");
     rgbForm.append(rgbFormInputContainerR, rgbFormInputContainerG, rgbFormInputContainerB)
     rowOne.append(rgbForm);
 
@@ -350,10 +359,12 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
     saveButton.classList.add("mimir-color-picker-save-button", "mimir-action-button-primary");
     saveButton.innerHTML = "Save";
     saveButton.addEventListener("click", () => {callback(`rgb(${r}, ${g}, ${b})`); closeFunc();});
+    saveButton.setAttribute("title", "Save Color");
     const removeButton = document.createElement("button");
     removeButton.classList.add("mimir-color-picker-remove-button", "mimir-action-button-secondary");
     removeButton.innerHTML = "Remove";
     removeButton.addEventListener("click", () => {callback(null); closeFunc();});
+    removeButton.setAttribute("title", "Remove Color");
     rowTwo.append(saveButton, removeButton);
 
     body.append(rowTwo);
@@ -403,6 +414,9 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         rgbFormInputR.value = r;
         rgbFormInputG.value = g;
         rgbFormInputB.value = b;
+
+        [h, s, v] = MimirUI.rgbToHsv(r, g, b);
+        primary.setAttribute("aria-valuetext", `Saturation: ${s}, Value: ${v}`);
     }
 
     // Render the hue canvas.
@@ -419,6 +433,8 @@ MimirUI.colorInput = (callback, button, primaryWidth, hueWidth, height) => {
         hueGradient.addColorStop(1, 'rgba(255, 0, 0, 1)');
         hueCtx.fillStyle = hueGradient;
         hueCtx.fill();
+
+        primary.setAttribute("aria-valuetext", `Hue: ${h} degrees`);
     }
 
     // Update color on primary canvas.
@@ -565,6 +581,7 @@ MimirUI.linkInput = (callback, button) => {
     const urlInput = document.createElement("input")
     urlInput.classList.add("mimir-link-input-input", "mimir-modal-input");
     urlInput.setAttribute("placeholder", "URL");
+    urlInput.setAttribute("type", "url");
     body.append(title, urlInput);
 
     // Create the dropdown.
@@ -584,10 +601,12 @@ MimirUI.linkInput = (callback, button) => {
     saveButton.classList.add("mimir-link-input-save-button", "mimir-action-button-primary");
     saveButton.innerHTML = "Save";
     saveButton.addEventListener("click", () => {callback(urlInput.value); value = urlInput.value; closeFunc(); urlInput.value = "";});
+    saveButton.setAttribute("title", "Save Link");
     const removeButton = document.createElement("button");
     removeButton.classList.add("mimir-link-input-remove-button", "mimir-action-button-secondary");
     removeButton.innerHTML = "Remove";
     removeButton.addEventListener("click", () => {callback(null); closeFunc();});
+    removeButton.setAttribute("title", "Remove Link");
     const buttonRow = document.createElement("div");
     buttonRow.classList.add("mimir-modal-row");
     buttonRow.append(saveButton, removeButton);
@@ -614,6 +633,7 @@ MimirUI.imageInput = (callback, button, objectURLList) => {
     const urlInput = document.createElement("input");
     urlInput.classList.add("mimir-image-url-input", "mimir-modal-input");
     urlInput.setAttribute("placeholder", "URL");
+    urlInput.setAttribute("type", "url");
     const altInput = document.createElement("input")
     altInput.classList.add("mimir-image-alt-input", "mimir-modal-input");
     altInput.setAttribute("placeholder", "Alt Text");
@@ -628,7 +648,7 @@ MimirUI.imageInput = (callback, button, objectURLList) => {
     // Save button.
     const saveButton = document.createElement("button");
     saveButton.classList.add("mimir-image-input-save-button");
-    saveButton.innerHTML = "Save";
+    saveButton.innerHTML = "Insert";
     saveButton.addEventListener("click", () => {
         if (imageInput.files.length != 0) {
             const url = URL.createObjectURL(imageInput.files[0]);
@@ -641,6 +661,7 @@ MimirUI.imageInput = (callback, button, objectURLList) => {
         urlInput.value = "";
         closeFunc();
     });
+    saveButton.setAttribute("title", "Insert Image");
     saveButton.classList.add("mimir-action-button-primary");
     const buttonRow = document.createElement("div");
     buttonRow.classList.add("mimir-modal-row");
@@ -1068,19 +1089,24 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
     const findButton = document.createElement("button");
     findButton.classList.add("mimir-find-and-replace-find-button", "mimir-action-button-primary");
     findButton.innerHTML = "Find";
+    findButton.setAttribute("title", "Find");
     findDiv.append(findButton);
     const findUpButton = document.createElement("button");
     findUpButton.classList.add("mimir-find-and-replace-find-up-button", "mimir-action-button-secondary");
     findUpButton.innerHTML = "&#9650;";
+    findUpButton.setAttribute("title", "Find Up");
     findDiv.append(findUpButton);
     const findDownButton = document.createElement("button");
     findDownButton.classList.add("mimir-find-and-replace-find-down-button", "mimir-action-button-secondary");
     findDownButton.innerHTML = "&#9660;";
+    findDownButton.setAttribute("title", "Find Down");
     findDiv.append(findDownButton);
     const toggleCaseSensitiveButton = document.createElement("button");
     toggleCaseSensitiveButton.classList.add("mimir-find-and-replace-toggle-case-sensitive-button");
     toggleCaseSensitiveButton.innerHTML = "Aa";
     toggleCaseSensitiveButton.classList.toggle("mimir-toggled", true);
+    toggleCaseSensitiveButton.setAttribute("title", "Toggle Case Sensitive");
+    toggleCaseSensitiveButton.setAttribute("aria-pressed", "true");
     findDiv.append(toggleCaseSensitiveButton);
     ui.append(findDiv);
 
@@ -1093,11 +1119,13 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
     replaceDiv.append(replaceInput);
     const replaceButton = document.createElement("button");
     replaceButton.classList.add("mimir-find-and-replace-replace-button", "mimir-action-button-primary");
+    replaceButton.setAttribute("title", "Replace");
     replaceButton.innerHTML = "Replace";
     replaceDiv.append(replaceButton);
     const replaceAllButton = document.createElement("button");
     replaceAllButton.classList.add("mimir-find-and-replace-replace-all-button", "mimir-action-button-primary");
     replaceAllButton.innerHTML = "Replace All";
+    replaceAllButton.setAttribute("title", "Replace All");
     replaceDiv.append(replaceAllButton);
     ui.append(replaceDiv);
 
@@ -1115,7 +1143,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
             return;
         }
         opened = true;
-        ui.style.display = "block";
+        ui.style.display = "flex";
         api.menubarOptions.openFindAndReplace.setAttribute("aria-expanded", "true");
         ui.setAttribute("aria-hidden", "false");
         ui.setAttribute("aria-disabled", "false");
@@ -1156,6 +1184,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
     function toggleCaseSensitive(event) {
         caseSensitive = !caseSensitive;
         toggleCaseSensitiveButton.classList.toggle("mimir-toggled", caseSensitive);
+        toggleCaseSensitiveButton.setAttribute("aria-pressed", "" + caseSensitive);
         if (search) {
             find();
         }
@@ -1215,6 +1244,11 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
         if (matches[selectedOffset]) {
             matches[selectedOffset][0].wrapper?.scrollIntoView(false);
         }
+    }
+
+    function selectCurrent() {
+        if (!matches[selectCurrent]) {return;}
+        matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("mimir-find-and-replace-current"));
     }
 
     function next() {
@@ -1370,11 +1404,13 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
 
     function replaceClick() {
         replace(replaceInput.value);
+        onEdit();
     }
 
     function replaceAllClick() {
         while (matches.length != 0) {
             replace(replaceInput.value);
+            onEdit();
         }
     }
 
@@ -1426,7 +1462,19 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
         return matches;
     }
 
-    return {open: open, close: close, find: findInEditor, highlight: highlight, unhighlight: unhighlight, prepareMatches: prepareMatches};
+    function isOpen() {
+        return !!matches;
+    }
+
+    function getMatches() {
+        return matches;
+    }
+
+    function getCurrent() {
+        return selectedOffset;
+    }
+
+    return {open: open, close: close, find: findInEditor, highlight: function() {highlight(matches)}, unhighlight: function() {unhighlight(matches)}, isOpen: isOpen, getMatches: getMatches, getCurrent: getCurrent, selectCurrent: selectCurrent};
 }
 
 module.exports = MimirUI;

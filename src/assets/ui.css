@@ -48,6 +48,7 @@
     font-family: var(--ui-font-family);
     border-radius: 3px;
     background-color: white;
+    height: 20px;
     padding: 2px;
     padding-left: 3px;
 }
@@ -365,6 +366,8 @@
     background-color: white;
     border: 1px solid silver;
     border-radius: 2px;
+    gap: 5px;
+    flex-direction: column;
 
     --ui-font-family: Segoe UI, Arial, Helvetica, sans-serif;
 }

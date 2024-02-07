@@ -230,6 +230,7 @@ class Mimir {
                         } else {
                             foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                         }
+                        foreColorButton.setAttribute("title", "Foreground Color");
                         foreColorButton.classList.add("mimir-menubar-option-fore-color-button");
                         foreColorButton.addEventListener("click", function() {this.foreColor(foreColorInput.getValue());}.bind(this));
                         const foreColorOpenButton = document.createElement("button");
@@ -241,7 +242,7 @@ class Mimir {
                         foreColorButtonContainer.classList.add("mimir-menubar-option-fore-color-button-container");
                         foreColorButtonContainer.append(foreColorButton, foreColorInput.dropdown.button);
                         foreColorInput.colorInput.prepend(foreColorButtonContainer);
-                        foreColorInput.colorInput.setAttribute("title", "Foreground Color");
+                        foreColorInput.dropdown.button.setAttribute("title", "Foreground Color");
                         foreColorInput.colorInput.setAttribute("aria-label", "Editor change foreground color");
                         this.menubar.append(foreColorInput.colorInput);
                         break;
@@ -253,6 +254,7 @@ class Mimir {
                         } else {
                             backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                         }
+                        backColorButton.setAttribute("title", "Background Color");
                         backColorButton.classList.add("mimir-menubar-option-back-color-button");
                         backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
                         const backColorOpenButton = document.createElement("button");
@@ -264,7 +266,7 @@ class Mimir {
                         backColorButtonContainer.classList.add("mimir-menubar-option-back-color-button-container");
                         backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
                         backColorInput.colorInput.prepend(backColorButtonContainer);
-                        backColorInput.colorInput.setAttribute("title", "Background Color");
+                        backColorInput.dropdown.button.setAttribute("title", "Background Color");
                         backColorInput.colorInput.setAttribute("aria-label", "Editor change background color");
                         this.menubar.append(backColorInput.colorInput);
                         break;
@@ -295,7 +297,7 @@ class Mimir {
                         const linkInput = this.MimirUI.linkInput(this.link.bind(this), linkButton);
                         this.menubarOptions.link = linkInput;
                         linkInput.linkInput.setAttribute("id", "mimir-menubar-option-link");
-                        linkInput.linkInput.setAttribute("title", "Hyperlink");
+                        linkInput.dropdown.button.setAttribute("title", "Hyperlink");
                         linkInput.linkInput.setAttribute("aria-pressed", "false");
                         linkInput.linkInput.setAttribute("aria-label", "Editor insert link");
                         this.menubar.append(linkInput.linkInput);
@@ -313,9 +315,10 @@ class Mimir {
                     case "header":
                         var options = [];
                         const createHeaderFontTextElem = (s, t) => {const e = document.createElement("strong"); e.innerHTML = `<span style="font-size: ${s}px" title="${t}" aria-label="Editor select header ${t}">${t}</span>`; return e;};
+                        const createParagraphFontTextElem = (t) => {const e = document.createElement("span"); e.innerHTML = `<span title="${t}" aria-label="Editor select header ${t}">${t}</span>`; return e;};
                         const createHeaderTextLabelElem = (t) => {const e = document.createElement("div"); e.innerHTML = `<span aria-label="Editor select header ${t}">${t}</span>`; return e;};
                         const headerToHTML = {
-                            Paragraph: [createHeaderTextLabelElem("Paragraph"), createHeaderTextLabelElem("Paragraph")], 
+                            Paragraph: [createParagraphFontTextElem("Paragraph"), createHeaderTextLabelElem("Paragraph")], 
                             H1: [createHeaderFontTextElem(36, "Heading 1"), createHeaderTextLabelElem("Heading 1")],
                             H2: [createHeaderFontTextElem(24, "Heading 2"), createHeaderTextLabelElem("Heading 2")],
                             H3: [createHeaderFontTextElem(18, "Heading 3"), createHeaderTextLabelElem("Heading 3")],
@@ -327,7 +330,7 @@ class Mimir {
                         }
                         this.menubarOptions.header = this.MimirUI.dropdownList(options, this.header.bind(this));
                         this.menubarOptions.header.list.setAttribute("id", "mimir-menubar-option-header");
-                        this.menubarOptions.header.list.setAttribute("title", "Header");
+                        this.menubarOptions.header.dropdown.button.setAttribute("title", "Header");
                         this.menubarOptions.header.list.setAttribute("aria-label", "Editor select header");
                         this.menubar.append(this.menubarOptions.header.list);
                         break;
@@ -336,6 +339,7 @@ class Mimir {
                         for (const direction of ["Left", "Right", "Center", "Justify"]) {
                             const newAlignOption = document.createElement("div");
                             newAlignOption.innerHTML = this.useIcons ? iconElem("align-" + direction.toLowerCase()) : direction;
+                            newAlignOption.style.width = "18px";
                             newAlignOption.setAttribute("value", direction.toLowerCase());
                             newAlignOption.setAttribute("title", direction);
                             newAlignOption.setAttribute("aria-label", "Editor change alignment " + direction);
@@ -343,7 +347,7 @@ class Mimir {
                         }
                         this.menubarOptions.align = this.MimirUI.dropdownList(options, this.align.bind(this));
                         this.menubarOptions.align.list.setAttribute("id", "mimir-menubar-option-align");
-                        this.menubarOptions.align.list.setAttribute("title", "Alignment");
+                        this.menubarOptions.align.dropdown.button.setAttribute("title", "Alignment");
                         this.menubarOptions.align.list.setAttribute("aria-label", "Editor change alignment");
                         this.menubar.append(this.menubarOptions.align.list);
                         break;
@@ -388,7 +392,7 @@ class Mimir {
                         const imageInput = this.MimirUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
                         this.menubarOptions.insertImage = imageInput;
                         imageInput.imageInput.setAttribute("id", "mimir-menubar-option-image");
-                        imageInput.imageInput.setAttribute("title", "Insert Image");
+                        imageInput.dropdown.button.setAttribute("title", "Insert Image");
                         imageInput.imageInput.setAttribute("aria-label", "Editor insert image");
                         this.menubar.append(imageInput.imageInput);
                         break;
@@ -2090,21 +2094,27 @@ class Mimir {
             if (option == "list") {
                 if (styling.find(s => s.type == "list" && s.listType == "ordered")) {
                     if (!this.menubarOptions.listOrdered.classList.contains("mimir-pressed")) this.menubarOptions.listOrdered.classList.add("mimir-pressed");
+                    this.menubarOptions.listOrdered.setAttribute("aria-pressed", "true");
                 } else {
                     this.menubarOptions.listOrdered.classList.remove("mimir-pressed");
+                    this.menubarOptions.listOrdered.setAttribute("aria-pressed", "false");
                 }
                 if (styling.find(s => s.type == "list" && s.listType == "unordered")) {
                     if (!this.menubarOptions.listUnordered.classList.contains("mimir-pressed")) this.menubarOptions.listUnordered.classList.add("mimir-pressed");
+                    this.menubarOptions.listUnordered.setAttribute("aria-pressed", "true");
                 } else {
                     this.menubarOptions.listUnordered.classList.remove("mimir-pressed");
+                    this.menubarOptions.listUnordered.setAttribute("aria-pressed", "false");
                 }
                 continue;
             }
 
             if (styling.some(s => s.type == option)) {
                 if (!this.menubarOptions[option].classList.contains("mimir-pressed")) this.menubarOptions[option].classList.add("mimir-pressed");
+                this.menubarOptions[option].setAttribute("aria-pressed", "true");
             } else {
                 if (this.menubarOptions[option].classList.contains("mimir-pressed")) this.menubarOptions[option].classList.remove("mimir-pressed");
+                this.menubarOptions[option].setAttribute("aria-pressed", "false");
             }
         }
     }
@@ -6060,6 +6070,11 @@ class Mimir {
     Take a snapshot of the editor.
     */
     snapshot() {
+        // Hide any find and replace annotations.
+        if (this.findAndReplaceModule && this.findAndReplaceModule.isOpen()) {
+            this.findAndReplaceModule.unhighlight();
+        }
+
         const content = this.editor.cloneNode(true);
         var range = null;
         const selRange = this.getRange();
@@ -6068,6 +6083,13 @@ class Mimir {
                 range = this.serializeRange(selRange, this.editor);
             }
         }
+
+        // Hide any find and replace annotations.
+        if (this.findAndReplaceModule && this.findAndReplaceModule.isOpen()) {
+            this.findAndReplaceModule.highlight();
+            this.findAndReplaceModule.selectCurrent();
+        }
+
         return {content: content, range: range, hash: this.hash(this.editor.innerHTML)};
     }
 
