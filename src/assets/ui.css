@@ -1,7 +1,7 @@
 /* Custom UI. */
 
 /* Action buttons and general UI. */
-.editor-action-button-primary {
+.mimir-action-button-primary {
     background-color: #cee2ff;
     min-width: 30px;
     min-height: 30px;
@@ -13,11 +13,11 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-action-button-primary:hover {
+.mimir-action-button-primary:hover {
     background-color: #a8cbff;
 }
 
-.editor-action-button-secondary {
+.mimir-action-button-secondary {
     background-color: #e0e0e0;
     min-width: 30px;
     min-height: 30px;
@@ -29,21 +29,21 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-action-button-secondary:hover {
+.mimir-action-button-secondary:hover {
     background-color: #d3d3d3;
 }
 
-.editor-modal-label {
+.mimir-modal-label {
     margin: 0px;
     font-weight: normal;
 }
 
-.editor-modal-row {
+.mimir-modal-row {
     display: flex;
     gap: 10px;
 }
 
-.editor-modal-input {
+.mimir-modal-input {
     border: 1px solid silver;
     font-family: var(--ui-font-family);
     border-radius: 3px;
@@ -53,11 +53,11 @@
 }
 
 /* Dropdown. */
-.editor-dropdown {
+.mimir-dropdown {
     position: relative;
 }
 
-.editor-dropdown-body {
+.mimir-dropdown-body {
     position: absolute;
     background-color: white;
     border: 1px solid silver;
@@ -69,18 +69,18 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-dropdown-show {
+.mimir-dropdown-show {
     display: block;
 }
 
 /* List dropdown. */
-.editor-dropdown-list > .editor-dropdown-body {
+.mimir-dropdown-list > .mimir-dropdown-body {
     padding-left: 0px;
     padding-right: 0px;
     font-family: var(--ui-font-family);
 }
 
-.editor-dropdown-list-open-button {
+.mimir-dropdown-list-open-button {
     height: 30px;
     padding: 5px 30px 5px 5px;
     border: none;
@@ -94,23 +94,23 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-dropdown-list-open-button div {
+.mimir-dropdown-list-open-button div {
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: left;
     white-space: nowrap;
 }
 
-.editor-dropdown-list-open-button:hover,
-.editor-dropdown-list-open-button:focus {
+.mimir-dropdown-list-open-button:hover,
+.mimir-dropdown-list-open-button:focus {
     background-color: #e0e0e0;
 }
 
-.editor-dropdown-list-options {
+.mimir-dropdown-list-options {
     width: max-content;
 }
 
-.editor-dropdown-list-options button {
+.mimir-dropdown-list-options button {
     min-height: 30px;
     border: none;
     padding: 5px 12px 5px 12px;
@@ -120,26 +120,26 @@
     text-align: left;
 }
 
-.editor-dropdown-list-options button:hover,
-.editor-dropdown-list-options button:focus {
+.mimir-dropdown-list-options button:hover,
+.mimir-dropdown-list-options button:focus {
     background-color: #e0e0e0;
 }
 
 /* Number input. */
-.editor-number-input {
+.mimir-number-input {
     background-color: #f7f7f7;
     border-radius: 5px;
 }
 
-.editor-number-input :first-child {
+.mimir-number-input :first-child {
     border-radius: 5px 0 0 5px;
 }
 
-.editor-number-input :last-child {
+.mimir-number-input :last-child {
     border-radius: 0 5px 5px 0;
 }
 
-.editor-number-input-input[type="number"] {
+.mimir-number-input-input[type="number"] {
     background-color: #f7f7f7;
     border: none;
     outline: none;
@@ -148,25 +148,25 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-number-input-input[type="number"]:focus,
-.editor-number-input-input[type="number"]:hover {
+.mimir-number-input-input[type="number"]:focus,
+.mimir-number-input-input[type="number"]:hover {
     background: #e0e0e0;
     border: none;
     outline: none;
 }
 
-.editor-number-input-input[type="number"]::-webkit-inner-spin-button,
-.editor-number-input-input[type="number"]::-webkit-outer-spin-button {
+.mimir-number-input-input[type="number"]::-webkit-inner-spin-button,
+.mimir-number-input-input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.editor-number-input-input[type="number"] {
+.mimir-number-input-input[type="number"] {
     -moz-appearance: textfield;
     background-color: #f7f7f7;
 }
 
-.editor-number-input-button {
+.mimir-number-input-button {
     min-width: 20px;
     min-height: 30px;
     background: none;
@@ -174,30 +174,30 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-number-input-button:hover {
+.mimir-number-input-button:hover {
     background: #e0e0e0;
 }
 
 /* Color input. */
-.editor-color-picker-row {
+.mimir-color-picker-row {
     display: flex;
     gap: 10px;
 }
 
-.editor-color-picker-row + .editor-color-picker-row {
+.mimir-color-picker-row + .mimir-color-picker-row {
     margin-top: 10px;
 }
 
-.editor-color-picker-primary-container {
+.mimir-color-picker-primary-container {
     position: relative;
     user-select: none;
 }
 
-.editor-color-picker-primary-canvas {
+.mimir-color-picker-primary-canvas {
     user-select: none;
 }
 
-.editor-color-picker-primary-thumb {
+.mimir-color-picker-primary-thumb {
     position: absolute;
     width: 10px;
     height: 10px;
@@ -210,11 +210,11 @@
     pointer-events: none;
 }
 
-.editor-color-picker-hue-container {
+.mimir-color-picker-hue-container {
     position: relative;
 }
 
-.editor-color-picker-hue-slider {
+.mimir-color-picker-hue-slider {
     position: absolute;
     width: 100%;
     height: 0px;
@@ -227,26 +227,26 @@
     box-sizing: border-box;
 }
 
-.editor-color-picker-rgb-form-input-container {
+.mimir-color-picker-rgb-form-input-container {
     width: 80px;
     display: flex;
     gap: 3px;
 }
 
-.editor-color-picker-rgb-form {
+.mimir-color-picker-rgb-form {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.editor-color-picker-rgb-form-color {
+.mimir-color-picker-rgb-form-color {
     width: 100%;
     flex-grow: 1;
     border: 1px solid black;
     box-sizing: border-box;
 }
 
-.editor-color-picker-rgb-form-input-label {
+.mimir-color-picker-rgb-form-input-label {
     display: block;
     width: 15px;
     display: flex;
@@ -254,7 +254,7 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-color-picker-rgb-form-input-container > input {
+.mimir-color-picker-rgb-form-input-container > input {
     display: block;
     flex-grow: 1;
     height: 20px;
@@ -267,32 +267,32 @@
     padding-left: 3px;
 }
 
-.editor-color-picker-rgb-form-input-container > input[type="number"]::-webkit-inner-spin-button,
-.editor-color-picker-rgb-form-input-container > input[type="number"]::-webkit-outer-spin-button {
+.mimir-color-picker-rgb-form-input-container > input[type="number"]::-webkit-inner-spin-button,
+.mimir-color-picker-rgb-form-input-container > input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.editor-color-picker-rgb-form-input-container > input[type="number"] {
+.mimir-color-picker-rgb-form-input-container > input[type="number"] {
     -moz-appearance: textfield;
     background-color: #f7f7f7;
     font-family: var(--ui-font-family);
 }
 
 /* Link and image insert UIs. */
-.editor-link-input-input {
+.mimir-link-input-input {
     margin-top: 10px;
     margin-bottom: 10px;
 }
 
-.editor-image-input-body {
+.mimir-image-input-body {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
 /* Image editing UI. */
-#editor-image-editing-ui > .resize-box {
+#mimir-image-editing-ui > .resize-box {
     position: absolute;
     width: 10px;
     height: 10px;
@@ -301,62 +301,62 @@
     z-index: 5;
 }
 
-#editor-image-editing-ui > .resize-box-top-right {
+#mimir-image-editing-ui > .resize-box-top-right {
     cursor: nesw-resize;
 }
 
-#editor-image-editing-ui > .resize-box-top-left {
+#mimir-image-editing-ui > .resize-box-top-left {
     cursor: nwse-resize;
 }
 
-#editor-image-editing-ui > .resize-box-bottom-right {
+#mimir-image-editing-ui > .resize-box-bottom-right {
     cursor: nwse-resize;
 }
 
-#editor-image-editing-ui > .resize-box-bottom-left {
+#mimir-image-editing-ui > .resize-box-bottom-left {
     cursor: nesw-resize;
 }
 
-#editor-image-editing-ui > .resize-bar {
+#mimir-image-editing-ui > .resize-bar {
     position: absolute;
     background-color: #70a9ff;
     display: none;
 }
 
-#editor-image-editing-ui > .resize-bar-horizontal {
+#mimir-image-editing-ui > .resize-bar-horizontal {
     height: 3px;
 }
 
-#editor-image-editing-ui > .resize-bar-vertical {
+#mimir-image-editing-ui > .resize-bar-vertical {
     width: 3px;
 }
 
-#editor-image-editing-ui > .resize-bar-top {
+#mimir-image-editing-ui > .resize-bar-top {
     cursor: ns-resize;
 }
 
-#editor-image-editing-ui > .resize-bar-bottom {
+#mimir-image-editing-ui > .resize-bar-bottom {
     cursor: ns-resize;
 }
 
-#editor-image-editing-ui > .resize-bar-right {
+#mimir-image-editing-ui > .resize-bar-right {
     cursor: ew-resize;
 }
 
-#editor-image-editing-ui > .resize-bar-left {
+#mimir-image-editing-ui > .resize-bar-left {
     cursor: ew-resize;
 }
 
-#editor-body img.editor-hide-selection::selection {
+#mimir-body img.mimir-hide-selection::selection {
     background: none;
 }
 
-#editor-body img.editor-hide-selection::-moz-selection {
+#mimir-body img.mimir-hide-selection::-moz-selection {
     background: none;
 }
 
 /* Find and replace UI. */
-#editor-find-and-replace-ui {
+#mimir-find-and-replace-ui {
     display: none;
     z-index: 5;
     position: absolute;
@@ -369,7 +369,7 @@
     --ui-font-family: Segoe UI, Arial, Helvetica, sans-serif;
 }
 
-.editor-find-and-replace-toggle-case-sensitive-button {
+.mimir-find-and-replace-toggle-case-sensitive-button {
     min-width: 30px;
     min-height: 30px;
     background: none;
@@ -381,26 +381,26 @@
     font-family: var(--ui-font-family);
 }
 
-.editor-find-and-replace-toggle-case-sensitive-button:hover {
+.mimir-find-and-replace-toggle-case-sensitive-button:hover {
     background: #e0e0e0;
 }
 
-.editor-find-and-replace-toggle-case-sensitive-button.editor-toggled {
+.mimir-find-and-replace-toggle-case-sensitive-button.mimir-toggled {
     background: #cee2ff;
 }
 
-.editor-find-and-replace-find-input {
+.mimir-find-and-replace-find-input {
     flex-grow: 1;
 }
 
-.editor-find-and-replace-replace-input {
+.mimir-find-and-replace-replace-input {
     flex-grow: 1;
 }
 
-#editor-body .editor-find-and-replace-match {
+#mimir-body .mimir-find-and-replace-match {
     background-color: yellow;
 }
 
-#editor-body .editor-find-and-replace-current {
+#mimir-body .mimir-find-and-replace-current {
     background-color: orange;
 }

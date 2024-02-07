@@ -2,6 +2,18 @@
 
 stay out!!!! gaming in progress!!!
 
+## 1.0 Release Roadmap
+
+- Current Features:
+    - [ ] ARIA for all UI components
+    - [ ] `tabindex`
+    - [x] Rename `editor` styles to `mimir` styles
+    - [ ] Disallow pasting HTML option in settings
+    - [ ] Disable find and replace option in settings
+    - [ ] More history
+    - [ ] Figure out scrolling to selected nodes
+- Documentation
+
 ## todo
 
 - [x] bug! (create bold, make substring italic, remove bold on substring)
@@ -172,7 +184,7 @@ stay out!!!! gaming in progress!!!
 - [x] case insensitive find and replace
 - [x] dropdown lists
 - [x] modal overhaul
-- [ ] menubar should stay at top of editor
+- [x] menubar should stay at top of editor
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after inserting/selecting image
 - [ ] reinsert cursor on cut and delete event
@@ -190,7 +202,7 @@ stay out!!!! gaming in progress!!!
 - [x] HR not splitting out of inline nodes
 - [x] `<strong>abc<img>abc</strong>` backspace on text
 - [ ] change list style (possibly)
-- [ ] find and replace
+- [x] find and replace
 - [ ] more history (calculate)
 - [ ] format paint (possibly)
 - [ ] release 1.0

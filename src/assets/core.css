@@ -2,7 +2,7 @@
 
 @import url("./ui.css");
 
-#editor-body {
+#mimir-body {
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-y: scroll;
@@ -10,22 +10,22 @@
     padding: 10px;
 }
 
-#editor-body:focus {
+#mimir-body:focus {
     outline: none;
 }
 
-#editor-body p, div, br {
+#mimir-body p, div, br {
     margin: 0;
     line-height: 1;
 }
 
-#editor-body blockquote {
+#mimir-body blockquote {
     border-left: 2px solid #aaaaaa;
     padding: 5px;
 }
 
 /* Editor menubar. */
-#editor-menubar {
+#mimir-menubar {
     display: flex;
     gap: 5px;
     padding: 5px;
@@ -35,18 +35,18 @@
     --ui-font-family: Segoe UI, Arial, Helvetica, sans-serif;
 }
 
-#editor-menubar > .editor-menubar-spacer {
+#mimir-menubar > .mimir-menubar-spacer {
     height: 20px;
     width: 1px;
     border-radius: 1px;
     background-color: #aaaaaa;
 }
 
-#editor-menubar > button,
-#editor-menubar .editor-menubar-option-fore-color-button-container button,
-#editor-menubar .editor-menubar-option-back-color-button-container button,
-#editor-menubar .editor-menubar-option-link-button,
-#editor-menubar .editor-menubar-option-image-button {
+#mimir-menubar > button,
+#mimir-menubar .mimir-menubar-option-fore-color-button-container button,
+#mimir-menubar .mimir-menubar-option-back-color-button-container button,
+#mimir-menubar .mimir-menubar-option-link-button,
+#mimir-menubar .mimir-menubar-option-image-button {
     min-width: 30px;
     min-height: 30px;
     background: none;
@@ -58,20 +58,20 @@
     font-family: var(--ui-font-family);
 }
 
-#editor-menubar > button:hover,
-#editor-menubar > button:focus,
-#editor-menubar .editor-menubar-option-fore-color-button-container button:hover,
-#editor-menubar .editor-menubar-option-fore-color-button-container button:focus,
-#editor-menubar .editor-menubar-option-back-color-button-container button:hover,
-#editor-menubar .editor-menubar-option-back-color-button-container button:focus,
-#editor-menubar .editor-menubar-option-link-button:hover,
-#editor-menubar .editor-menubar-option-link-button:focus,
-#editor-menubar .editor-menubar-option-image-button:hover,
-#editor-menubar .editor-menubar-option-image-button:focus {
+#mimir-menubar > button:hover,
+#mimir-menubar > button:focus,
+#mimir-menubar .mimir-menubar-option-fore-color-button-container button:hover,
+#mimir-menubar .mimir-menubar-option-fore-color-button-container button:focus,
+#mimir-menubar .mimir-menubar-option-back-color-button-container button:hover,
+#mimir-menubar .mimir-menubar-option-back-color-button-container button:focus,
+#mimir-menubar .mimir-menubar-option-link-button:hover,
+#mimir-menubar .mimir-menubar-option-link-button:focus,
+#mimir-menubar .mimir-menubar-option-image-button:hover,
+#mimir-menubar .mimir-menubar-option-image-button:focus {
     background: #e0e0e0;
 }
 
-#editor-menubar > select {
+#mimir-menubar > select {
     min-height: 30px;
     padding: 5px 35px 5px 5px;
     -webkit-appearance: none;
@@ -87,41 +87,41 @@
     font-family: var(--ui-font-family);
 }
 
-#editor-menubar > select:hover,
-#editor-menubar > select:focus {
+#mimir-menubar > select:hover,
+#mimir-menubar > select:focus {
     background-color: #e0e0e0;
 }
 
-#editor-menubar > .editor-pressed {
+#mimir-menubar > .mimir-pressed {
     background: #cee2ff;
 }
 
-#editor-menubar > #editor-menubar-option-bold { font-weight: bold; }
+#mimir-menubar > #mimir-menubar-option-bold { font-weight: bold; }
 
-#editor-menubar > #editor-menubar-option-italic { font-style: italic; }
+#mimir-menubar > #mimir-menubar-option-italic { font-style: italic; }
 
-#editor-menubar > #editor-menubar-option-underline { text-decoration: underline; }
+#mimir-menubar > #mimir-menubar-option-underline { text-decoration: underline; }
 
-#editor-menubar > #editor-menubar-option-strikethrough { text-decoration: line-through; }
+#mimir-menubar > #mimir-menubar-option-strikethrough { text-decoration: line-through; }
 
-#editor-menubar > #editor-menubar-option-fore-color .editor-menubar-option-fore-color-button-container,
-#editor-menubar > #editor-menubar-option-back-color .editor-menubar-option-back-color-button-container {
+#mimir-menubar > #mimir-menubar-option-fore-color .mimir-menubar-option-fore-color-button-container,
+#mimir-menubar > #mimir-menubar-option-back-color .mimir-menubar-option-back-color-button-container {
     display: flex;
 }
 
-#editor-menubar > #editor-menubar-option-fore-color > .editor-menubar-option-fore-color-button-container > .editor-menubar-option-fore-color-button,
-#editor-menubar > #editor-menubar-option-back-color > .editor-menubar-option-back-color-button-container > .editor-menubar-option-back-color-button {
+#mimir-menubar > #mimir-menubar-option-fore-color > .mimir-menubar-option-fore-color-button-container > .mimir-menubar-option-fore-color-button,
+#mimir-menubar > #mimir-menubar-option-back-color > .mimir-menubar-option-back-color-button-container > .mimir-menubar-option-back-color-button {
     text-decoration: underline;
 }
 
-#editor-menubar > #editor-menubar-option-fore-color > .editor-menubar-option-fore-color-button-container > .editor-menubar-option-fore-color-button,
-#editor-menubar > #editor-menubar-option-back-color > .editor-menubar-option-back-color-button-container > .editor-menubar-option-back-color-button {
+#mimir-menubar > #mimir-menubar-option-fore-color > .mimir-menubar-option-fore-color-button-container > .mimir-menubar-option-fore-color-button,
+#mimir-menubar > #mimir-menubar-option-back-color > .mimir-menubar-option-back-color-button-container > .mimir-menubar-option-back-color-button {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-#editor-menubar > #editor-menubar-option-fore-color > .editor-menubar-option-fore-color-button-container > .editor-dropdown-button > .editor-color-picker-button,
-#editor-menubar > #editor-menubar-option-back-color > .editor-menubar-option-back-color-button-container > .editor-dropdown-button > .editor-color-picker-button {
+#mimir-menubar > #mimir-menubar-option-fore-color > .mimir-menubar-option-fore-color-button-container > .mimir-dropdown-button > .mimir-color-picker-button,
+#mimir-menubar > #mimir-menubar-option-back-color > .mimir-menubar-option-back-color-button-container > .mimir-dropdown-button > .mimir-color-picker-button {
     min-width: 10px;
     width: 10px;
     font-size: 10px;

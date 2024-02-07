@@ -91,7 +91,7 @@ class Mimir {
     createCursor() {
         // Create the cursor object.
         const cursor = document.createElement("span");
-        cursor.setAttribute("class", "editor-temp-cursor");
+        cursor.setAttribute("class", "mimir-temp-cursor");
         cursor.innerHTML = this.invisible;
 
         this.currentCursor = cursor;
@@ -139,7 +139,7 @@ class Mimir {
         iconElem = iconElem.bind(this);
 
         this.menubar = document.createElement("div");
-        this.menubar.setAttribute("id", "editor-menubar");
+        this.menubar.setAttribute("id", "mimir-menubar");
         this.menubar.setAttribute("role", "toolbar");
         this.menubar.setAttribute("aria-label", "Editor menubar");
         this.container.append(this.menubar);
@@ -151,7 +151,7 @@ class Mimir {
                 switch (command) {
                     case "bold":
                         this.menubarOptions.bold = document.createElement("button");
-                        this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
+                        this.menubarOptions.bold.setAttribute("id", "mimir-menubar-option-bold");
                         this.menubarOptions.bold.innerHTML = this.useIcons ? iconElem("bold") : "B";
                         this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
                         this.menubarOptions.bold.setAttribute("title", "Bold");
@@ -161,7 +161,7 @@ class Mimir {
                         break;
                     case "italic":
                         this.menubarOptions.italic = document.createElement("button");
-                        this.menubarOptions.italic.setAttribute("id", "editor-menubar-option-italic");
+                        this.menubarOptions.italic.setAttribute("id", "mimir-menubar-option-italic");
                         this.menubarOptions.italic.innerHTML = this.useIcons ? iconElem("italic") : "I";
                         this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
                         this.menubarOptions.italic.setAttribute("title", "Italic");
@@ -171,7 +171,7 @@ class Mimir {
                         break;
                     case "underline":
                         this.menubarOptions.underline = document.createElement("button");
-                        this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-underline");
+                        this.menubarOptions.underline.setAttribute("id", "mimir-menubar-option-underline");
                         this.menubarOptions.underline.innerHTML = this.useIcons ? iconElem("underline") : "U";
                         this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
                         this.menubarOptions.underline.setAttribute("title", "Underline");
@@ -181,7 +181,7 @@ class Mimir {
                         break;
                     case "strikethrough":
                         this.menubarOptions.strikethrough = document.createElement("button");
-                        this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
+                        this.menubarOptions.strikethrough.setAttribute("id", "mimir-menubar-option-strikethrough");
                         this.menubarOptions.strikethrough.innerHTML = this.useIcons ? iconElem("strikethrough") : "S";
                         this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
                         this.menubarOptions.strikethrough.setAttribute("title", "Strikethrough");
@@ -201,7 +201,7 @@ class Mimir {
                             options.push({name: font, content: newFontOption});
                         }
                         this.menubarOptions.font = this.MimirUI.dropdownList(options, this.font.bind(this));
-                        this.menubarOptions.font.list.setAttribute("id", "editor-menubar-option-font");
+                        this.menubarOptions.font.list.setAttribute("id", "mimir-menubar-option-font");
                         this.menubarOptions.font.setValue(this.defaultFont);
                         this.menubar.append(this.menubarOptions.font.list);
                         this.menubarOptions.font.list.setAttribute("title", "Font");
@@ -211,7 +211,7 @@ class Mimir {
                     case "size":
                         const { numberInput, input, plus, minus } = this.MimirUI.numberInput(1, 200);
                         this.menubarOptions.size = input;
-                        numberInput.setAttribute("id", "editor-menubar-option-size");
+                        numberInput.setAttribute("id", "mimir-menubar-option-size");
                         this.menubarOptions.size.value = this.defaultSize;
                         this.menubarOptions.size.addEventListener("change", this.size.bind(this));
                         this.menubarOptions.size.setAttribute("title", "Size");
@@ -230,15 +230,15 @@ class Mimir {
                         } else {
                             foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                         }
-                        foreColorButton.classList.add("editor-menubar-option-fore-color-button");
+                        foreColorButton.classList.add("mimir-menubar-option-fore-color-button");
                         foreColorButton.addEventListener("click", function() {this.foreColor(foreColorInput.getValue());}.bind(this));
                         const foreColorOpenButton = document.createElement("button");
                         foreColorOpenButton.innerHTML = "&#9660";
                         var foreColorInput = this.MimirUI.colorInput(this.foreColor.bind(this), foreColorOpenButton, 200, 40, 200);
                         this.menubarOptions.foreColor = foreColorInput;
-                        foreColorInput.colorInput.setAttribute("id", "editor-menubar-option-fore-color");
+                        foreColorInput.colorInput.setAttribute("id", "mimir-menubar-option-fore-color");
                         const foreColorButtonContainer = document.createElement("div");
-                        foreColorButtonContainer.classList.add("editor-menubar-option-fore-color-button-container");
+                        foreColorButtonContainer.classList.add("mimir-menubar-option-fore-color-button-container");
                         foreColorButtonContainer.append(foreColorButton, foreColorInput.dropdown.button);
                         foreColorInput.colorInput.prepend(foreColorButtonContainer);
                         foreColorInput.colorInput.setAttribute("title", "Foreground Color");
@@ -253,15 +253,15 @@ class Mimir {
                         } else {
                             backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
                         }
-                        backColorButton.classList.add("editor-menubar-option-back-color-button");
+                        backColorButton.classList.add("mimir-menubar-option-back-color-button");
                         backColorButton.addEventListener("click", function() {this.backColor(backColorInput.getValue());}.bind(this));
                         const backColorOpenButton = document.createElement("button");
                         backColorOpenButton.innerHTML = "&#9660";
                         const backColorInput = this.MimirUI.colorInput(this.backColor.bind(this), backColorOpenButton, 200, 40, 200);
                         this.menubarOptions.backColor = backColorInput;
-                        backColorInput.colorInput.setAttribute("id", "editor-menubar-option-back-color");
+                        backColorInput.colorInput.setAttribute("id", "mimir-menubar-option-back-color");
                         const backColorButtonContainer = document.createElement("div");
-                        backColorButtonContainer.classList.add("editor-menubar-option-back-color-button-container");
+                        backColorButtonContainer.classList.add("mimir-menubar-option-back-color-button-container");
                         backColorButtonContainer.append(backColorButton, backColorInput.dropdown.button);
                         backColorInput.colorInput.prepend(backColorButtonContainer);
                         backColorInput.colorInput.setAttribute("title", "Background Color");
@@ -270,7 +270,7 @@ class Mimir {
                         break;
                     case "sup":
                         this.menubarOptions.sup = document.createElement("button");
-                        this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
+                        this.menubarOptions.sup.setAttribute("id", "mimir-menubar-option-sup");
                         this.menubarOptions.sup.innerHTML = this.useIcons ? iconElem("superscript") : "x<sup>2</sup>";
                         this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
                         this.menubarOptions.sup.setAttribute("title", "Superscript");
@@ -280,7 +280,7 @@ class Mimir {
                         break;
                     case "sub":
                         this.menubarOptions.sub = document.createElement("button");
-                        this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
+                        this.menubarOptions.sub.setAttribute("id", "mimir-menubar-option-sub");
                         this.menubarOptions.sub.innerHTML = this.useIcons ? iconElem("subscript") : "x<sub>2</sub>";
                         this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
                         this.menubarOptions.sub.setAttribute("title", "Subscript");
@@ -291,10 +291,10 @@ class Mimir {
                     case "link":
                         const linkButton = document.createElement("button");
                         linkButton.innerHTML = this.useIcons ? iconElem("link") : "&#128279;";
-                        linkButton.classList.add("editor-menubar-option-link-button");
+                        linkButton.classList.add("mimir-menubar-option-link-button");
                         const linkInput = this.MimirUI.linkInput(this.link.bind(this), linkButton);
                         this.menubarOptions.link = linkInput;
-                        linkInput.linkInput.setAttribute("id", "editor-menubar-option-link");
+                        linkInput.linkInput.setAttribute("id", "mimir-menubar-option-link");
                         linkInput.linkInput.setAttribute("title", "Hyperlink");
                         linkInput.linkInput.setAttribute("aria-pressed", "false");
                         linkInput.linkInput.setAttribute("aria-label", "Editor insert link");
@@ -302,7 +302,7 @@ class Mimir {
                         break;
                     case "quote":
                         this.menubarOptions.quote = document.createElement("button");
-                        this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
+                        this.menubarOptions.quote.setAttribute("id", "mimir-menubar-option-quote");
                         this.menubarOptions.quote.innerHTML = this.useIcons ? iconElem("quote") : "\"";
                         this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
                         this.menubarOptions.quote.setAttribute("title", "Blockquote");
@@ -326,7 +326,7 @@ class Mimir {
                             options.push({name: level, content: headerToHTML[level][0], buttonDisplay: headerToHTML[level][1]});
                         }
                         this.menubarOptions.header = this.MimirUI.dropdownList(options, this.header.bind(this));
-                        this.menubarOptions.header.list.setAttribute("id", "editor-menubar-option-header");
+                        this.menubarOptions.header.list.setAttribute("id", "mimir-menubar-option-header");
                         this.menubarOptions.header.list.setAttribute("title", "Header");
                         this.menubarOptions.header.list.setAttribute("aria-label", "Editor select header");
                         this.menubar.append(this.menubarOptions.header.list);
@@ -342,21 +342,21 @@ class Mimir {
                             options.push({name: direction.toLowerCase(), content: newAlignOption});
                         }
                         this.menubarOptions.align = this.MimirUI.dropdownList(options, this.align.bind(this));
-                        this.menubarOptions.align.list.setAttribute("id", "editor-menubar-option-align");
+                        this.menubarOptions.align.list.setAttribute("id", "mimir-menubar-option-align");
                         this.menubarOptions.align.list.setAttribute("title", "Alignment");
                         this.menubarOptions.align.list.setAttribute("aria-label", "Editor change alignment");
                         this.menubar.append(this.menubarOptions.align.list);
                         break;
                     case "list":
                         this.menubarOptions.listOrdered = document.createElement("button");
-                        this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
+                        this.menubarOptions.listOrdered.setAttribute("id", "mimir-menubar-option-ordered-list");
                         this.menubarOptions.listOrdered.innerHTML = this.useIcons ? iconElem("list-ordered") : "OL";
                         this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
                         this.menubarOptions.listOrdered.setAttribute("title", "Ordered List");
                         this.menubarOptions.listOrdered.setAttribute("aria-label", "Editor toggle ordered list");
                         this.menubar.append(this.menubarOptions.listOrdered);
                         this.menubarOptions.listUnordered = document.createElement("button");
-                        this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
+                        this.menubarOptions.listUnordered.setAttribute("id", "mimir-menubar-option-unordered-list");
                         this.menubarOptions.listUnordered.innerHTML = this.useIcons ? iconElem("list-unordered") : "UL";
                         this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
                         this.menubarOptions.listUnordered.setAttribute("title", "Unordered List");
@@ -365,7 +365,7 @@ class Mimir {
                         break;
                     case "indent":
                         this.menubarOptions.indent = document.createElement("button");
-                        this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
+                        this.menubarOptions.indent.setAttribute("id", "mimir-menubar-option-indent");
                         this.menubarOptions.indent.innerHTML = this.useIcons ? iconElem("indent") : ">";
                         this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
                         this.menubarOptions.indent.setAttribute("title", "Indent");
@@ -374,7 +374,7 @@ class Mimir {
                         break;
                     case "outdent":
                         this.menubarOptions.outdent = document.createElement("button");
-                        this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
+                        this.menubarOptions.outdent.setAttribute("id", "mimir-menubar-option-outdent");
                         this.menubarOptions.outdent.innerHTML = this.useIcons ? iconElem("outdent") : "<";
                         this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
                         this.menubarOptions.outdent.setAttribute("title", "Outdent");
@@ -384,17 +384,17 @@ class Mimir {
                     case "insertImage":
                         const imageButton = document.createElement("button");
                         imageButton.innerHTML = this.useIcons ? iconElem("image") : "&#128444;";
-                        imageButton.classList.add("editor-menubar-option-image-button");
+                        imageButton.classList.add("mimir-menubar-option-image-button");
                         const imageInput = this.MimirUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
                         this.menubarOptions.insertImage = imageInput;
-                        imageInput.imageInput.setAttribute("id", "editor-menubar-option-image");
+                        imageInput.imageInput.setAttribute("id", "mimir-menubar-option-image");
                         imageInput.imageInput.setAttribute("title", "Insert Image");
                         imageInput.imageInput.setAttribute("aria-label", "Editor insert image");
                         this.menubar.append(imageInput.imageInput);
                         break;
                     case "insertHorizontalRule":
                         this.menubarOptions.hr = document.createElement("button");
-                        this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
+                        this.menubarOptions.hr.setAttribute("id", "mimir-menubar-option-hr");
                         this.menubarOptions.hr.innerHTML = this.useIcons ? iconElem("hr") : "&#9135;";
                         this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
                         this.menubarOptions.hr.setAttribute("title", "Horizontal Line");
@@ -403,7 +403,7 @@ class Mimir {
                         break;
                     case "undo":
                         this.menubarOptions.undo = document.createElement("button");
-                        this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
+                        this.menubarOptions.undo.setAttribute("id", "mimir-menubar-option-undo");
                         this.menubarOptions.undo.innerHTML = this.useIcons ? iconElem("undo") : "&#8630;";
                         this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
                         this.menubarOptions.undo.setAttribute("title", "Undo");
@@ -412,7 +412,7 @@ class Mimir {
                         break;
                     case "redo":
                         this.menubarOptions.redo = document.createElement("button");
-                        this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
+                        this.menubarOptions.redo.setAttribute("id", "mimir-menubar-option-redo");
                         this.menubarOptions.redo.innerHTML = this.useIcons ? iconElem("redo") : "&#8631;";
                         this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
                         this.menubarOptions.redo.setAttribute("title", "Redo");
@@ -421,7 +421,7 @@ class Mimir {
                         break;
                     case "remove":
                         this.menubarOptions.remove = document.createElement("button");
-                        this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
+                        this.menubarOptions.remove.setAttribute("id", "mimir-menubar-option-remove");
                         this.menubarOptions.remove.innerHTML = this.useIcons ? iconElem("remove") : "X";
                         this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
                         this.menubarOptions.remove.setAttribute("title", "Remove Styling");
@@ -430,7 +430,7 @@ class Mimir {
                         break;
                     case "openFindAndReplace":
                         this.menubarOptions.openFindAndReplace = document.createElement("button");
-                        this.menubarOptions.openFindAndReplace.setAttribute("id", "editor-menubar-option-open-find-and-replace");
+                        this.menubarOptions.openFindAndReplace.setAttribute("id", "mimir-menubar-option-open-find-and-replace");
                         this.menubarOptions.openFindAndReplace.innerHTML = this.useIcons ? iconElem("search") : "&#128270;";
                         this.menubarOptions.openFindAndReplace.addEventListener("click", this.openFindAndReplace.bind(this));
                         this.menubarOptions.openFindAndReplace.setAttribute("title", "Find and Replace");
@@ -444,7 +444,7 @@ class Mimir {
             // Add a spacer.
             if (this.menubarSettings.indexOf(group) == this.menubarSettings.length) {continue;}
             const spacer = document.createElement("div");
-            spacer.classList.add("editor-menubar-spacer");
+            spacer.classList.add("mimir-menubar-spacer");
             this.menubar.append(spacer);
         }
     }
@@ -2089,22 +2089,22 @@ class Mimir {
 
             if (option == "list") {
                 if (styling.find(s => s.type == "list" && s.listType == "ordered")) {
-                    if (!this.menubarOptions.listOrdered.classList.contains("editor-pressed")) this.menubarOptions.listOrdered.classList.add("editor-pressed");
+                    if (!this.menubarOptions.listOrdered.classList.contains("mimir-pressed")) this.menubarOptions.listOrdered.classList.add("mimir-pressed");
                 } else {
-                    this.menubarOptions.listOrdered.classList.remove("editor-pressed");
+                    this.menubarOptions.listOrdered.classList.remove("mimir-pressed");
                 }
                 if (styling.find(s => s.type == "list" && s.listType == "unordered")) {
-                    if (!this.menubarOptions.listUnordered.classList.contains("editor-pressed")) this.menubarOptions.listUnordered.classList.add("editor-pressed");
+                    if (!this.menubarOptions.listUnordered.classList.contains("mimir-pressed")) this.menubarOptions.listUnordered.classList.add("mimir-pressed");
                 } else {
-                    this.menubarOptions.listUnordered.classList.remove("editor-pressed");
+                    this.menubarOptions.listUnordered.classList.remove("mimir-pressed");
                 }
                 continue;
             }
 
             if (styling.some(s => s.type == option)) {
-                if (!this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.add("editor-pressed");
+                if (!this.menubarOptions[option].classList.contains("mimir-pressed")) this.menubarOptions[option].classList.add("mimir-pressed");
             } else {
-                if (this.menubarOptions[option].classList.contains("editor-pressed")) this.menubarOptions[option].classList.remove("editor-pressed");
+                if (this.menubarOptions[option].classList.contains("mimir-pressed")) this.menubarOptions[option].classList.remove("mimir-pressed");
             }
         }
     }
@@ -5811,9 +5811,9 @@ class Mimir {
         this.performStyleCommand({type: "foreColor", color: color});
         if (color != null) {
             if (this.useIcons) {
-                this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
+                this.menubarOptions.foreColor.colorInput.getElementsByClassName("mimir-menubar-option-fore-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
             } else {
-                this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
+                this.menubarOptions.foreColor.colorInput.getElementsByClassName("mimir-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
             }
         }
     }
@@ -5825,9 +5825,9 @@ class Mimir {
         this.performStyleCommand({type: "backColor", color: color});
         if (color != null) {
             if (this.useIcons) {
-                this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
+                this.menubarOptions.backColor.colorInput.getElementsByClassName("mimir-menubar-option-back-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
             } else {
-                this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].style.textDecorationColor = color;
+                this.menubarOptions.backColor.colorInput.getElementsByClassName("mimir-menubar-option-back-color-button")[0].style.textDecorationColor = color;
             }
         }
     }
@@ -6109,8 +6109,8 @@ class Mimir {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
         }
-        if (this.editor.getElementsByClassName("editor-temp-cursor").length != 0) {
-            this.currentCursor = this.editor.getElementsByClassName("editor-temp-cursor")[0];
+        if (this.editor.getElementsByClassName("mimir-temp-cursor").length != 0) {
+            this.currentCursor = this.editor.getElementsByClassName("mimir-temp-cursor")[0];
         }
 
         if (this.history.length == 0) {
@@ -6144,8 +6144,8 @@ class Mimir {
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
         }
-        if (this.editor.getElementsByClassName("editor-temp-cursor").length != 0) {
-            this.currentCursor = this.editor.getElementsByClassName("editor-temp-cursor")[0];
+        if (this.editor.getElementsByClassName("mimir-temp-cursor").length != 0) {
+            this.currentCursor = this.editor.getElementsByClassName("mimir-temp-cursor")[0];
         }
 
         this.imageModule.deselect();
@@ -6202,7 +6202,7 @@ class Mimir {
 
         // Insert the content editable div.
         this.editor = document.createElement("div");
-        this.editor.setAttribute("id", "editor-body");
+        this.editor.setAttribute("id", "mimir-body");
         this.editor.setAttribute("contenteditable", "true");
         this.editor.setAttribute("spellcheck", !!this.spellcheck);
         this.editor.setAttribute("role", "textbox");
