@@ -7,6 +7,7 @@ The Mimir rich text editor class.
 class Mimir {
 
     MimirUI = require("./ui.js");
+    MimirIcons = require("./assets/icons.js");
 
     /* 
     Editor constants. 
@@ -130,10 +131,8 @@ class Mimir {
     Create the menubar.
     */
     createMenubar() {
-        function iconPathFromName(name) { // See https://stackoverflow.com/questions/29855098/.
-            var separator = '/';
-            var replace = new RegExp(separator + '{1,}', 'g');
-            return "<img src=\"" + ([this.iconDirectory, name + ".svg"].join(separator).replace(replace, separator)) + "\">";
+        function iconElem(name) { // See https://stackoverflow.com/questions/29855098/.
+            return EditorIcons[name];
         }
         iconPathFromName = iconPathFromName.bind(this);
 
@@ -151,7 +150,7 @@ class Mimir {
                     case "bold":
                         this.menubarOptions.bold = document.createElement("button");
                         this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
-                        this.menubarOptions.bold.innerHTML = this.iconDirectory ? iconPathFromName("bold") : "B";
+                        this.menubarOptions.bold.innerHTML = this.iconDirectory ? iconElem("bold") : "B";
                         this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
                         this.menubarOptions.bold.setAttribute("title", "Bold");
                         this.menubarOptions.bold.setAttribute("aria-pressed", "false");

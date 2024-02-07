@@ -2,5 +2,7 @@
 
 const MimirIcons = {};
 
-module.exports = MimirIcons;
+MimirIcons.a = require("./icons/a.svg");
+MimirIcons.bold = require("./icons/bold.svg");
 
+module.exports = MimirIcons;
