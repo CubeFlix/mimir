@@ -8,9 +8,8 @@ stay out!!!! gaming in progress!!!
     - [x] ARIA for all UI components
     - [ ] `tabindex`
     - [x] Rename `editor` styles to `mimir` styles
-    - [ ] Disallow pasting HTML option in settings
-    - [ ] Disable find and replace option in settings
-    - [ ] More history
+    - [x] Disallow pasting HTML option in settings
+    - [x] More history
     - [ ] Figure out scrolling to selected nodes
 - Documentation
 

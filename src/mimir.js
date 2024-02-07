@@ -52,13 +52,14 @@ class Mimir {
             ["undo", "redo", "openFindAndReplace"]
         ] || settings.menubar;
         this.snapshotInterval = 5000 || settings.snapshotInterval;
-        this.historyLimit = 50 || settings.historyLimit;
+        this.historyLimit = 100 || settings.historyLimit;
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
         this.defaultSize = 16 || settings.defaultSize;
         this.spellcheck = settings.spellcheck == undefined ? true : !!settings.spellcheck;
         this.defaultImageWidth = "300px" || settings.defaultImageWidth;
         this.useIcons = settings.useIcons == undefined ? true : !!settings.useIcons;
+        this.allowPasteHTML = settings.allowPasteHTML == undefined ? true : !!settings.allowPasteHTML;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -1833,7 +1834,7 @@ class Mimir {
             this.removeCursor(false);
 
             // Paste HTML data.
-            if (e.clipboardData.getData("text/html")) {
+            if (e.clipboardData.getData("text/html") && this.allowPasteHTML) {
                 e.preventDefault();
 
                 const range = this.getRange();
