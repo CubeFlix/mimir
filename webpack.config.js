@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/mimir.js',
+  entry: './src/entry.js',
   output: {
     filename: 'dist/mimir.js',
     path: path.resolve(__dirname, 'dist'),

@@ -54,9 +54,9 @@ class Mimir {
         this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
         this.defaultFont = "Arial" || settings.defaultFont;
         this.defaultSize = 16 || settings.defaultSize;
-        this.spellcheck = settings.spellcheck == undefined ? true : settings.spellcheck;
+        this.spellcheck = true && !!settings.spellcheck;
         this.defaultImageWidth = "300px" || settings.defaultImageWidth;
-        this.iconDirectory = settings.iconDirectory;
+        this.useIcons = true && !!settings.useIcons;
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -131,10 +131,10 @@ class Mimir {
     Create the menubar.
     */
     createMenubar() {
-        function iconElem(name) { // See https://stackoverflow.com/questions/29855098/.
-            return EditorIcons[name];
+        function iconElem(name) {
+            return this.MimirIcons[name];
         }
-        iconPathFromName = iconPathFromName.bind(this);
+        iconElem = iconElem.bind(this);
 
         this.menubar = document.createElement("div");
         this.menubar.setAttribute("id", "editor-menubar");
@@ -150,7 +150,7 @@ class Mimir {
                     case "bold":
                         this.menubarOptions.bold = document.createElement("button");
                         this.menubarOptions.bold.setAttribute("id", "editor-menubar-option-bold");
-                        this.menubarOptions.bold.innerHTML = this.iconDirectory ? iconElem("bold") : "B";
+                        this.menubarOptions.bold.innerHTML = this.useIcons ? iconElem("bold") : "B";
                         this.menubarOptions.bold.addEventListener("click", this.bold.bind(this));
                         this.menubarOptions.bold.setAttribute("title", "Bold");
                         this.menubarOptions.bold.setAttribute("aria-pressed", "false");
@@ -160,7 +160,7 @@ class Mimir {
                     case "italic":
                         this.menubarOptions.italic = document.createElement("button");
                         this.menubarOptions.italic.setAttribute("id", "editor-menubar-option-italic");
-                        this.menubarOptions.italic.innerHTML = this.iconDirectory ? iconPathFromName("italic") : "I";
+                        this.menubarOptions.italic.innerHTML = this.useIcons ? iconElem("italic") : "I";
                         this.menubarOptions.italic.addEventListener("click", this.italic.bind(this));
                         this.menubarOptions.italic.setAttribute("title", "Italic");
                         this.menubarOptions.italic.setAttribute("aria-pressed", "false");
@@ -170,7 +170,7 @@ class Mimir {
                     case "underline":
                         this.menubarOptions.underline = document.createElement("button");
                         this.menubarOptions.underline.setAttribute("id", "editor-menubar-option-underline");
-                        this.menubarOptions.underline.innerHTML = this.iconDirectory ? iconPathFromName("underline") : "U";
+                        this.menubarOptions.underline.innerHTML = this.useIcons ? iconElem("underline") : "U";
                         this.menubarOptions.underline.addEventListener("click", this.underline.bind(this));
                         this.menubarOptions.underline.setAttribute("title", "Underline");
                         this.menubarOptions.underline.setAttribute("aria-pressed", "false");
@@ -180,7 +180,7 @@ class Mimir {
                     case "strikethrough":
                         this.menubarOptions.strikethrough = document.createElement("button");
                         this.menubarOptions.strikethrough.setAttribute("id", "editor-menubar-option-strikethrough");
-                        this.menubarOptions.strikethrough.innerHTML = this.iconDirectory ? iconPathFromName("strikethrough") : "S";
+                        this.menubarOptions.strikethrough.innerHTML = this.useIcons ? iconElem("strikethrough") : "S";
                         this.menubarOptions.strikethrough.addEventListener("click", this.strikethrough.bind(this));
                         this.menubarOptions.strikethrough.setAttribute("title", "Strikethrough");
                         this.menubarOptions.strikethrough.setAttribute("aria-pressed", "false");
@@ -222,8 +222,8 @@ class Mimir {
                         break;
                     case "foreColor":
                         const foreColorButton = document.createElement("button");
-                        foreColorButton.innerHTML = this.iconDirectory ? iconPathFromName("a") : "A";
-                        if (this.iconDirectory) {
+                        foreColorButton.innerHTML = this.useIcons ? iconElem("a") : "A";
+                        if (this.useIcons) {
                             foreColorButton.childNodes[0].style.borderBottom = `2px solid rgb(255, 0, 0)`;
                         } else {
                             foreColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
@@ -245,8 +245,8 @@ class Mimir {
                         break;
                     case "backColor":
                         const backColorButton = document.createElement("button");
-                        backColorButton.innerHTML = this.iconDirectory ? iconPathFromName("fill") : "&#9639;";
-                        if (this.iconDirectory) {
+                        backColorButton.innerHTML = this.useIcons ? iconElem("fill") : "&#9639;";
+                        if (this.useIcons) {
                             backColorButton.childNodes[0].style.borderBottom = `2px solid rgb(255, 0, 0)`;
                         } else {
                             backColorButton.style.textDecorationColor = `rgb(255, 0, 0)`;
@@ -269,7 +269,7 @@ class Mimir {
                     case "sup":
                         this.menubarOptions.sup = document.createElement("button");
                         this.menubarOptions.sup.setAttribute("id", "editor-menubar-option-sup");
-                        this.menubarOptions.sup.innerHTML = this.iconDirectory ? iconPathFromName("superscript") : "x<sup>2</sup>";
+                        this.menubarOptions.sup.innerHTML = this.useIcons ? iconElem("superscript") : "x<sup>2</sup>";
                         this.menubarOptions.sup.addEventListener("click", this.sup.bind(this));
                         this.menubarOptions.sup.setAttribute("title", "Superscript");
                         this.menubarOptions.sup.setAttribute("aria-pressed", "false");
@@ -279,7 +279,7 @@ class Mimir {
                     case "sub":
                         this.menubarOptions.sub = document.createElement("button");
                         this.menubarOptions.sub.setAttribute("id", "editor-menubar-option-sub");
-                        this.menubarOptions.sub.innerHTML = this.iconDirectory ? iconPathFromName("subscript") : "x<sub>2</sub>";
+                        this.menubarOptions.sub.innerHTML = this.useIcons ? iconElem("subscript") : "x<sub>2</sub>";
                         this.menubarOptions.sub.addEventListener("click", this.sub.bind(this));
                         this.menubarOptions.sub.setAttribute("title", "Subscript");
                         this.menubarOptions.sub.setAttribute("aria-pressed", "false");
@@ -288,7 +288,7 @@ class Mimir {
                         break;
                     case "link":
                         const linkButton = document.createElement("button");
-                        linkButton.innerHTML = this.iconDirectory ? iconPathFromName("link") : "&#128279;";
+                        linkButton.innerHTML = this.useIcons ? iconElem("link") : "&#128279;";
                         linkButton.classList.add("editor-menubar-option-link-button");
                         const linkInput = this.MimirUI.linkInput(this.link.bind(this), linkButton);
                         this.menubarOptions.link = linkInput;
@@ -301,7 +301,7 @@ class Mimir {
                     case "quote":
                         this.menubarOptions.quote = document.createElement("button");
                         this.menubarOptions.quote.setAttribute("id", "editor-menubar-option-quote");
-                        this.menubarOptions.quote.innerHTML = this.iconDirectory ? iconPathFromName("quote") : "\"";
+                        this.menubarOptions.quote.innerHTML = this.useIcons ? iconElem("quote") : "\"";
                         this.menubarOptions.quote.addEventListener("click", this.quote.bind(this));
                         this.menubarOptions.quote.setAttribute("title", "Blockquote");
                         this.menubarOptions.quote.setAttribute("aria-pressed", "false");
@@ -333,7 +333,7 @@ class Mimir {
                         var options = [];
                         for (const direction of ["Left", "Right", "Center", "Justify"]) {
                             const newAlignOption = document.createElement("div");
-                            newAlignOption.innerHTML = this.iconDirectory ? iconPathFromName("align-" + direction.toLowerCase()) : direction;
+                            newAlignOption.innerHTML = this.useIcons ? iconElem("align-" + direction.toLowerCase()) : direction;
                             newAlignOption.setAttribute("value", direction.toLowerCase());
                             newAlignOption.setAttribute("title", direction);
                             newAlignOption.setAttribute("aria-label", "Editor change alignment " + direction);
@@ -348,14 +348,14 @@ class Mimir {
                     case "list":
                         this.menubarOptions.listOrdered = document.createElement("button");
                         this.menubarOptions.listOrdered.setAttribute("id", "editor-menubar-option-ordered-list");
-                        this.menubarOptions.listOrdered.innerHTML = this.iconDirectory ? iconPathFromName("list-ordered") : "OL";
+                        this.menubarOptions.listOrdered.innerHTML = this.useIcons ? iconElem("list-ordered") : "OL";
                         this.menubarOptions.listOrdered.addEventListener("click", this.listOrdered.bind(this));
                         this.menubarOptions.listOrdered.setAttribute("title", "Ordered List");
                         this.menubarOptions.listOrdered.setAttribute("aria-label", "Editor toggle ordered list");
                         this.menubar.append(this.menubarOptions.listOrdered);
                         this.menubarOptions.listUnordered = document.createElement("button");
                         this.menubarOptions.listUnordered.setAttribute("id", "editor-menubar-option-unordered-list");
-                        this.menubarOptions.listUnordered.innerHTML = this.iconDirectory ? iconPathFromName("list-unordered") : "UL";
+                        this.menubarOptions.listUnordered.innerHTML = this.useIcons ? iconElem("list-unordered") : "UL";
                         this.menubarOptions.listUnordered.addEventListener("click", this.listUnordered.bind(this));
                         this.menubarOptions.listUnordered.setAttribute("title", "Unordered List");
                         this.menubarOptions.listUnordered.setAttribute("aria-label", "Editor toggle unordered list");
@@ -364,7 +364,7 @@ class Mimir {
                     case "indent":
                         this.menubarOptions.indent = document.createElement("button");
                         this.menubarOptions.indent.setAttribute("id", "editor-menubar-option-indent");
-                        this.menubarOptions.indent.innerHTML = this.iconDirectory ? iconPathFromName("indent") : ">";
+                        this.menubarOptions.indent.innerHTML = this.useIcons ? iconElem("indent") : ">";
                         this.menubarOptions.indent.addEventListener("click", this.indent.bind(this));
                         this.menubarOptions.indent.setAttribute("title", "Indent");
                         this.menubarOptions.indent.setAttribute("aria-label", "Editor increase indent");
@@ -373,7 +373,7 @@ class Mimir {
                     case "outdent":
                         this.menubarOptions.outdent = document.createElement("button");
                         this.menubarOptions.outdent.setAttribute("id", "editor-menubar-option-outdent");
-                        this.menubarOptions.outdent.innerHTML = this.iconDirectory ? iconPathFromName("outdent") : "<";
+                        this.menubarOptions.outdent.innerHTML = this.useIcons ? iconElem("outdent") : "<";
                         this.menubarOptions.outdent.addEventListener("click", this.outdent.bind(this));
                         this.menubarOptions.outdent.setAttribute("title", "Outdent");
                         this.menubarOptions.outdent.setAttribute("aria-label", "Editor decrease indent");
@@ -381,7 +381,7 @@ class Mimir {
                         break;
                     case "insertImage":
                         const imageButton = document.createElement("button");
-                        imageButton.innerHTML = this.iconDirectory ? iconPathFromName("image") : "&#128444;";
+                        imageButton.innerHTML = this.useIcons ? iconElem("image") : "&#128444;";
                         imageButton.classList.add("editor-menubar-option-image-button");
                         const imageInput = this.MimirUI.imageInput(this.insertImage.bind(this), imageButton, this.imageObjectURLs);
                         this.menubarOptions.insertImage = imageInput;
@@ -393,7 +393,7 @@ class Mimir {
                     case "insertHorizontalRule":
                         this.menubarOptions.hr = document.createElement("button");
                         this.menubarOptions.hr.setAttribute("id", "editor-menubar-option-hr");
-                        this.menubarOptions.hr.innerHTML = this.iconDirectory ? iconPathFromName("hr") : "&#9135;";
+                        this.menubarOptions.hr.innerHTML = this.useIcons ? iconElem("hr") : "&#9135;";
                         this.menubarOptions.hr.addEventListener("click", this.insertHR.bind(this));
                         this.menubarOptions.hr.setAttribute("title", "Horizontal Line");
                         this.menubarOptions.hr.setAttribute("aria-label", "Editor insert horizontal line");
@@ -402,7 +402,7 @@ class Mimir {
                     case "undo":
                         this.menubarOptions.undo = document.createElement("button");
                         this.menubarOptions.undo.setAttribute("id", "editor-menubar-option-undo");
-                        this.menubarOptions.undo.innerHTML = this.iconDirectory ? iconPathFromName("undo") : "&#8630;";
+                        this.menubarOptions.undo.innerHTML = this.useIcons ? iconElem("undo") : "&#8630;";
                         this.menubarOptions.undo.addEventListener("click", this.undo.bind(this));
                         this.menubarOptions.undo.setAttribute("title", "Undo");
                         this.menubarOptions.undo.setAttribute("aria-label", "Editor undo");
@@ -411,7 +411,7 @@ class Mimir {
                     case "redo":
                         this.menubarOptions.redo = document.createElement("button");
                         this.menubarOptions.redo.setAttribute("id", "editor-menubar-option-redo");
-                        this.menubarOptions.redo.innerHTML = this.iconDirectory ? iconPathFromName("redo") : "&#8631;";
+                        this.menubarOptions.redo.innerHTML = this.useIcons ? iconElem("redo") : "&#8631;";
                         this.menubarOptions.redo.addEventListener("click", this.redo.bind(this));
                         this.menubarOptions.redo.setAttribute("title", "Redo");
                         this.menubarOptions.redo.setAttribute("aria-label", "Editor redo");
@@ -420,7 +420,7 @@ class Mimir {
                     case "remove":
                         this.menubarOptions.remove = document.createElement("button");
                         this.menubarOptions.remove.setAttribute("id", "editor-menubar-option-remove");
-                        this.menubarOptions.remove.innerHTML = this.iconDirectory ? iconPathFromName("remove") : "X";
+                        this.menubarOptions.remove.innerHTML = this.useIcons ? iconElem("remove") : "X";
                         this.menubarOptions.remove.addEventListener("click", this.remove.bind(this));
                         this.menubarOptions.remove.setAttribute("title", "Remove Styling");
                         this.menubarOptions.remove.setAttribute("aria-label", "Editor remove all styling");
@@ -429,7 +429,7 @@ class Mimir {
                     case "openFindAndReplace":
                         this.menubarOptions.openFindAndReplace = document.createElement("button");
                         this.menubarOptions.openFindAndReplace.setAttribute("id", "editor-menubar-option-open-find-and-replace");
-                        this.menubarOptions.openFindAndReplace.innerHTML = this.iconDirectory ? iconPathFromName("search") : "&#128270;";
+                        this.menubarOptions.openFindAndReplace.innerHTML = this.useIcons ? iconElem("search") : "&#128270;";
                         this.menubarOptions.openFindAndReplace.addEventListener("click", this.openFindAndReplace.bind(this));
                         this.menubarOptions.openFindAndReplace.setAttribute("title", "Find and Replace");
                         this.menubarOptions.openFindAndReplace.setAttribute("aria-label", "Editor open find and replace dialog");
@@ -5808,7 +5808,7 @@ class Mimir {
     foreColor(color) {
         this.performStyleCommand({type: "foreColor", color: color});
         if (color != null) {
-            if (this.iconDirectory) {
+            if (this.useIcons) {
                 this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
             } else {
                 this.menubarOptions.foreColor.colorInput.getElementsByClassName("editor-menubar-option-fore-color-button")[0].style.textDecorationColor = color;
@@ -5822,7 +5822,7 @@ class Mimir {
     backColor(color) {
         this.performStyleCommand({type: "backColor", color: color});
         if (color != null) {
-            if (this.iconDirectory) {
+            if (this.useIcons) {
                 this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].childNodes[0].style.borderBottom = "2px solid " + color;
             } else {
                 this.menubarOptions.backColor.colorInput.getElementsByClassName("editor-menubar-option-back-color-button")[0].style.textDecorationColor = color;
