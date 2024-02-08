@@ -11,6 +11,7 @@ stay out!!!! gaming in progress!!!
     - [x] Disallow pasting HTML option in settings
     - [x] More history
     - [ ] Figure out scrolling to selected nodes
+    - [ ] Catch `beforeinput` `insert` and `delete` event for cursor
 - Documentation
 
 ## todo
