@@ -733,7 +733,7 @@ class Mimir {
                         newRange.collapse();
                         document.getSelection().removeAllRanges();
                         document.getSelection().addRange(newRange);
-                        this.scrollTextNodeIntoView(cursor);
+                        // this.scrollTextNodeIntoView(cursor);
                     }
                 }
                 this.updateMenubarOptions();
@@ -762,7 +762,7 @@ class Mimir {
                     newRange.collapse(false);
                     document.getSelection().removeAllRanges();
                     document.getSelection().addRange(newRange);
-                    this.scrollTextNodeIntoView(newTextNode);
+                    // this.scrollTextNodeIntoView(newTextNode);
 
                     this.updateMenubarOptions();
                     return;
@@ -847,7 +847,7 @@ class Mimir {
             range.setStart(container, 0);
             document.getSelection().removeAllRanges();
             document.getSelection().addRange(range);
-            container.scrollIntoView(false);
+            // container.scrollIntoView(false);
             return true;
         }
         return false;
@@ -919,7 +919,7 @@ class Mimir {
             range.setStart(container, 0);
             document.getSelection().removeAllRanges();
             document.getSelection().addRange(range);
-            container.scrollIntoView(false);
+            // container.scrollIntoView(false);
             return true;
         }
         return false;
@@ -1584,7 +1584,7 @@ class Mimir {
             newRange.collapse(false);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
-            this.scrollTextNodeIntoView(tabNode);
+            // this.scrollTextNodeIntoView(tabNode);
             return;
         }
 
@@ -1601,7 +1601,7 @@ class Mimir {
             newRange.collapse(false);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(newRange);
-            this.scrollTextNodeIntoView(tabNode);
+            // this.scrollTextNodeIntoView(tabNode);
             return;
         }
 
@@ -1616,7 +1616,7 @@ class Mimir {
                 newRange.collapse(false);
                 window.getSelection().removeAllRanges();
                 window.getSelection().addRange(newRange);
-                this.scrollTextNodeIntoView(tabNode);
+                // this.scrollTextNodeIntoView(tabNode);
                 return;
             }
         }
@@ -1628,7 +1628,7 @@ class Mimir {
         newRange.collapse(false);
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(newRange);
-        this.scrollTextNodeIntoView(tabNode);
+        // this.scrollTextNodeIntoView(tabNode);
     }
 
     /*
