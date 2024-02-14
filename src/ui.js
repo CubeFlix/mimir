@@ -1197,7 +1197,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
 
     function onClick(event) {
         if (!(ui.contains(event.target))) {
-            if (ui.style.display == "block") {
+            if (ui.style.display == "flex") {
                 close();
             }
             document.removeEventListener("mousedown", onClick);
@@ -1247,7 +1247,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
     }
 
     function selectCurrent() {
-        if (!matches[selectCurrent]) {return;}
+        if (!matches[selectedOffset]) {return;}
         matches[selectedOffset]?.forEach(n => n.wrapper.classList.add("mimir-find-and-replace-current"));
     }
 
