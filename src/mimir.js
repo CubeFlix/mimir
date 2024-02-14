@@ -51,13 +51,13 @@ class Mimir {
             ["insertImage", "insertHorizontalRule"],
             ["undo", "redo", "openFindAndReplace"]
         ] || settings.menubar;
-        this.snapshotInterval = 5000 || settings.snapshotInterval;
-        this.historyLimit = 100 || settings.historyLimit;
-        this.supportedFonts = ["Arial", "Times New Roman", "monospace", "Helvetica"] || settings.supportedFonts;
-        this.defaultFont = "Arial" || settings.defaultFont;
+        this.snapshotInterval = settings.snapshotInterval || 5000;
+        this.historyLimit = settings.historyLimit || 100;
+        this.supportedFonts = settings.supportedFonts || ["Arial", "Times New Roman", "monospace", "Helvetica"];
+        this.defaultFont = settings.defaultFont || "Arial";
         this.defaultSize = 16 || settings.defaultSize;
         this.spellcheck = settings.spellcheck == undefined ? true : !!settings.spellcheck;
-        this.defaultImageWidth = "300px" || settings.defaultImageWidth;
+        this.defaultImageWidth = settings.defaultImageWidth || "300px";
         this.useIcons = settings.useIcons == undefined ? true : !!settings.useIcons;
         this.allowPasteHTML = settings.allowPasteHTML == undefined ? true : !!settings.allowPasteHTML;
 
@@ -104,8 +104,8 @@ class Mimir {
     Apply the height and width style options to the editor. 
     */
     applySizeStyles() {
-        this.editor.style.width = "600px" || this.settings.width;
-        this.menubar.style.width = "600px" || this.settings.width;
+        this.editor.style.width = this.settings.width || "600px";
+        this.menubar.style.width = this.settings.width || "600px";
 
         if (this.settings.height) {
             this.editor.style.height = this.settings.height;
