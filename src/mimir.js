@@ -105,7 +105,6 @@ class Mimir {
     */
     applySizeStyles() {
         this.editor.style.width = this.settings.width || "600px";
-        this.menubar.style.width = this.settings.width || "600px";
 
         if (this.settings.height) {
             this.editor.style.height = this.settings.height;
