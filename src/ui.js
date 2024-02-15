@@ -1155,6 +1155,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
         replaceAllButton.disabled = true;
         document.addEventListener("mousedown", onClick);
         document.addEventListener("keydown", onKeyPress);
+        findInput.focus();
 
         updateModalPosition();
     }

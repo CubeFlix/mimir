@@ -446,7 +446,7 @@ class Mimir {
                 }
             }
             // Add a spacer.
-            if (this.menubarSettings.indexOf(group) == this.menubarSettings.length) {continue;}
+            if (this.menubarSettings.indexOf(group) == this.menubarSettings.length - 1) {continue;}
             const spacer = document.createElement("div");
             spacer.classList.add("mimir-menubar-spacer");
             this.menubar.append(spacer);
@@ -6229,6 +6229,7 @@ class Mimir {
         this.editor.setAttribute("spellcheck", !!this.spellcheck);
         this.editor.setAttribute("role", "textbox");
         this.editor.setAttribute("aria-label", "Editor main editing area");
+        this.editor.setAttribute("tabindex", "-1");
         this.container.append(this.editor);
 
         this.saveHistory();
