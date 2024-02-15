@@ -5,9 +5,11 @@
 #mimir-body {
     white-space: pre-wrap;
     word-wrap: break-word;
-    overflow-y: scroll;
+    overflow-y: auto;
     border: 1px solid silver;
     padding: 10px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #mimir-body:focus {
