@@ -734,6 +734,7 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
 
         // Bind events.
         window.addEventListener("resize", updateUI);
+        editor.addEventListener("scroll", updateUI);
 
         // Disable user selection on the image.
         selectedImage.classList.add("mimir-hide-selection");
@@ -760,6 +761,7 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
 
         // Unbind events.
         window.removeEventListener("resize", updateUI);
+        editor.removeEventListener("scroll", updateUI);
     }
 
     // Update the UI.
@@ -994,6 +996,11 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
         if (e.target.tagName == "IMG") {
             selectImage(e.target);
         }
+    });
+    document.addEventListener("selectionchange", (e) => {
+        if (selectedImage) {
+            if (document.getSelection().rangeCount) deselectImage();
+        };
     });
     window.addEventListener("mousedown", (e) => {
         if (!(editor.parentNode && editor.parentNode.contains(e.target)) && !ui.contains(e.target)) {
