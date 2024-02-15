@@ -1163,6 +1163,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
         const rect = ui.getBoundingClientRect();
         const editorRect = editor.getBoundingClientRect();
         ui.style.left = editorRect.right - rect.width + "px";
+        ui.style.top = editorRect.top + "px";
     }
 
     function close() {
