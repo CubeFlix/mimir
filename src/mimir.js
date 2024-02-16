@@ -775,6 +775,8 @@ class Mimir {
     */
     bindInputEvents() {
         this.editor.addEventListener("beforeinput", function(e) {
+            this.editor.dispatchEvent(new Event("mimiredited"));
+
             if (e.inputType == "formatBold") {
                 // Bold.
                 e.preventDefault();
@@ -1571,7 +1573,8 @@ class Mimir {
         if (!range) {
             return;
         }
-
+        
+        this.editor.dispatchEvent(new Event("mimiredited"));
         if (this.currentCursor && this.currentCursor.contains(range.commonAncestorContainer)) {
             const tabNode = document.createTextNode("\t");
             this.currentCursor.after(tabNode);
@@ -1828,6 +1831,7 @@ class Mimir {
     */
     bindPasteEvents() {
         this.editor.addEventListener("paste", function(e) {
+            this.editor.dispatchEvent(new Event("mimiredited"));
             this.saveHistory();
             this.imageModule.deselect();
             this.removeCursor(false);
@@ -1890,6 +1894,7 @@ class Mimir {
         }.bind(this));
 
         this.editor.addEventListener("drop", function(e) {
+            this.editor.dispatchEvent(new Event("mimiredited"));
             this.saveHistory();
             this.imageModule.deselect();
             this.removeCursor(false);
@@ -5684,6 +5689,8 @@ class Mimir {
         }
         const currentStyling = this.detectStyling(range);
 
+        this.editor.dispatchEvent(new Event("mimiredited"));
+
         // Set the style.
         if (style.type == "remove") {
             this.removeAllStyles(style, range);
@@ -6139,6 +6146,7 @@ class Mimir {
             this.saveHistory();
         }
 
+        this.editor.dispatchEvent(new Event("mimiredited"));
         this.imageModule.deselect();
     }
 
@@ -6170,6 +6178,7 @@ class Mimir {
             this.currentCursor = this.editor.getElementsByClassName("mimir-temp-cursor")[0];
         }
 
+        this.editor.dispatchEvent(new Event("mimiredited"));
         this.imageModule.deselect();
     }
 
@@ -6195,6 +6204,88 @@ class Mimir {
             const url = this.imageObjectURLs.pop();
             URL.revokeObjectURL(url);
         }
+    }
+
+    /*
+    Export to document.
+    */
+    async export() {
+        /*
+        Convert a blob into data URL.
+        */
+        function blobToDataUrl(b) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(reader.result);
+                reader.onerror = e => reject(reader.error);
+                reader.onabort = e => reject(new Error("Failed to read blob"));
+                reader.readAsDataURL(b);
+              });
+        }
+
+        const content = this.snapshot().content;
+
+        // Remove cursor.
+        if (content.querySelector(".mimir-temp-cursor")) {
+            // Traverse upwards and remove empty text tags.
+            var currentNode = content.querySelector(".mimir-temp-cursor");
+            while (currentNode.parentNode != content && !this.blockTags.includes(currentNode.parentNode.tagName)) {
+                currentNode = currentNode.parentNode;
+            }
+            currentNode.remove();
+        }
+
+        // Prepare image sources.
+        for (const child of content.querySelectorAll("img")) {
+            if (child.getAttribute("src") && child.getAttribute("src").toLowerCase().startsWith("blob")) {
+                const blob = await (await fetch(child.getAttribute("src"))).blob();
+                const url = await blobToDataUrl(blob);
+                child.setAttribute("src", url);
+            }
+        }
+
+        const doc = { content: content.innerHTML };
+        return doc;
+    }
+
+    /*
+    Import a document.
+    */
+    import(doc) {
+        // Sanitize elements and attributes.
+        const temp = document.createElement("div");
+        temp.innerHTML = doc.content;
+
+        const allowed = []
+            .concat(this.blockTags)
+            .concat(this.stylingTags)
+            .concat(this.contentTags)
+            .concat(["SPAN"]);
+        const selector = allowed.map((t) => `:not(${t})`).join("");
+        if (temp.querySelector(selector)) {
+            throw new Error("Invalid tag in document content. Ensure the document is valid.");
+        }
+
+        this.new();
+
+        // Resolve image sources.
+        for (const child of temp.querySelectorAll("img")) {
+            if (child.getAttribute("src") && child.getAttribute("src").toLowerCase().startsWith("data")) {
+                var mime = child.getAttribute("src").split(',')[0].split(':')[1].split(';')[0];
+                var binary = atob(child.getAttribute("src").split(',')[1]);
+                var array = [];
+                for (var i = 0; i < binary.length; i++) {
+                    array.push(binary.charCodeAt(i));
+                }
+                const blob = new Blob([new Uint8Array(array)], {type: mime});
+                var src = URL.createObjectURL(blob);
+                child.setAttribute("src", src);
+                this.imageObjectURLs.push(src);
+                continue;
+            }
+        }
+        
+        this.editor.append(...temp.childNodes);    
     }
 
     /* 
@@ -6271,12 +6362,14 @@ class Mimir {
         this.imageModule = this.MimirUI.bindImageEditing(this.editor, function() {
             this.saveHistory(); 
             this.shouldTakeSnapshotOnNextChange = true;
+            this.editor.dispatchEvent(new Event("mimiredited"));
         }.bind(this));
 
         // Find and replace module.
         this.findAndReplaceModule = this.MimirUI.findAndReplace(this.editor, function() {
             this.saveHistory(); 
             this.shouldTakeSnapshotOnNextChange = true;
+            this.editor.dispatchEvent(new Event("mimiredited"));
         }.bind(this), this);
     }
 }
