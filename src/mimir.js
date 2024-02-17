@@ -1884,13 +1884,11 @@ class Mimir {
         this.editor.addEventListener("drag", function(e) {
             // Set the range to remove during the drag.
             this.dragRangeToRemove = this.getRange();
-            console.log("DRAG", this.dragRangeToRemove)
         }.bind(this));
 
         this.editor.addEventListener("dragend", function(e) {
             // Set the range to remove during the drag.
             this.dragRangeToRemove = null;
-            console.log("DROP", this.dragRangeToRemove)
         }.bind(this));
 
         this.editor.addEventListener("drop", function(e) {
@@ -1898,7 +1896,6 @@ class Mimir {
             this.saveHistory();
             this.imageModule.deselect();
             this.removeCursor(false);
-            console.log("DROP", this.dragRangeToRemove)
 
             // Insert HTML data.
             if (e.dataTransfer.getData("text/html")) {
@@ -6284,7 +6281,7 @@ class Mimir {
                 continue;
             }
         }
-        
+
         this.editor.append(...temp.childNodes);    
     }
 
