@@ -1175,7 +1175,7 @@ class Mimir {
     /*
     Reconstruct a node's children.
     */
-    reconstructNodeContents(node, parent, cachedInlineBlockStyles, removeExtraneousWhitespace = true) {
+    reconstructNodeContents(node, parent, cachedInlineBlockStyles, removeExtraneousWhitespace = true, ignoreList = null) {
         const reconstructed = [];
 
         // Reconstruct each of the children.
@@ -1320,6 +1320,10 @@ class Mimir {
                     }
                 }
             } else if (child.nodeType == Node.ELEMENT_NODE) {
+                if (ignoreList && ignoreList.includes(child.tagName)) {
+                    continue;
+                }
+
                 var removeExtraneousWhitespaceOnChildren = removeExtraneousWhitespace;
                 if (child.tagName == "PRE") {
                     removeExtraneousWhitespaceOnChildren = false;
@@ -1464,14 +1468,14 @@ class Mimir {
     /*
     Sanitize and reconstruct HTML data.
     */
-    sanitize(contents) {
+    sanitize(contents, ignoreList = null) {
         // Place the data into a temporary node.
         const original = document.createElement("div");
         original.innerHTML = contents;
 
         // Reconstruct the node.
         const cachedInlineBlockStyles = [];
-        const reconstructed = this.reconstructNodeContents(original, original, cachedInlineBlockStyles);
+        const reconstructed = this.reconstructNodeContents(original, original, cachedInlineBlockStyles, true, ignoreList);
 
         // Remove trailing and leading whitespace nodes.
         const withoutWhitespace = [];
@@ -1676,10 +1680,10 @@ class Mimir {
     /*
     Insert and sanitize HTML data.
     */
-    insertHTML(startNode, data, select = "end", nodesToInsert = null) {
+    insertHTML(startNode, data, select = "end", nodesToInsert = null, ignoreList = null) {
         if (data) {
             // Reconstruct the data.
-            var reconstructed = this.sanitize(data);
+            var reconstructed = this.sanitize(data, ignoreList);
             if (reconstructed.length == 0) {
                 return;
             }
