@@ -1279,6 +1279,17 @@ class Mimir {
                         // if (child.textContent[child.textContent.length - 1] == " " && rightSibling && rightSibling.textContent.startsWith(" ")) {
                         //     child.textContent = child.textContent.slice(0, child.textContent.length - 1);
                         // }
+
+                        // Sequences at the beginning and end of an element are removed.
+                        if (!child.previousSibling) {
+                            if (child.textContent[0] == " ") {
+                                child.textContent = child.textContent.slice(1, child.textContent.length);
+                            }
+                        } else if (!child.nextSibling) {
+                            if (child.textContent[child.textContent.length - 1] == " ") {
+                                child.textContent = child.textContent.slice(0, child.textContent.length - 1);
+                            }
+                        }
                     }
 
                     // Reconstruct the styling.
