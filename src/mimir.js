@@ -6219,6 +6219,17 @@ class Mimir {
     }
 
     /*
+    Release image URLs.
+    */
+    releaseImageURLs() {
+        // Clear the image object URL list and release the URLs.
+        while (this.imageObjectURLs.length != 0) {
+            const url = this.imageObjectURLs.pop();
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    /*
     Export to document.
     */
     async export() {
