@@ -6132,6 +6132,10 @@ class Mimir {
     Undo.
     */
     undo() {
+        if (this.history.length == 0) {
+            return;
+        }
+
         var snap = this.history.pop();
 
         // If the undo snapshot is the same as the current content, ignore it.
@@ -6334,7 +6338,8 @@ class Mimir {
             }
         }
 
-        this.editor.append(...temp.childNodes);    
+        this.editor.append(...temp.childNodes);
+        this.history = [];
     }
 
     /* 
