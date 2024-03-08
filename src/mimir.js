@@ -6283,10 +6283,36 @@ class Mimir {
             .concat(this.blockTags)
             .concat(this.stylingTags)
             .concat(this.contentTags)
-            .concat(["SPAN"]);
+            .concat(["SPAN", "A"]);
         const selector = allowed.map((t) => `:not(${t})`).join("");
         if (temp.querySelector(selector)) {
             throw new Error("Invalid tag in document content. Ensure the document is valid.");
+        }
+
+        const walker = document.createTreeWalker(temp, NodeFilter.SHOW_ELEMENT);
+        const allowedAttrs = {
+            "A": ["href"],
+            "IMG": ["src"]
+        };
+        while (walker.nextNode()) {
+            if (allowedAttrs[walker.currentNode.tagName] && walker.currentNode.hasAttributes()) {
+                for (const attr of walker.currentNode.attributes) {
+                    if (!(allowedAttrs[walker.currentNode.tagName].includes(attr.name.toLowerCase()))) {
+                        throw new Error("Invalid attribute in document content. Ensure the document is valid.");
+                    }
+                }
+                if (walker.currentNode.tagName == "A" && walker.currentNode.getAttribute("href")) {
+                    if (walker.currentNode.getAttribute("href").trim().substring(0, 11).toLowerCase() == "javascript:") {
+                        throw new Error("Invalid attribute in document content. Ensure the document is valid.");
+                    }
+                }
+            } else if (walker.currentNode.hasAttributes()) {
+                for (const attr of walker.currentNode.attributes) {
+                    if (!(["style"].includes(attr.name.toLowerCase()))) {
+                        throw new Error("Invalid attribute in document content. Ensure the document is valid.");
+                    }
+                }
+            }
         }
 
         this.new();
