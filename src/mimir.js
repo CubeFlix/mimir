@@ -6295,8 +6295,9 @@ class Mimir {
 
         const walker = document.createTreeWalker(temp, NodeFilter.SHOW_ELEMENT);
         const allowedAttrs = {
-            "A": ["href"],
-            "IMG": ["src"]
+            "A": ["href", "alt", "style"],
+            "IMG": ["src", "alt", "class", "style"],
+            "FONT": ["size", "color", "face", "style"]
         };
         while (walker.nextNode()) {
             if (allowedAttrs[walker.currentNode.tagName] && walker.currentNode.hasAttributes()) {
