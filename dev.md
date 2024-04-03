@@ -185,6 +185,7 @@ stay out!!!! gaming in progress!!!
 - [x] dropdown lists
 - [x] modal overhaul
 - [x] menubar should stay at top of editor
+- [ ] find and replace menu is not working
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after inserting/selecting image
 - [ ] reinsert cursor on cut and delete event

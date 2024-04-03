@@ -107,10 +107,13 @@ class Mimir {
         this.editor.style.width = this.settings.width || "600px";
 
         if (this.settings.height) {
+            this.editorContainer.style.height = this.settings.height;
             this.editor.style.height = this.settings.height;
         } else if (this.settings.minHeight) {
+            this.editorContainer.style.minHeight = this.settings.minHeight;
             this.editor.style.minHeight = this.settings.minHeight;
         } else {
+            this.editorContainer.style.minHeight = "600px";
             this.editor.style.minHeight = "600px";
         }
     }
@@ -5975,6 +5978,7 @@ class Mimir {
         this.editor.style.zoom = `${level}`;
         this.editor.style.MozTransform = `scale(${level})`;
         this.editor.style.WebkitTransform = `scale(${level})`;
+        this.editor.style.transformOrigin = "top left";
     }
 
     /*
