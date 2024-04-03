@@ -2,10 +2,13 @@
 
 @import url("./ui.css");
 
+#mimir-body-container {
+    overflow-y: auto;
+}
+
 #mimir-body {
     white-space: pre-wrap;
     word-wrap: break-word;
-    overflow-y: auto;
     border: 1px solid silver;
     padding: 10px;
     margin-left: auto;

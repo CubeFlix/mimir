@@ -5968,6 +5968,16 @@ class Mimir {
     }
 
     /*
+    Zoom the editor.
+    */
+    zoom(level) {
+        this.currentZoom = level;
+        this.editor.style.zoom = `${level}`;
+        this.editor.style.MozTransform = `scale(${level})`;
+        this.editor.style.WebkitTransform = `scale(${level})`;
+    }
+
+    /*
     Serialize a node's contents to a object.
     */
     async serializeContents(node) {
@@ -6346,6 +6356,9 @@ class Mimir {
     Initialize the editor. Must be called before using the editor. 
     */
     init() {
+        // Current zoom level.
+        this.currentZoom = 1;
+
         // Initialize history.
         this.history = [];
         this.redoHistory = [];
@@ -6368,6 +6381,8 @@ class Mimir {
         this.createMenubar();
 
         // Insert the content editable div.
+        this.editorContainer = document.createElement("div");
+        this.editorContainer.setAttribute("id", "mimir-body-container");
         this.editor = document.createElement("div");
         this.editor.setAttribute("id", "mimir-body");
         this.editor.setAttribute("contenteditable", "true");
@@ -6375,7 +6390,8 @@ class Mimir {
         this.editor.setAttribute("role", "textbox");
         this.editor.setAttribute("aria-label", "Editor main editing area");
         this.editor.setAttribute("tabindex", "-1");
-        this.container.append(this.editor);
+        this.editorContainer.append(this.editor);
+        this.container.append(this.editorContainer);
 
         this.saveHistory();
 
