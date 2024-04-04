@@ -734,7 +734,7 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
 
         // Bind events.
         window.addEventListener("resize", updateUI);
-        editor.addEventListener("scroll", updateUI);
+        editor.parentNode.addEventListener("scroll", updateUI);
 
         // Disable user selection on the image.
         selectedImage.classList.add("mimir-hide-selection");
@@ -761,14 +761,24 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
 
         // Unbind events.
         window.removeEventListener("resize", updateUI);
-        editor.removeEventListener("scroll", updateUI);
+        editor.parentNode.removeEventListener("scroll", updateUI);
     }
+
+    function isContainedInRect(x, y, rect) {
+        if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+            return true;
+        }
+        return false;
+    }
+
+    function cullHorizontal()
 
     // Update the UI.
     function updateUI() {
         if (!selectedImage) {return;}
 
         const rect = selectedImage.getBoundingClientRect();
+        const editorRect = editor.parentNode.getBoundingClientRect();
         const scrollTop = document.documentElement.scrollTop;
 
         resizeBoxTopLeft.style.left = rect.left - 5 + "px";
@@ -792,6 +802,33 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
         resizeBarRight.style.left = rect.left + rect.width + "px";
         resizeBarRight.style.top = (rect.top + scrollTop) + "px";
         resizeBarRight.style.height = rect.height + "px";
+
+        cullHorizontal(resizeBarTop, rect, );
+        cullHorizontal(resizeBarBottom);
+        cullVertical(resizeBarLeft);
+        cullVertical(resizeBarRight);
+
+        if (!isContainedInRect(rect.left, rect.top + scrollTop, editorRect)) {
+            resizeBoxTopLeft.style.display = "none";
+        } else {
+            resizeBoxTopLeft.style.display = "block";
+        }
+        if (!isContainedInRect(rect.right, rect.top + scrollTop, editorRect)) {
+            resizeBoxTopRight.style.display = "none";
+        } else {
+            resizeBoxTopRight.style.display = "block";
+        }
+        if (!isContainedInRect(rect.left, rect.bottom + scrollTop, editorRect)) {
+            resizeBoxBottomLeft.style.display = "none";
+        } else {
+            resizeBoxBottomLeft.style.display = "block";
+        }
+        if (!isContainedInRect(rect.right, rect.bottom + scrollTop, editorRect)) {
+            resizeBoxBottomRight.style.display = "none";
+        } else {
+            resizeBoxBottomRight.style.display = "block";
+        }
+        
     }
 
     function startDragCorner(e) {

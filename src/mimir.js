@@ -5975,10 +5975,10 @@ class Mimir {
     */
     zoom(level) {
         this.currentZoom = level;
-        this.editor.style.zoom = `${level}`;
         this.editor.style.MozTransform = `scale(${level})`;
         this.editor.style.WebkitTransform = `scale(${level})`;
         this.editor.style.transformOrigin = "top left";
+        this.imageModule.deselect();
     }
 
     /*
