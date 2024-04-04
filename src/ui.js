@@ -1169,7 +1169,7 @@ MimirUI.findAndReplace = (editor, onEdit, api) => {
 
     function updateModalPosition() {
         const rect = ui.getBoundingClientRect();
-        const editorRect = editor.getBoundingClientRect();
+        const editorRect = editor.parentNode.getBoundingClientRect();
         ui.style.left = editorRect.right - rect.width + "px";
         ui.style.top = editorRect.top + "px";
     }
