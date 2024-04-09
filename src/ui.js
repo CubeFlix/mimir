@@ -771,7 +771,63 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
         return false;
     }
 
-    function cullHorizontal()
+    function cullAndRenderHorizontal(bar, x, y, length, editor) {
+        // If the bar is moved vertically off the editor, hide it.
+        if (y < editor.top || y > editor.bottom) {
+            bar.style.display = "none";
+            return;
+        } else {
+            bar.style.display = "block";
+        }
+
+        // If the bar starts before the left edge of the editor, cull it to start at the left edge.
+        if (x < editor.left) {
+            length -= Math.max(editor.left - x, 0);
+            x = editor.left;
+        }
+
+        // If the bar's length exceeds the width of the editor, cull the length of the bar.
+        if (x + length > editor.right) {
+            length = editor.right - x;
+        }
+        
+        if (length == 0) {
+            bar.style.display = "none";
+            return;
+        }
+        bar.style.left = x + "px";
+        bar.style.top = y + "px";
+        bar.style.width = length + "px";
+    }
+
+    function cullAndRenderVertical(bar, x, y, length, editor) {
+        // If the bar is moved horizontally off the editor, hide it.
+        if (x < editor.left || x > editor.right) {
+            bar.style.display = "none";
+            return;
+        } else {
+            bar.style.display = "block";
+        }
+
+        // If the bar starts before the top edge of the editor, cull it to start at the top edge.
+        if (y < editor.top) {
+            length -= Math.max(editor.top - y, 0);
+            y = editor.top;
+        }
+
+        // If the bar's length exceeds the height of the editor, cull the length of the bar.
+        if (y + length > editor.bottom) {
+            length = editor.bottom - x;
+        }
+        
+        if (length == 0) {
+            bar.style.display = "none";
+            return;
+        }
+        bar.style.left = x + "px";
+        bar.style.top = y + "px";
+        bar.style.height = length + "px";
+    }
 
     // Update the UI.
     function updateUI() {
@@ -790,23 +846,10 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
         resizeBoxBottomRight.style.left = rect.left + rect.width - 5 + "px";
         resizeBoxBottomRight.style.top = (rect.bottom + scrollTop) - 5 + "px";
 
-        resizeBarTop.style.left = rect.left + "px";
-        resizeBarTop.style.top = (rect.top + scrollTop) + "px";
-        resizeBarTop.style.width = rect.width + "px";
-        resizeBarBottom.style.left = rect.left + "px";
-        resizeBarBottom.style.top = (rect.bottom + scrollTop) + "px";
-        resizeBarBottom.style.width = rect.width + "px";
-        resizeBarLeft.style.left = rect.left + "px";
-        resizeBarLeft.style.top = (rect.top + scrollTop) + "px";
-        resizeBarLeft.style.height = rect.height + "px";
-        resizeBarRight.style.left = rect.left + rect.width + "px";
-        resizeBarRight.style.top = (rect.top + scrollTop) + "px";
-        resizeBarRight.style.height = rect.height + "px";
-
-        cullHorizontal(resizeBarTop, rect, );
-        cullHorizontal(resizeBarBottom);
-        cullVertical(resizeBarLeft);
-        cullVertical(resizeBarRight);
+        cullAndRenderHorizontal(resizeBarTop, rect.left, rect.top + scrollTop, rect.width, editorRect);
+        cullAndRenderHorizontal(resizeBarBottom, rect.left, rect.bottom + scrollTop, rect.width, editorRect);
+        cullAndRenderVertical(resizeBarLeft, rect.left, rect.top + scrollTop, rect.height, editorRect);
+        cullAndRenderVertical(resizeBarRight, rect.left + rect.width, rect.top + scrollTop, rect.height, editorRect);
 
         if (!isContainedInRect(rect.left, rect.top + scrollTop, editorRect)) {
             resizeBoxTopLeft.style.display = "none";

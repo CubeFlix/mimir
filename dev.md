@@ -186,7 +186,7 @@ stay out!!!! gaming in progress!!!
 - [x] modal overhaul
 - [x] menubar should stay at top of editor
 - [x] find and replace menu is not working
-- [ ] image editing ui not going behind other ui
+- [x] image editing ui not going behind other ui
 - [ ] undo redo context menu grayed out
 - [ ] focus editor after inserting/selecting image
 - [ ] reinsert cursor on cut and delete event
