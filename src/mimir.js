@@ -49,7 +49,7 @@ class Mimir {
             ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "remove"],
             ["quote", "header", "align", "list", "indent", "outdent"],
             ["insertImage", "insertHorizontalRule"],
-            ["undo", "redo", "openFindAndReplace"]
+            ["undo", "redo", "openFindAndReplace", "zoom"]
         ] || settings.menubar;
         this.snapshotInterval = settings.snapshotInterval || 5000;
         this.historyLimit = settings.historyLimit || 100;
@@ -445,6 +445,24 @@ class Mimir {
                         this.menubarOptions.openFindAndReplace.setAttribute("aria-haspopup", "true");
                         this.menubarOptions.openFindAndReplace.setAttribute("aria-expanded", "false");
                         this.menubar.append(this.menubarOptions.openFindAndReplace);
+                        break;
+                    case "zoom":
+                        var options = [];
+                        for (const zoomLevel of ["50", "75", "90", "100", "125", "150", "175", "200"]) {
+                            const newZoomOption = document.createElement("div");
+                            newZoomOption.innerHTML = zoomLevel + "%";
+                            newZoomOption.style.width = "34px";
+                            newZoomOption.setAttribute("value", zoomLevel.toLowerCase());
+                            newZoomOption.setAttribute("title", zoomLevel);
+                            newZoomOption.setAttribute("aria-label", "Editor adjust zoom " + zoomLevel + "%");
+                            options.push({name: zoomLevel, content: newZoomOption});
+                        }
+                        this.menubarOptions.zoom = this.MimirUI.dropdownList(options, this.changeZoom.bind(this));
+                        this.menubarOptions.zoom.list.setAttribute("id", "mimir-menubar-option-zoom");
+                        this.menubarOptions.zoom.dropdown.button.setAttribute("title", "Zoom level");
+                        this.menubarOptions.zoom.list.setAttribute("aria-label", "Editor change alignment");
+                        this.menubarOptions.zoom.setValue("100");
+                        this.menubar.append(this.menubarOptions.zoom.list);
                         break;
                 }
             }
@@ -5979,6 +5997,13 @@ class Mimir {
         this.editor.style.WebkitTransform = `scale(${level})`;
         this.editor.style.transformOrigin = "top left";
         this.imageModule.deselect();
+    }
+
+    /*
+    Adjust the zoom level of the editor by percentage.
+    */
+    changeZoom(level) {
+        this.zoom(parseInt(level) / 100);
     }
 
     /*
