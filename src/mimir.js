@@ -49,7 +49,7 @@ class Mimir {
             ["bold", "italic", "underline", "strikethrough", "font", "size", "foreColor", "backColor", "sup", "sub", "link", "remove"],
             ["quote", "header", "align", "list", "indent", "outdent"],
             ["insertImage", "insertHorizontalRule"],
-            ["undo", "redo", "openFindAndReplace"]
+            ["undo", "redo", "openFindAndReplace", "zoom"]
         ] || settings.menubar;
         this.snapshotInterval = settings.snapshotInterval || 5000;
         this.historyLimit = settings.historyLimit || 100;
@@ -107,10 +107,13 @@ class Mimir {
         this.editor.style.width = this.settings.width || "600px";
 
         if (this.settings.height) {
+            this.editorContainer.style.height = this.settings.height;
             this.editor.style.height = this.settings.height;
         } else if (this.settings.minHeight) {
+            this.editorContainer.style.minHeight = this.settings.minHeight;
             this.editor.style.minHeight = this.settings.minHeight;
         } else {
+            this.editorContainer.style.minHeight = "600px";
             this.editor.style.minHeight = "600px";
         }
     }
@@ -442,6 +445,24 @@ class Mimir {
                         this.menubarOptions.openFindAndReplace.setAttribute("aria-haspopup", "true");
                         this.menubarOptions.openFindAndReplace.setAttribute("aria-expanded", "false");
                         this.menubar.append(this.menubarOptions.openFindAndReplace);
+                        break;
+                    case "zoom":
+                        var options = [];
+                        for (const zoomLevel of ["50", "75", "90", "100", "125", "150", "175", "200"]) {
+                            const newZoomOption = document.createElement("div");
+                            newZoomOption.innerHTML = zoomLevel + "%";
+                            newZoomOption.style.width = "34px";
+                            newZoomOption.setAttribute("value", zoomLevel.toLowerCase());
+                            newZoomOption.setAttribute("title", zoomLevel);
+                            newZoomOption.setAttribute("aria-label", "Editor adjust zoom " + zoomLevel + "%");
+                            options.push({name: zoomLevel, content: newZoomOption});
+                        }
+                        this.menubarOptions.zoom = this.MimirUI.dropdownList(options, this.changeZoom.bind(this));
+                        this.menubarOptions.zoom.list.setAttribute("id", "mimir-menubar-option-zoom");
+                        this.menubarOptions.zoom.dropdown.button.setAttribute("title", "Zoom level");
+                        this.menubarOptions.zoom.list.setAttribute("aria-label", "Editor change alignment");
+                        this.menubarOptions.zoom.setValue("100");
+                        this.menubar.append(this.menubarOptions.zoom.list);
                         break;
                 }
             }
@@ -5968,6 +5989,24 @@ class Mimir {
     }
 
     /*
+    Zoom the editor.
+    */
+    zoom(level) {
+        this.currentZoom = level;
+        this.editor.style.MozTransform = `scale(${level})`;
+        this.editor.style.WebkitTransform = `scale(${level})`;
+        this.editor.style.transformOrigin = "top left";
+        this.imageModule.deselect();
+    }
+
+    /*
+    Adjust the zoom level of the editor by percentage.
+    */
+    changeZoom(level) {
+        this.zoom(parseInt(level) / 100);
+    }
+
+    /*
     Serialize a node's contents to a object.
     */
     async serializeContents(node) {
@@ -6347,6 +6386,9 @@ class Mimir {
     Initialize the editor. Must be called before using the editor. 
     */
     init() {
+        // Current zoom level.
+        this.currentZoom = 1;
+
         // Initialize history.
         this.history = [];
         this.redoHistory = [];
@@ -6369,6 +6411,8 @@ class Mimir {
         this.createMenubar();
 
         // Insert the content editable div.
+        this.editorContainer = document.createElement("div");
+        this.editorContainer.setAttribute("id", "mimir-body-container");
         this.editor = document.createElement("div");
         this.editor.setAttribute("id", "mimir-body");
         this.editor.setAttribute("contenteditable", "true");
@@ -6376,7 +6420,8 @@ class Mimir {
         this.editor.setAttribute("role", "textbox");
         this.editor.setAttribute("aria-label", "Editor main editing area");
         this.editor.setAttribute("tabindex", "-1");
-        this.container.append(this.editor);
+        this.editorContainer.append(this.editor);
+        this.container.append(this.editorContainer);
 
         this.saveHistory();
 
