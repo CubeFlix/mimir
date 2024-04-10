@@ -817,7 +817,7 @@ MimirUI.bindImageEditing = (editor, onEdit) => {
 
         // If the bar's length exceeds the height of the editor, cull the length of the bar.
         if (y + length > editor.bottom) {
-            length = editor.bottom - x;
+            length = editor.bottom - y;
         }
         
         if (length == 0) {
