@@ -461,7 +461,7 @@ class Mimir {
                         this.menubarOptions.zoom = this.MimirUI.dropdownList(options, this.changeZoom.bind(this));
                         this.menubarOptions.zoom.list.setAttribute("id", "mimir-menubar-option-zoom");
                         this.menubarOptions.zoom.dropdown.button.setAttribute("title", "Zoom level");
-                        this.menubarOptions.zoom.list.setAttribute("aria-label", "Editor change alignment");
+                        this.menubarOptions.zoom.list.setAttribute("aria-label", "Editor change zoom");
                         this.menubarOptions.zoom.setValue("100");
                         this.menubar.append(this.menubarOptions.zoom.list);
                         break;
