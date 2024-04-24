@@ -60,6 +60,7 @@ class Mimir {
         this.defaultImageWidth = settings.defaultImageWidth || "300px";
         this.useIcons = settings.useIcons == undefined ? true : !!settings.useIcons;
         this.allowPasteHTML = settings.allowPasteHTML == undefined ? true : !!settings.allowPasteHTML;
+        this.zoomOptions = settings.zoomOptions || ["50", "75", "90", "100", "125", "150", "175", "200"];
 
         // Parse the invisible entity as text.
         const temp = document.createElement("div");
@@ -448,7 +449,7 @@ class Mimir {
                         break;
                     case "zoom":
                         var options = [];
-                        for (const zoomLevel of ["50", "75", "90", "100", "125", "150", "175", "200"]) {
+                        for (const zoomLevel of this.zoomOptions) {
                             const newZoomOption = document.createElement("div");
                             newZoomOption.innerHTML = zoomLevel + "%";
                             newZoomOption.style.width = "34px";
@@ -6004,6 +6005,17 @@ class Mimir {
     */
     changeZoom(level) {
         this.zoom(parseInt(level) / 100);
+    }
+
+    /*
+    Apply zoom programmatically.
+    */
+    applyZoom(level) {
+        if (!this.zoomOptions.includes(level)) {
+            throw new Error("Invalid zoom level.");
+        }
+        this.changeZoom(level);
+        this.menubarOptions.zoom.setValue(level);
     }
 
     /*
