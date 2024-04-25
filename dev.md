@@ -1,6 +1,8 @@
 # Mimir Development Document
 
-stay out!!!! gaming in progress!!!
+> stay out!!!! gaming in progress!!!
+
+This is a development document used for me to keep track of different bugs and features I want to add in the future. Please don't edit this!
 
 ## 1.0 Release Roadmap
 
