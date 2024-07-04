@@ -18,6 +18,11 @@ This is a development document used for me to keep track of different bugs and f
 
 ## todo
 
+### present bugs
+
+- [x] selecting an entire list and deleting it results in `<ol><li>></li><br><li></li></ol>`
+
+### past bugs (still need work)
 - [x] bug! (create bold, make substring italic, remove bold on substring)
 - [x] splitNodeAtChild
 - [x] styleToElement
@@ -198,7 +203,7 @@ This is a development document used for me to keep track of different bugs and f
 - [x] re-select image after block/inline styling it
 - [ ] disallow pasting HTML option 
 - [ ] disable find and replace option
-- [ ] overhaul UI
+- [x] overhaul UI
 - [ ] copy paste buttons
 - [ ] accessibility (for, name, aria, etc.) and esc button handling for modals tab on buttons
 - [x] remove all styling from text, remove all color from 

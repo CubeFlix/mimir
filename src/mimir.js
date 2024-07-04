@@ -476,6 +476,34 @@ class Mimir {
     }
 
     /*
+    Check if the node is at the beginning of another predicate (is first child).
+    */
+    isAtBeginning(node, predicate) {
+        while (!predicate(node)) {
+            if (node.parentNode && this.inEditor(node.parentNode) && node.parentNode.firstChild == node) {
+                node = node.parentNode;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*
+    Check if the node is at the end of another predicate (is last child).
+    */
+    isAtEnd(node, predicate) {
+        while (!predicate(node)) {
+            if (node.parentNode && this.inEditor(node.parentNode) && node.parentNode.lastChild == node) {
+                node = node.parentNode;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*
     Bind event listeners for keyboard events.
     */
     bindKeyboardEvents() {
@@ -611,7 +639,7 @@ class Mimir {
 
                         if (range.startOffset == 0 && range.endOffset >= endLength && !(range.startOffset == range.endOffset && range.startContainer == range.endContainer)) {
                             // Handle deleting entire regions of text.
-                            
+
                             // Get the current styling.
                             const contents = range.extractContents(); // Extract the contents here so the only styles we track are the ones directly in the range.
                             if (this.imageModule.getSelected()) this.imageModule.deselect();
@@ -674,7 +702,29 @@ class Mimir {
                                 lastNode = newElem;
                             }
 
-                            range.insertNode(lastNode);
+                            // Wait, handle special cases for lists.
+                            if (["UL", "OL"].includes(range.startContainer.tagName) && range.startContainer == range.endContainer) {
+                                if (this.isEmptyOrLineBreak(contents)) {
+                                    // If there was nothing there, remove the list entirely.
+                                    cursor = this.createCursor();
+                                    range.startContainer.after(cursor);
+                                    range.startContainer.remove();
+                                    if (this.isEmpty(cursor.parentNode)) {
+                                        cursor.append(document.createElement("br"));
+                                    }
+                                } else {
+                                    const lis = range.startContainer.querySelectorAll("li");
+                                    if (lis.length == 2) {
+                                        // Remove the second one, place the cursor in the first.
+                                        lis[1].remove();
+                                        lis[0].append(lastNode);
+                                    } else if (lis.length == 1) {
+                                        lis[0].append(lastNode);
+                                    }
+                                }
+                            } else {
+                                range.insertNode(lastNode);
+                            }
 
                             const newRange = new Range();
                             newRange.selectNodeContents(cursor);
