@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="210mm"
+   viewBox="0 0 210 210"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="mimir.svg"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.63118803"
+     inkscape:cx="92.682365"
+     inkscape:cy="508.56477"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="2552"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="76.178978"
+       y="366.33127"
+       width="43.065278"
+       height="36.033131"
+       id="rect236" />
+    <rect
+       x="76.178978"
+       y="366.33127"
+       width="43.065278"
+       height="36.033131"
+       id="rect236-1" />
+    <rect
+       x="76.178978"
+       y="366.33127"
+       width="43.065277"
+       height="36.033131"
+       id="rect236-7" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <ellipse
+       style="fill:#000000;stroke:#ffffff;stroke-width:8.309;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1"
+       id="path954"
+       ry="94.117004"
+       rx="94.971268"
+       cy="105"
+       cx="105" />
+    <text
+       xml:space="preserve"
+       transform="matrix(4.5818137,0,0,4.5818137,-342.67094,-1642.7429)"
+       id="text234"
+       style="font-size:13.3333px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Normal';text-align:center;white-space:pre;shape-inside:url(#rect236);display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.09127;stroke-dasharray:none;stroke-opacity:0.992908"><tspan
+         x="83.743164"
+         y="387.95014"
+         id="tspan1744"><tspan
+           style="font-size:24px"
+           id="tspan1742">MI</tspan></tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:4.99999;stroke-dasharray:none;stroke-opacity:0.992908"
+       id="rect2805"
+       width="112.04192"
+       height="5.3353291"
+       x="48.979038"
+       y="146.88821" />
+  </g>
+</svg>

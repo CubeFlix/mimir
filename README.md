@@ -1,5 +1,7 @@
 # Mimir
 
+<img style="float: right;" src="img/icon.png" width="150px">
+
 Mimir is a simple, lightweight yet powerful rich text editor written in vanilla JavaScript built by [cubeflix](https://github.com/cubeflix) and released under the MIT license. Much of the code in this library was hacked together over the course of a few months, so certain bugs may still be present, and the code isn't as clean as I'd like. My main goal was to build a working, bug-free rich text editor with *no* `execCommand` and zero dependencies (apart from [Bootstrap Icons](https://icons.getbootstrap.com)). However, I still think this is pretty usable!
 
 Mimir runs as a wrapper around a single `contenteditable` container, representing the editor. The library provides styling and editing functionality on top of the default behavior of the browser, and smooths out some quirks with `contenteditable`, especially in Chrome. It also provides a custom UI interface and more complex features like copy and paste, drag'n'drop, nested lists, and history to create a more powerful editing experience. Have fun!
