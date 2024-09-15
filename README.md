@@ -22,7 +22,7 @@ Mimir runs as a wrapper around a single `contenteditable` container, representin
 - JSON serialization
 - Simple API
 
-## Example Usage
+## Getting Started
 
 You can build the library using `npm run build` in the main directory. This should create a file called `mimir.js` in the `dist` directory. In an HTML file, load the `mimir.js` script, create a new Mimir object, and initialize it.
 
